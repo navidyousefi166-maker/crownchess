@@ -1,659 +1,246 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fa">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CrownChess</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>صفحه شطرنج با مهره‌های سفارشی</title>
 <style>
-:root {
-  --bg: #0B1220;
-  --panel: #182438;
-  --gold: #E5BD65;
-  --text: #E7EDF5;
-  --muted: #9BAFC4;
-  --light: #F0DCC0;
-  --dark: #557C68;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Arial, sans-serif;
-}
-
-header {
-  text-align: center;
-  padding: 22px 12px 14px;
-}
-
-.logo {
-  color: var(--gold);
-  font-size: 30px;
-  font-weight: 800;
-}
-
-.subtitle {
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 6px;
-}
-
-main {
-  width: min(100% - 24px, 850px);
-  margin: 0 auto 30px;
-}
-
-.layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(190px, .65fr);
-  gap: 16px;
-  align-items: start;
-}
-
-.panel {
-  background: var(--panel);
-  border: 1px solid #2A3A50;
-  border-radius: 14px;
-  padding: 14px;
-}
-
-.status {
-  color: var(--gold);
-  text-align: center;
-  font-weight: bold;
-  min-height: 42px;
-  padding: 10px 2px;
-}
-
-.board {
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  width: 100%;
-  aspect-ratio: 1;
-  border: 3px solid #24354A;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.square {
-  position: relative;
-  min-width: 0;
-  min-height: 0;
-  padding: 0;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.square.light {
-  background: var(--light);
-}
-
-.square.dark {
-  background: var(--dark);
-}
-
-.square.selected {
-  box-shadow: inset 0 0 0 4px var(--gold);
-}
-
-.square.last {
-  box-shadow: inset 0 0 0 4px #E5BD6570;
-}
-
-.square.legal::after {
-  content: "";
-  position: absolute;
-  width: 25%;
-  height: 25%;
-  border-radius: 50%;
-  background: #101A2B70;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.square.legal.has-piece::after {
-  width: 85%;
-  height: 85%;
-  background: transparent;
-  border: 4px solid #E5BD65C0;
-}
-
-.piece-svg {
-  display: block;
-  width: 90%;
-  height: 90%;
-  position: relative;
-  z-index: 1;
-  overflow: visible;
-  pointer-events: none;
-  filter: drop-shadow(0 2px 1px #0004);
-}
-
-.white-piece {
-  color: #FFF8E8;
-  fill: #FFF8E8;
-  stroke: #24354A;
-}
-
-.black-piece {
-  color: #17202C;
-  fill: #17202C;
-  stroke: #E7EDF5;
-}
-
-.coordinates {
-  position: absolute;
-  z-index: 3;
-  font-size: clamp(8px, 1.6vw, 12px);
-  font-weight: bold;
-  opacity: .85;
-  pointer-events: none;
-}
-
-.file-label {
-  right: 3px;
-  bottom: 1px;
-}
-
-.rank-label {
-  left: 3px;
-  top: 1px;
-}
-
-.square.light .coordinates {
-  color: var(--dark);
-}
-
-.square.dark .coordinates {
-  color: var(--light);
-}
-
-.controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.action {
-  padding: 11px 6px;
-  background: #24354A;
-  color: var(--text);
-  border: 1px solid #3B4D63;
-  border-radius: 9px;
-  font-weight: bold;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.action.primary {
-  background: var(--gold);
-  color: #182438;
-}
-
-.section-title {
-  color: var(--gold);
-  font-weight: bold;
-  margin: 3px 0 12px;
-}
-
-.info {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.9;
-  margin-bottom: 18px;
-}
-
-.history {
-  max-height: 300px;
-  overflow-y: auto;
-  font-size: 13px;
-}
-
-.move-row {
-  display: grid;
-  grid-template-columns: 35px 1fr 1fr;
-  gap: 5px;
-  padding: 7px 5px;
-  border-bottom: 1px solid #2A3A50;
-}
-
-.move-number {
-  color: var(--muted);
-}
-
-.note {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.8;
-  margin-top: 14px;
-}
-
-footer {
-  color: #73869D;
-  font-size: 12px;
-  text-align: center;
-  padding: 20px 0 8px;
-}
-
-@media (max-width: 600px) {
-  header {
-    padding-top: 16px;
+  :root{
+    --light-square: #f0d9b5; /* رنگ صفحه روشن */
+    --dark-square: #b58863;  /* رنگ صفحه تیره */
+    --ivory: #F6F1E6;        /* عاجی برای مهره‌های سفید */
+    --black-piece: #212121;  /* رنگ مهره‌های سیاه */
+    --board-bg: #3b2f22;     /* حاشیه دور صفحه */
+    --board-gap: 6px;        /* فاصله بین خانه‌ها برای تاکید حدها */
   }
 
-  .logo {
-    font-size: 27px;
+  html,body{height:100%;margin:0;font-family:Tahoma, Arial, sans-serif;background:#efe8de;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+
+  /* قاب کلی */
+  .board-wrap{
+    background:linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.05));
+    padding:16px;
+    border-radius:14px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35), inset 0 2px 0 rgba(255,255,255,0.04);
+    border:6px solid var(--board-bg);
   }
 
-  .layout {
-    grid-template-columns: 1fr;
+  /* خود صفحه شطرنج: گرید 8x8 */
+  .board{
+    display:grid;
+    grid-template-columns: repeat(8, 64px);
+    grid-template-rows: repeat(8, 64px);
+    gap: var(--board-gap);
+    background: #0000; /* شفاف، فاصله خانه‌ها را نشان می‌دهد */
+    padding:10px;
+    border-radius:10px;
   }
 
-  .panel {
-    padding: 10px;
+  /* هر خانه */
+  .square{
+    width:64px;height:64px;
+    display:flex;
+    align-items:center;justify-content:center;
+    border-radius:8px;
+    box-sizing:border-box;
+    position:relative;
+    transition:transform .12s ease, box-shadow .12s;
+    user-select:none;
   }
 
-  .history {
-    max-height: 180px;
+  .square.light{ background: var(--light-square); }
+  .square.dark{  background: var(--dark-square);  }
+
+  /* هایلایت حاشیه داخلی خانه‌ها (حد جدید) */
+  .square::after{
+    content:"";
+    position:absolute;inset:4px;border-radius:6px;
+    pointer-events:none;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -3px 6px rgba(0,0,0,0.08);
+    opacity:0.9;
   }
 
-  .info {
-    margin-bottom: 8px;
+  /* مهره‌ها */
+  .piece{
+    width:56px;height:56px;display:flex;align-items:center;justify-content:center;
+    transform: translateY(0);
   }
-}
+
+  /* آیکون مبتنی بر SVG که رنگ را از currentColor می‌گیرد */
+  .piece svg{
+    width:56px;height:56px;
+    display:block;
+  }
+
+  /* رنگ‌دهی برای سفید/سیاه */
+  .white .piece-icon{ color: var(--ivory); stroke: #6b5e3c; stroke-width:1.2; }
+  .black .piece-icon{ color: var(--black-piece); stroke: rgba(255,255,255,0.02); stroke-width:1.0; }
+
+  /* سایه و برجستگی مهره‌ها */
+  .white .piece{ filter: drop-shadow(0 3px 2px rgba(0,0,0,.15)); }
+  .black .piece{ filter: drop-shadow(0 4px 3px rgba(0,0,0,.45)); }
+
+  /* افکت قرار گرفتن موس روی مهره‌ها */
+  .piece:hover{ transform: translateY(-4px); transition: transform .08s ease; cursor:grab; }
+
+  /* شماره‌گذاری ستون/ردیف (اختیاری) */
+  .coords{ margin-top:10px; display:flex;justify-content:center;gap:6px;color:#3b2f22 }
+  .coords span{ width:64px;text-align:center;font-weight:600;opacity:.8 }
+
+  /* توضیح کوتاه در پایین */
+  .note{ margin-top:12px;text-align:center;color:#5b4937; font-size:14px; }
 </style>
 </head>
-
 <body>
+  <div class="board-wrap" role="main" aria-label="صفحه شطرنج">
+    <!-- SVG symbols (آیکون‌ها) -->
+    <svg width="0" height="0" style="position:absolute">
+      <defs>
+        <!-- King: تاج و صلیب -->
+        <symbol id="king" viewBox="0 0 45 45">
+          <g fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M22.5 11.5v-6" stroke-width="2.5"/>
+            <path d="M20 6h5" stroke-width="2.5"/>
+            <path d="M8 30c6-6 14-8 14-8s8 2 14 8c-7 4-14 4-14 4s-7 0-14-4z" stroke-width="1.2" fill="currentColor"/>
+            <path d="M11 28c6-6 12-6 12-6s6 0 12 6" stroke-width="1.2" fill="none"/>
+            <circle cx="22.5" cy="25" r="2.2" fill="rgba(0,0,0,0.06)" />
+          </g>
+        </symbol>
 
-<header>
-  <div class="logo">♛ CrownChess</div>
-  <div class="subtitle">Your move. Your crown.</div>
-</header>
+        <!-- Bishop: کلاهک مورب (میتر) -->
+        <symbol id="bishop" viewBox="0 0 45 45">
+          <g fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M22.5 10c-3 3-10 10-10 16 0 6 8 8 10 8s10-2 10-8c0-6-7-13-10-16z" stroke-width="1.2" />
+            <path d="M18 18c2-2 5-2 7 0" stroke-width="1.6" fill="none" stroke="#ffffff50"/>
+            <path d="M22.5 6v6" stroke-width="2.2" />
+            <circle cx="22.5" cy="27" r="1.8" fill="rgba(0,0,0,0.06)"/>
+          </g>
+        </symbol>
 
-<main>
-  <div class="layout">
+        <!-- Knight: سر اسب (ساده‌شده) -->
+        <symbol id="knight" viewBox="0 0 45 45">
+          <g fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M10 30c2-8 12-11 12-11s-1-5 3-8c3-2 7-1 9 1 0 0-2 3-4 5-3 3-1 7-1 7s5 1 6 5c1 4-4 7-4 7s-6 0-16 0c-1 0-3-2-5-5z" stroke-width="1.1"/>
+            <circle cx="22" cy="18" r="1.6" fill="#fff3"/>
+          </g>
+        </symbol>
 
-    <section class="panel">
-      <div class="status" id="status">در حال آماده‌سازی...</div>
-      <div class="board" id="board"></div>
+        <!-- Other simple pieces (rook, queen, pawn) -->
+        <symbol id="rook" viewBox="0 0 45 45">
+          <g fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
+            <rect x="12" y="12" width="21" height="4" rx="0.8" />
+            <path d="M12 16v11c0 2 2 4 4 4h13c2 0 4-2 4-4V16" stroke-width="1.1" fill="currentColor"/>
+            <rect x="14" y="28" width="17" height="4" rx="1"/>
+          </g>
+        </symbol>
 
-      <div class="controls">
-        <button class="action primary" id="reset">بازی جدید</button>
-        <button class="action" id="flip">چرخاندن صفحه</button>
-      </div>
-    </section>
+        <symbol id="queen" viewBox="0 0 45 45">
+          <g fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M8 30c6-7 13-9 14-9s8 2 14 9c-7 4-14 4-14 4s-7 0-14-4z" stroke-width="1.1"/>
+            <path d="M22.5 13c-2 2-3 6-3 6s2 1 3 1 3-1 3-1-1-4-3-6z" stroke-width="1.2"/>
+          </g>
+        </symbol>
 
-    <aside class="panel">
-      <div class="section-title">وضعیت بازی</div>
-      <div class="info" id="turnInfo">نوبت سفید</div>
+        <symbol id="pawn" viewBox="0 0 45 45">
+          <g fill="currentColor" stroke="currentColor">
+            <circle cx="22.5" cy="15" r="4.8"/>
+            <path d="M14 32c4-3 12-3 17 0-6 4-11 4-17 0z" />
+          </g>
+        </symbol>
+      </defs>
+    </svg>
 
-      <div class="section-title">حرکت‌ها</div>
-      <div class="history" id="history"></div>
+    <!-- صفحه -->
+    <div id="board" class="board" aria-hidden="false"></div>
 
-      <div class="note">
-        مهره را انتخاب کن و خانهٔ مقصد را بزن.
-        پیاده‌ای که به انتهای صفحه برسد، به وزیر تبدیل می‌شود.
-      </div>
-    </aside>
+    <!-- حروف ستون (اختیاری) -->
+    <div class="coords" aria-hidden="true">
+      <span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span>
+    </div>
 
+    <div class="note">اگر می‌خواهید شکل اسب/فیل/شاه دقیق‌تر یا بزرگ‌تر باشد بگویید تا مسیر SVG را اصلاح کنم.</div>
   </div>
 
-  <footer>CrownChess · Play for the crown</footer>
-</main>
-
 <script>
-const boardEl = document.getElementById("board");
-const statusEl = document.getElementById("status");
-const turnInfoEl = document.getElementById("turnInfo");
-const historyEl = document.getElementById("history");
+  // ساختار صفحه و قرار دادن مهره‌ها با FEN استاندارد شروع
+  const boardEl = document.getElementById('board');
 
-let game = null;
-let selected = null;
-let legalMoves = [];
-let lastMove = null;
-let flipped = false;
+  // تولید لیست خانه‌ها از a8 تا h1
+  const files = ['a','b','c','d','e','f','g','h'];
+  const ranks = [8,7,6,5,4,3,2,1];
 
-/* طرح اختصاصی مهره‌های CrownChess */
-const pieceArt = {
+  // تابع کمکی برای ساخت عنصر خانه
+  function makeSquare(file,rank) {
+    const sq = document.createElement('div');
+    const index = (files.indexOf(file) + ranks.indexOf(rank)) % 2;
+    sq.className = 'square ' + (index===0 ? 'light' : 'dark');
+    sq.dataset.square = file+rank;
+    sq.setAttribute('role','button');
+    sq.setAttribute('aria-label','خانه ' + file + rank);
+    return sq;
+  }
 
-  /* شاه: تاج و صلیب واضح‌تر */
-  k: `
-    <path d="
-      M44 5 H56 V15 H66 V27 H56 V35
-      C64 40 68 49 68 59
-      L73 73 L84 83 V91 H16 V83
-      L27 73 L32 59
-      C32 49 36 40 44 35
-      V27 H34 V15 H44 Z
-    "/>
-    <path d="M46 7 H54 V17 H46 Z"
-      fill="var(--piece-stroke)" stroke="none"/>
-    <path d="M38 21 H62 V25 H38 Z"
-      fill="var(--piece-stroke)" stroke="none"/>
-    <path d="M31 78 H69"
-      fill="none" stroke="var(--piece-stroke)"
-      stroke-width="3" stroke-linecap="round"/>
-  `,
-
-  /* وزیر: تاج پرجزئیات */
-  q: `
-    <path d="
-      M24 31 L34 41 L43 29 L47 42
-      H53 L57 29 L66 41 L76 31
-      L70 65 L76 78 L83 84 V91 H17
-      V84 L24 78 L30 65 Z
-    "/>
-    <circle cx="23" cy="24" r="7"/>
-    <circle cx="43" cy="19" r="7"/>
-    <circle cx="57" cy="19" r="7"/>
-    <circle cx="77" cy="24" r="7"/>
-    <circle cx="50" cy="12" r="7"/>
-  `,
-
-  /* رخ: برجک کلاسیک */
-  r: `
-    <path d="
-      M20 12 H36 V24 H43 V12 H57
-      V24 H64 V12 H80 V38
-      L70 45 L73 73 L82 82
-      V91 H18 V82 L27 73 L30 45
-      L20 38 Z
-    "/>
-    <path d="M29 49 H71"
-      fill="none" stroke="var(--piece-stroke)"
-      stroke-width="3"/>
-  `,
-
-  /* فیل: سر گرد و شکاف مورب */
-  b: `
-    <path d="
-      M50 9
-      C39 9 31 18 31 29
-      C31 37 37 43 43 47
-      L35 70 L26 80 L19 91
-      H81 L74 80 L65 70
-      L57 47
-      C64 41 69 35 69 27
-      C69 17 61 9 50 9 Z
-    "/>
-    <path d="M43 20 L57 36"
-      fill="none" stroke="var(--piece-stroke)"
-      stroke-width="4" stroke-linecap="round"/>
-    <circle cx="50" cy="15" r="2.5"
-      fill="var(--piece-stroke)" stroke="none"/>
-  `,
-
-  /* اسب: سر و گردن مشخص‌تر */
-  n: `
-    <path d="
-      M17 91 L21 80 L30 73
-      L33 61 L26 49 L25 37
-      L31 27 L42 17 L54 11
-      L67 15 L79 28 L83 39
-      L76 47 L66 48 L59 40
-      L51 34 L45 39 L49 47
-      L60 57 L67 67 L71 77
-      L82 84 V91 Z
-    "/>
-    <path d="M35 28 L43 21 L51 19 L58 23 L50 26 L43 32 Z"
-      fill="var(--piece-stroke)" stroke="none"/>
-    <circle cx="64" cy="28" r="3.5"
-      fill="var(--piece-stroke)" stroke="none"/>
-    <path d="M34 58 L42 66 L38 72"
-      fill="none" stroke="var(--piece-stroke)"
-      stroke-width="3" stroke-linecap="round"/>
-  `,
-
-  /* پیاده */
-  p: `
-    <circle cx="50" cy="26" r="14"/>
-    <path d="
-      M39 40 H61 L57 51 L64 72
-      L74 81 L80 91 H20 L26 81
-      L36 72 L43 51 Z
-    "/>
-  `
-};
-
-function makePiece(piece) {
-  const svg = document.createElementNS(
-    "http://www.w3.org/2000/svg", "svg"
-  );
-
-  svg.setAttribute("viewBox", "0 0 100 100");
-  svg.setAttribute(
-    "class",
-    "piece-svg " +
-    (piece.color === "w" ? "white-piece" : "black-piece")
-  );
-  svg.setAttribute("aria-hidden", "true");
-
-  const isWhite = piece.color === "w";
-  const fillColor = isWhite ? "#FFF8E8" : "#17202C";
-  const strokeColor = isWhite ? "#24354A" : "#E7EDF5";
-
-  svg.style.color = fillColor;
-  svg.style.fill = fillColor;
-  svg.style.stroke = strokeColor;
-  svg.style.setProperty("--piece-stroke", strokeColor);
-
-  svg.innerHTML = pieceArt[piece.type];
-
-  return svg;
-}
-
-function visibleSquares() {
-  const files = flipped
-    ? ["h","g","f","e","d","c","b","a"]
-    : ["a","b","c","d","e","f","g","h"];
-
-  const ranks = flipped
-    ? [1,2,3,4,5,6,7,8]
-    : [8,7,6,5,4,3,2,1];
-
-  const result = [];
-
-  ranks.forEach(rank => {
-    files.forEach(file => {
-      result.push(file + rank);
-    });
-  });
-
-  return result;
-}
-
-function render() {
-  if (!game) return;
-
-  boardEl.innerHTML = "";
-  const position = game.board();
-
-  visibleSquares().forEach(sq => {
-    const file = sq.charCodeAt(0) - 97;
-    const rank = Number(sq[1]);
-    const row = 8 - rank;
-    const piece = position[row][file];
-
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className =
-      "square " +
-      ((row + file) % 2 === 0 ? "light" : "dark");
-
-    if (selected === sq) {
-      button.classList.add("selected");
-    }
-
-    if (
-      lastMove &&
-      (lastMove.from === sq || lastMove.to === sq)
-    ) {
-      button.classList.add("last");
-    }
-
-    if (legalMoves.some(m => m.to === sq)) {
-      button.classList.add("legal");
-      if (piece) button.classList.add("has-piece");
-    }
-
-    if (piece) {
-      button.appendChild(makePiece(piece));
-    }
-
-    if (file === (flipped ? 7 : 0)) {
-      const label = document.createElement("span");
-      label.className = "coordinates rank-label";
-      label.textContent = rank;
-      button.appendChild(label);
-    }
-
-    if (rank === (flipped ? 8 : 1)) {
-      const label = document.createElement("span");
-      label.className = "coordinates file-label";
-      label.textContent = sq[0];
-      button.appendChild(label);
-    }
-
-    button.addEventListener("click", () => {
-      onSquareClick(sq);
-    });
-
-    boardEl.appendChild(button);
-  });
-
-  updateInfo();
-}
-
-function onSquareClick(sq) {
-  if (!game || game.game_over()) return;
-
-  const piece = game.get(sq);
-
-  if (selected && legalMoves.some(m => m.to === sq)) {
-    const move = game.move({
-      from: selected,
-      to: sq,
-      promotion: "q"
-    });
-
-    if (move) {
-      lastMove = {
-        from: move.from,
-        to: move.to
-      };
-
-      selected = null;
-      legalMoves = [];
-      render();
-      return;
+  // ساخت گرید
+  for (let r of ranks){
+    for (let f of files){
+      boardEl.appendChild(makeSquare(f,r));
     }
   }
 
-  if (piece && piece.color === game.turn()) {
-    selected = sq;
-    legalMoves = game.moves({
-      square: sq,
-      verbose: true
-    });
-  } else {
-    selected = null;
-    legalMoves = [];
+  // مپ کاراکتر FEN به آیکون و رنگ
+  const pieceMap = {
+    'K': {id:'king', color:'white'},
+    'Q': {id:'queen', color:'white'},
+    'R': {id:'rook', color:'white'},
+    'B': {id:'bishop', color:'white'},
+    'N': {id:'knight', color:'white'},
+    'P': {id:'pawn', color:'white'},
+    'k': {id:'king', color:'black'},
+    'q': {id:'queen', color:'black'},
+    'r': {id:'rook', color:'black'},
+    'b': {id:'bishop', color:'black'},
+    'n': {id:'knight', color:'black'},
+    'p': {id:'pawn', color:'black'}
+  };
+
+  // FEN شروع
+  const startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
+  // تابع قرار دادن مهره در خانه مشخص
+  function placePiece(squareEl, pieceChar){
+    if(!pieceChar) return;
+    const mapping = pieceMap[pieceChar];
+    if(!mapping) return;
+    const holder = document.createElement('div');
+    holder.className = mapping.color + " piece";
+    holder.innerHTML = '<svg class="piece-icon" viewBox="0 0 45 45" aria-hidden="true"><use href="#'+mapping.id+'"></use></svg>';
+    squareEl.appendChild(holder);
   }
 
-  render();
-}
-
-function updateInfo() {
-  historyEl.innerHTML = "";
-  const moves = game.history();
-
-  for (let i = 0; i < moves.length; i += 2) {
-    const row = document.createElement("div");
-    row.className = "move-row";
-
-    const num = document.createElement("span");
-    num.className = "move-number";
-    num.textContent = (Math.floor(i / 2) + 1) + ".";
-
-    const white = document.createElement("span");
-    white.textContent = moves[i];
-
-    const black = document.createElement("span");
-    black.textContent = moves[i + 1] || "";
-
-    row.append(num, white, black);
-    historyEl.appendChild(row);
+  // تبدیل FEN به آرایه از خانه‌ها
+  function loadFEN(fen){
+    const rows = fen.split('/');
+    let rank = 8;
+    for(let r=0;r<rows.length;r++){
+      let fileIndex = 0;
+      const row = rows[r];
+      for(let ch of row){
+        if(/\d/.test(ch)){
+          fileIndex += parseInt(ch,10);
+        } else {
+          const file = files[fileIndex];
+          const sq = document.querySelector('[data-square="'+file+rank+'"]');
+          placePiece(sq, ch);
+          fileIndex++;
+        }
+      }
+      rank--;
+    }
   }
 
-  historyEl.scrollTop = historyEl.scrollHeight;
+  loadFEN(startFEN);
 
-  if (game.in_checkmate()) {
-    statusEl.textContent =
-      "کیش‌ومات! " +
-      (game.turn() === "w" ? "سیاه" : "سفید") +
-      " برنده شد!";
-
-    turnInfoEl.textContent = "بازی تمام شد";
-
-  } else if (game.in_draw()) {
-    statusEl.textContent = "بازی مساوی شد.";
-    turnInfoEl.textContent = "نتیجه: مساوی";
-
-  } else if (game.in_check()) {
-    statusEl.textContent = "کیش!";
-
-    turnInfoEl.textContent =
-      "نوبت " +
-      (game.turn() === "w" ? "سفید" : "سیاه");
-
-  } else {
-    statusEl.textContent =
-      "نوبت " +
-      (game.turn() === "w" ? "سفید" : "سیاه");
-
-    turnInfoEl.textContent =
-      "بازی ادامه دارد · نوبت " +
-      (game.turn() === "w" ? "سفید" : "سیاه");
-  }
-}
-
-document.getElementById("reset").addEventListener("click", () => {
-  game = new Chess();
-  selected = null;
-  legalMoves = [];
-  lastMove = null;
-  render();
-});
-
-document.getElementById("flip").addEventListener("click", () => {
-  flipped = !flipped;
-  render();
-});
-
-if (typeof Chess === "undefined") {
-  statusEl.textContent =
-    "برای بارگذاری بازی، اتصال اینترنت را بررسی کن.";
-} else {
-  game = new Chess();
-  render();
-}
+  // اگر بخواهید بعداً مهره‌ها را جابه‌جا کنید، می‌توانید این توابع را گسترش دهید.
 </script>
-
 </body>
 </html>
