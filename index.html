@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,20 +13,23 @@
   --bg: #0B1220;
   --panel: #151F30;
   --gold: #E5BD65;
-  --light: #F0E8D5;
-  --dark: #71916A;
-  --white-piece: #FFFCF2;
-  --black-piece: #17202C;
+  --light: #D6C7A5;
+  --dark: #26364A;
+  --ivory: #FFFCF2;
+  --navy-piece: #17202C;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
   padding: 18px 12px 30px;
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse at top, #17243A 0%, var(--bg) 68%);
   color: #F7F4EC;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 .app {
@@ -40,8 +42,8 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
   gap: 10px;
+  margin-bottom: 20px;
 }
 
 .brand {
@@ -52,6 +54,7 @@ header {
 }
 
 .tagline {
+  margin-top: 3px;
   color: #AAB4C3;
   font-size: 11px;
   letter-spacing: 1px;
@@ -63,6 +66,7 @@ header {
   padding: 7px 10px;
   color: #C5CFDB;
   font-size: 11px;
+  white-space: nowrap;
 }
 
 .game {
@@ -72,12 +76,15 @@ header {
   gap: 18px;
 }
 
-.board-area { min-width: 0; }
+.board-area {
+  min-width: 0;
+}
 
 .player {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 43px;
   padding: 10px 12px;
   margin: 0 0 9px;
   background: var(--panel);
@@ -86,8 +93,6 @@ header {
   font-size: 13px;
 }
 
-.player + .board-wrap { margin-top: 0; }
-
 .board-wrap {
   width: 100%;
   max-width: 650px;
@@ -95,9 +100,10 @@ header {
   padding: 4px;
   border: 1px solid #947640;
   background: #111B2B;
+  box-shadow: 0 14px 32px #00000030;
 }
 
-/* The board itself defines the exact size of every square. */
+/* Keep the original, corrected 8 x 8 board dimensions. */
 #board {
   width: 100%;
   display: grid;
@@ -125,28 +131,34 @@ header {
   appearance: none;
   overflow: hidden;
   cursor: pointer;
-  aspect-ratio: auto;
   -webkit-tap-highlight-color: transparent;
 }
 
 .square.light { background: var(--light); }
 .square.dark { background: var(--dark); }
-.square.last { background: #D8CC91; }
-.square.last.dark { background: #9BAE70; }
+
+.square.last.light { background: #C5B581; }
+.square.last.dark { background: #3C5266; }
 
 .square.selected {
-  box-shadow: inset 0 0 0 4px var(--gold);
+  box-shadow: inset 0 0 0 3px var(--gold);
   z-index: 1;
 }
 
-.square.check { background: #C84E4E !important; }
+.square.check {
+  background: #A94C4C !important;
+}
 
+/* Minimal, consistent digital pieces */
 .piece {
   display: block;
   width: 88%;
   height: 88%;
-  pointer-events: none;
+  max-width: 100%;
+  max-height: 100%;
   overflow: visible;
+  pointer-events: none;
+  flex: 0 0 auto;
 }
 
 .coord {
@@ -160,22 +172,22 @@ header {
   pointer-events: none;
 }
 
-.light .coord { color: #56754F; }
-.dark .coord { color: #F8F0DF; }
+.light .coord { color: #445B4B; }
+.dark .coord { color: #E8DFCB; }
 
 .dot {
   position: absolute;
-  width: 25%;
-  height: 25%;
+  width: 24%;
+  height: 24%;
   border-radius: 50%;
-  background: #14203366;
+  background: #0B122055;
   pointer-events: none;
 }
 
 .capture-mark {
   position: absolute;
-  inset: 4%;
-  border: 4px solid #14203355;
+  inset: 5%;
+  border: 4px solid #0B122044;
   border-radius: 50%;
   pointer-events: none;
 }
@@ -212,7 +224,9 @@ button.action.primary {
   font-weight: 800;
 }
 
-button.action:active { transform: scale(.98); }
+button.action:active {
+  transform: scale(.98);
+}
 
 .sidebar {
   display: flex;
@@ -261,7 +275,9 @@ button.action:active { transform: scale(.98); }
   background: #FFFFFF08;
 }
 
-.move-number { color: #8D9AAD; }
+.move-number {
+  color: #8D9AAD;
+}
 
 .empty {
   padding: 20px 10px;
@@ -277,7 +293,9 @@ footer {
   letter-spacing: 1px;
 }
 
-footer strong { color: var(--gold); }
+footer strong {
+  color: var(--gold);
+}
 
 #error {
   display: none;
@@ -286,35 +304,52 @@ footer strong { color: var(--gold); }
   border: 1px solid #9B4949;
   border-radius: 10px;
   color: #FFD9D9;
+  line-height: 1.7;
 }
 
 @media (max-width: 680px) {
-  body { padding: 13px 9px 25px; }
+  body {
+    padding: 13px 9px 25px;
+  }
 
   .game {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
   }
 
-  .brand { font-size: 23px; }
+  .brand {
+    font-size: 23px;
+  }
 
   .board-wrap {
     max-width: 620px;
   }
 
-  .sidebar { gap: 12px; }
-  #history { max-height: 180px; }
+  .sidebar {
+    gap: 12px;
+  }
+
+  #history {
+    max-height: 180px;
+  }
 }
 
 @media (max-width: 350px) {
-  body { padding-left: 5px; padding-right: 5px; }
-  .board-wrap { padding: 2px; }
+  body {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+  .board-wrap {
+    padding: 2px;
+  }
 }
 </style>
 </head>
 
 <body>
 <div class="app">
+
   <header>
     <div>
       <div class="brand">♚ KINGSFALL</div>
@@ -324,7 +359,9 @@ footer strong { color: var(--gold); }
   </header>
 
   <main class="game">
+
     <section class="board-area">
+
       <div class="player">
         <span>♚ &nbsp; Black</span>
         <span id="blackTurn"></span>
@@ -336,7 +373,7 @@ footer strong { color: var(--gold); }
 
       <div class="player" style="margin-top:9px">
         <span>♔ &nbsp; White</span>
-        <span id="whiteTurn">●</span>
+        <span id="whiteTurn">● Your turn</span>
       </div>
 
       <div class="message" id="message">White to move</div>
@@ -350,6 +387,7 @@ footer strong { color: var(--gold); }
     </section>
 
     <aside class="sidebar">
+
       <section class="panel">
         <div class="panel-title">Game Status</div>
         <div class="panel-body" id="status">
@@ -360,7 +398,9 @@ footer strong { color: var(--gold); }
 
       <section class="panel">
         <div class="panel-title">Move History</div>
-        <div id="history"><div class="empty">No moves yet</div></div>
+        <div id="history">
+          <div class="empty">No moves yet</div>
+        </div>
       </section>
 
       <section class="panel">
@@ -371,108 +411,205 @@ footer strong { color: var(--gold); }
           Pawns promote to queens automatically.
         </div>
       </section>
+
     </aside>
   </main>
 
-  <footer><strong>KINGSFALL</strong> · EVERY KING CAN FALL.</footer>
+  <footer>
+    <strong>KINGSFALL</strong> · EVERY KING CAN FALL.
+  </footer>
+
 </div>
 
 <script>
 (() => {
+  "use strict";
+
   const board = document.getElementById("board");
   const message = document.getElementById("message");
   const status = document.getElementById("status");
-  const history = document.getElementById("history");
+  const historyElement = document.getElementById("history");
+  const errorElement = document.getElementById("error");
 
   if (typeof Chess === "undefined") {
-    document.getElementById("error").style.display = "block";
-    document.getElementById("error").textContent =
-      "Chess rules failed to load. Check your internet connection and reload.";
+    errorElement.style.display = "block";
+    errorElement.textContent =
+      "Chess rules could not load. Check your internet connection and reload.";
     return;
   }
 
   const game = new Chess();
   const files = "abcdefgh";
+
   let flipped = false;
   let selected = null;
   let targets = [];
   let lastMove = null;
 
   /*
-    Classic Staunton-inspired piece silhouettes.
-    Each SVG uses the same viewBox and fits inside its square.
+    Kingsfall Minimal Piece Set
+    Common SVG viewBox and consistent visual weight.
+    Ivory pieces: warm ivory fill, navy outline.
+    Dark pieces: navy fill, soft ivory outline.
   */
+
   const shapes = {
+
+    /* King: crown-like top with a clear cross */
     k: `
-      <path d="M44 8h12v11h11v10H56v9
-      c2 7 7 12 10 20l8 18 7 5v7H19v-7l7-5
-      8-18c3-8 8-13 10-20v-9H33V19h11z"/>
-      <path d="M50 1v15M43 8h14"
-      fill="none" stroke="currentColor" stroke-width="4"/>`,
+      <path d="
+        M44 17 H56 V28 H67 V38 H59
+        C60 47 65 55 70 64
+        L77 77 L85 82 V88 H15 V82
+        L23 77 L30 64 C35 55 40 47 41 38
+        H33 V28 H44 Z"/>
+      <path d="M50 3 V21 M41 12 H59"
+        fill="none" stroke="currentColor"
+        stroke-width="5" stroke-linecap="round"/>
+      <path d="M34 49 H66"
+        fill="none" stroke="currentColor"
+        stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M27 77 H73"
+        fill="none" stroke="currentColor"
+        stroke-width="3" stroke-linecap="round"/>
+    `,
+
+    /* Queen: five visible crown points */
     q: `
-      <path d="M19 28l12 25 7-28 12 25 12-25 7 28
-      12-25-7 44H26z"/>
-      <circle cx="19" cy="22" r="5"/>
-      <circle cx="38" cy="19" r="5"/>
-      <circle cx="50" cy="14" r="5"/>
-      <circle cx="62" cy="19" r="5"/>
-      <circle cx="81" cy="22" r="5"/>
-      <path d="M24 76h52l5 10H19z"/>`,
+      <path d="
+        M18 28 L29 50 L36 31 L50 48
+        L64 31 L71 50 L82 28
+        L75 72 H25 Z"/>
+      <circle cx="18" cy="22" r="6"/>
+      <circle cx="36" cy="24" r="6"/>
+      <circle cx="50" cy="17" r="6"/>
+      <circle cx="64" cy="24" r="6"/>
+      <circle cx="82" cy="22" r="6"/>
+      <path d="M23 77 H77 L82 88 H18 Z"/>
+      <path d="M31 56 H69"
+        fill="none" stroke="currentColor"
+        stroke-width="3" stroke-linecap="round"/>
+    `,
+
+    /* Rook: unmistakable crenellated castle tower */
     r: `
-      <path d="M23 14h13v10h8V14h12v10h8V14h13l-3 29
-      -6 5 4 27H28l4-27-6-5z"/>
-      <path d="M34 47h32M31 75h38"
-      fill="none" stroke="currentColor" stroke-width="3"/>`,
+      <path d="
+        M21 13 H36 V25 H43 V13 H57 V25
+        H64 V13 H79 L76 42 L68 49
+        L72 76 H28 L32 49 L24 42 Z"/>
+      <path d="M31 48 H69 M31 76 H69"
+        fill="none" stroke="currentColor"
+        stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M38 52 V69 M50 52 V69 M62 52 V69"
+        fill="none" stroke="currentColor"
+        stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M21 80 H79 L84 88 H16 Z"/>
+    `,
+
+    /* Bishop: mitre and a clearly visible diagonal slit */
     b: `
-      <path d="M50 12c-12 0-17 12-10 22 4 5 4 10-2 17
-      -6 7-9 15-11 24h46c-2-9-5-17-11-24-6-7-6-12-2-17
-      7-10 2-22-10-22z"/>
-      <path d="M57 18L43 38"
-      fill="none" stroke="currentColor" stroke-width="4"/>
-      <path d="M23 78h54l5 9H18z"/>`,
+      <path d="
+        M50 10
+        C39 10 33 20 38 31
+        C41 37 44 41 41 47
+        C38 53 31 61 28 73
+        H72 C69 61 62 53 59 47
+        C56 41 59 37 62 31
+        C67 20 61 10 50 10 Z"/>
+      <path d="M57 17 L43 39"
+        fill="none" stroke="currentColor"
+        stroke-width="5" stroke-linecap="round"/>
+      <path d="M34 57 H66"
+        fill="none" stroke="currentColor"
+        stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M23 77 H77 L83 88 H17 Z"/>
+    `,
+
+    /* Knight: recognizable horse head, ears, muzzle and mane */
     n: `
-      <path d="M23 83l4-17c-3-12 2-24 12-32l12-14
-      13-5 7 12 10 7-5 10-14 1-7 11 10 9 7 18z"/>
-      <path d="M39 34l-4 15 13-7 4-9-8-6z"/>
-      <circle cx="61" cy="30" r="3.5"
-      fill="currentColor" stroke="none"/>
-      <path d="M31 70h29"
-      fill="none" stroke="currentColor" stroke-width="3"/>`,
+      <path d="
+        M23 83 L25 68
+        C21 58 24 48 32 40
+        L42 29 L49 15
+        L61 20 L67 30
+        L79 37 L74 47
+        L63 48 L57 58
+        L67 67 L75 83 Z"/>
+      <path d="
+        M42 29 L32 40 L43 43
+        L51 34 L49 15 Z"/>
+      <path d="M57 24 L61 34 L68 30 Z"/>
+      <path d="M66 39 L77 40 L72 45 L63 44 Z"/>
+      <circle cx="60" cy="34" r="3.5"
+        fill="currentColor" stroke="none"/>
+      <path d="M32 58 L43 53 L49 58"
+        fill="none" stroke="currentColor"
+        stroke-width="3" stroke-linecap="round"
+        stroke-linejoin="round"/>
+      <path d="M29 72 H61"
+        fill="none" stroke="currentColor"
+        stroke-width="3" stroke-linecap="round"/>
+    `,
+
+    /* Pawn: clean ball head, neck and rounded body */
     p: `
-      <circle cx="50" cy="26" r="12"/>
-      <path d="M42 39c-1 8-5 14-11 22l-7 14h52l-7-14
-      c-6-8-10-14-11-22z"/>
-      <path d="M22 78h56l5 9H17z"/>`
+      <circle cx="50" cy="25" r="13"/>
+      <path d="
+        M43 39
+        C43 47 39 54 33 62
+        L26 74 H74 L67 62
+        C61 54 57 47 57 39 Z"/>
+      <path d="M22 78 H78 L83 88 H17 Z"/>
+      <path d="M37 68 H63"
+        fill="none" stroke="currentColor"
+        stroke-width="3" stroke-linecap="round"/>
+    `
   };
 
-  function pieceSVG(piece) {
-    const white = piece.color === "w";
-    const fill = white ? "#FFFCF2" : "#17202C";
-    const stroke = white ? "#243047" : "#F1EBDD";
+  function createPieceSVG(piece) {
+    const isWhite = piece.color === "w";
+    const fill = isWhite ? "#FFFCF2" : "#17202C";
+    const stroke = isWhite ? "#26364A" : "#F0E8D5";
+
     return `
-      <svg class="piece" viewBox="0 0 100 100"
-           aria-hidden="true" focusable="false">
-        <g fill="${fill}" stroke="${stroke}" stroke-width="2.8"
-           stroke-linejoin="round" stroke-linecap="round">
+      <svg class="piece"
+           viewBox="0 0 100 100"
+           xmlns="http://www.w3.org/2000/svg"
+           aria-hidden="true"
+           focusable="false">
+        <g fill="${fill}"
+           stroke="${stroke}"
+           stroke-width="2.6"
+           stroke-linejoin="round"
+           stroke-linecap="round">
           ${shapes[piece.type]}
         </g>
-      </svg>`;
+      </svg>
+    `;
   }
 
-  function kingSquare(color) {
+  function findKingSquare(color) {
     for (const file of files) {
       for (let rank = 1; rank <= 8; rank++) {
-        const sq = file + rank;
-        const p = game.get(sq);
-        if (p && p.type === "k" && p.color === color) return sq;
+        const squareName = file + rank;
+        const piece = game.get(squareName);
+
+        if (piece && piece.type === "k" &&
+            piece.color === color) {
+          return squareName;
+        }
       }
     }
+
     return null;
   }
 
-  function drawBoard() {
+  function renderBoard() {
     board.innerHTML = "";
-    const checkKing = game.in_check() ? kingSquare(game.turn()) : null;
+
+    const checkedKing = game.in_check()
+      ? findKingSquare(game.turn())
+      : null;
 
     for (let row = 0; row < 8; row++) {
       const rank = flipped ? row + 1 : 8 - row;
@@ -480,86 +617,121 @@ footer strong { color: var(--gold); }
       for (let col = 0; col < 8; col++) {
         const fileIndex = flipped ? 7 - col : col;
         const file = files[fileIndex];
-        const sqName = file + rank;
-        const sq = document.createElement("button");
-        sq.type = "button";
-        sq.className = "square";
-        sq.dataset.sq = sqName;
-        sq.setAttribute("aria-label", sqName);
+        const squareName = file + rank;
+
+        const square = document.createElement("button");
+        square.type = "button";
+        square.className = "square";
+        square.dataset.square = squareName;
+        square.setAttribute("aria-label", squareName);
 
         const isLight = (fileIndex + rank) % 2 === 1;
-        sq.classList.add(isLight ? "light" : "dark");
+        square.classList.add(isLight ? "light" : "dark");
 
-        if (lastMove && (sqName === lastMove.from ||
-                         sqName === lastMove.to)) {
-          sq.classList.add("last");
+        if (lastMove &&
+            (squareName === lastMove.from ||
+             squareName === lastMove.to)) {
+          square.classList.add("last");
         }
-        if (sqName === selected) sq.classList.add("selected");
-        if (sqName === checkKing) sq.classList.add("check");
 
-        const piece = game.get(sqName);
-        if (piece) sq.insertAdjacentHTML("beforeend", pieceSVG(piece));
+        if (squareName === selected) {
+          square.classList.add("selected");
+        }
 
-        if (targets.includes(sqName)) {
+        if (squareName === checkedKing) {
+          square.classList.add("check");
+        }
+
+        const piece = game.get(squareName);
+
+        if (piece) {
+          square.insertAdjacentHTML(
+            "beforeend",
+            createPieceSVG(piece)
+          );
+        }
+
+        if (targets.includes(squareName)) {
           const marker = document.createElement("span");
           marker.className = piece ? "capture-mark" : "dot";
-          sq.appendChild(marker);
+          square.appendChild(marker);
         }
 
         const showFile = flipped ? rank === 1 : rank === 8;
         const showRank = flipped ? fileIndex === 7 : fileIndex === 0;
 
         if (showFile || showRank) {
-          const coord = document.createElement("span");
-          coord.className = "coord";
-          coord.textContent = showFile && showRank
-            ? file + rank
-            : showFile ? file : String(rank);
-          sq.appendChild(coord);
+          const coordinate = document.createElement("span");
+          coordinate.className = "coord";
+          coordinate.textContent =
+            showFile && showRank ? file + rank :
+            showFile ? file : String(rank);
+          square.appendChild(coordinate);
         }
 
-        sq.addEventListener("click", () => clickSquare(sqName));
-        board.appendChild(sq);
+        square.addEventListener("click", () => {
+          handleSquareClick(squareName);
+        });
+
+        board.appendChild(square);
       }
     }
 
-    drawStatus();
-    drawHistory();
+    renderStatus();
+    renderHistory();
   }
 
-  function clickSquare(sq) {
+  function handleSquareClick(squareName) {
     if (game.game_over()) return;
 
-    if (selected && targets.includes(sq)) {
+    if (selected && targets.includes(squareName)) {
       let result = null;
-      try {
-        result = game.move({ from: selected, to: sq, promotion: "q" });
-      } catch (_) {}
 
-      if (result) lastMove = { from: result.from, to: result.to };
+      try {
+        result = game.move({
+          from: selected,
+          to: squareName,
+          promotion: "q"
+        });
+      } catch (error) {
+        result = null;
+      }
+
+      if (result) {
+        lastMove = {
+          from: result.from,
+          to: result.to
+        };
+      }
+
       selected = null;
       targets = [];
-      drawBoard();
+      renderBoard();
       return;
     }
 
-    const piece = game.get(sq);
+    const piece = game.get(squareName);
+
     if (piece && piece.color === game.turn()) {
-      selected = sq;
-      targets = game.moves({ square: sq, verbose: true })
-        .map(move => move.to);
+      selected = squareName;
+      targets = game.moves({
+        square: squareName,
+        verbose: true
+      }).map(move => move.to);
     } else {
       selected = null;
       targets = [];
     }
 
-    drawBoard();
+    renderBoard();
   }
 
-  function drawStatus() {
+  function renderStatus() {
     const turn = game.turn() === "w" ? "White" : "Black";
+
     document.getElementById("whiteTurn").textContent =
       game.turn() === "w" ? "● Your turn" : "";
+
     document.getElementById("blackTurn").textContent =
       game.turn() === "b" ? "● Your turn" : "";
 
@@ -578,16 +750,18 @@ footer strong { color: var(--gold); }
       status.textContent = turn + " is in check.";
     } else {
       message.textContent = turn + " to move";
-      status.textContent = turn + " to move. Select a piece to see legal moves.";
+      status.textContent =
+        turn + " to move. Select a piece to see legal moves.";
     }
   }
 
-  function drawHistory() {
+  function renderHistory() {
     const moves = game.history();
-    history.innerHTML = "";
+    historyElement.innerHTML = "";
 
-    if (!moves.length) {
-      history.innerHTML = '<div class="empty">No moves yet</div>';
+    if (moves.length === 0) {
+      historyElement.innerHTML =
+        '<div class="empty">No moves yet</div>';
       return;
     }
 
@@ -599,17 +773,17 @@ footer strong { color: var(--gold); }
       number.className = "move-number";
       number.textContent = (Math.floor(i / 2) + 1) + ".";
 
-      const white = document.createElement("span");
-      white.textContent = moves[i];
+      const whiteMove = document.createElement("span");
+      whiteMove.textContent = moves[i];
 
-      const black = document.createElement("span");
-      black.textContent = moves[i + 1] || "";
+      const blackMove = document.createElement("span");
+      blackMove.textContent = moves[i + 1] || "";
 
-      row.append(number, white, black);
-      history.appendChild(row);
+      row.append(number, whiteMove, blackMove);
+      historyElement.appendChild(row);
     }
 
-    history.scrollTop = history.scrollHeight;
+    historyElement.scrollTop = historyElement.scrollHeight;
   }
 
   document.getElementById("reset").addEventListener("click", () => {
@@ -617,17 +791,17 @@ footer strong { color: var(--gold); }
     selected = null;
     targets = [];
     lastMove = null;
-    drawBoard();
+    renderBoard();
   });
 
   document.getElementById("flip").addEventListener("click", () => {
     flipped = !flipped;
     selected = null;
     targets = [];
-    drawBoard();
+    renderBoard();
   });
 
-  drawBoard();
+  renderBoard();
 })();
 </script>
 </body>
