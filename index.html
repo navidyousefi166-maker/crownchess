@@ -385,8 +385,8 @@ function pieceShape(type) {
 
   return shapes[type] || shapes.p;
 }
-
-function makePiece(piece) {
+  
+  function makePiece(piece) {
   const white = piece.color === "w";
   const fill = white ? "#F0DCC0" : "#17202C";
   const stroke = white ? "#24354A" : "#E7EDF5";
@@ -397,7 +397,6 @@ function makePiece(piece) {
 
   svg.setAttribute("viewBox", "0 0 100 100");
   svg.setAttribute("class", "piece-svg");
-  svg.setAttribute("aria-hidden", "true");
 
   const path = document.createElementNS(
     "http://www.w3.org/2000/svg", "path"
@@ -408,11 +407,10 @@ function makePiece(piece) {
   path.setAttribute("stroke", stroke);
   path.setAttribute("stroke-width", "2.5");
   path.setAttribute("stroke-linejoin", "round");
-  path.setAttribute("stroke-linecap", "round");
 
   svg.appendChild(path);
   return svg;
-}
+  }
 
 function render() {
   if (!game) return;
