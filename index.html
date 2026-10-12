@@ -6,143 +6,154 @@
 <title>صفحه شطرنج با مهره‌های سفارشی</title>
 <style>
   :root{
-    --light-square: #f0d9b5; /* رنگ صفحه روشن */
-    --dark-square: #b58863;  /* رنگ صفحه تیره */
-    --ivory: #F6F1E6;        /* عاجی برای مهره‌های سفید */
-    --black-piece: #212121;  /* رنگ مهره‌های سیاه */
-    --board-bg: #3b2f22;     /* حاشیه دور صفحه */
-    --board-gap: 6px;        /* فاصله بین خانه‌ها برای تاکید حدها */
+    --light-square: #f0d9b5;
+    --dark-square: #b58863;
+    --ivory: #F6F1E6;
+    --black-piece: #111111;
+    --board-bg: #3b2f22;
+    --gap: 6px;
+    --board-size: min(92vmin, 640px);
   }
 
   html,body{height:100%;margin:0;font-family:Tahoma, Arial, sans-serif;background:#efe8de;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
 
   /* قاب کلی */
   .board-wrap{
-    background:linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.05));
-    padding:16px;
+    background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(255,255,255,0.02));
+    padding:14px;
     border-radius:14px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.35), inset 0 2px 0 rgba(255,255,255,0.04);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.25);
     border:6px solid var(--board-bg);
   }
 
-  /* خود صفحه شطرنج: گرید 8x8 */
+  /* صفحه شطرنج: واکنش‌گرا و مربع */
   .board{
+    width: var(--board-size);
+    height: var(--board-size);
     display:grid;
-    grid-template-columns: repeat(8, 64px);
-    grid-template-rows: repeat(8, 64px);
-    gap: var(--board-gap);
-    background: #0000; /* شفاف، فاصله خانه‌ها را نشان می‌دهد */
+    grid-template-columns: repeat(8, 1fr);
+    grid-auto-rows: 1fr;
+    gap: var(--gap);
     padding:10px;
     border-radius:10px;
+    background: transparent;
+    box-sizing:border-box;
   }
 
-  /* هر خانه */
+  /* هر خانه همیشه مربعی و یک اندازه */
   .square{
-    width:64px;height:64px;
+    width:100%;
+    height:100%;
+    aspect-ratio: 1 / 1; /* تضمین مربع بودن */
     display:flex;
-    align-items:center;justify-content:center;
+    align-items:center;
+    justify-content:center;
     border-radius:8px;
     box-sizing:border-box;
     position:relative;
-    transition:transform .12s ease, box-shadow .12s;
+    overflow:visible;
     user-select:none;
   }
 
   .square.light{ background: var(--light-square); }
-  .square.dark{  background: var(--dark-square);  }
+  .square.dark { background: var(--dark-square); }
 
-  /* هایلایت حاشیه داخلی خانه‌ها (حد جدید) */
+  /* حد داخلی خانه (در پشت مهره‌ها) */
   .square::after{
     content:"";
-    position:absolute;inset:4px;border-radius:6px;
+    position:absolute;
+    inset:4px;
+    border-radius:6px;
     pointer-events:none;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -3px 6px rgba(0,0,0,0.08);
-    opacity:0.9;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), inset 0 -4px 8px rgba(0,0,0,0.06);
+    z-index:1;
   }
 
-  /* مهره‌ها */
+  /* مهره‌ها همیشه بالای حد‌ها */
   .piece{
-    width:56px;height:56px;display:flex;align-items:center;justify-content:center;
+    width:86%;
+    height:86%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    z-index:2;
     transform: translateY(0);
+    transition: transform .12s ease, box-shadow .12s ease;
+    cursor:grab;
   }
 
-  /* آیکون مبتنی بر SVG که رنگ را از currentColor می‌گیرد */
-  .piece svg{
-    width:56px;height:56px;
-    display:block;
-  }
+  .piece:active{ cursor:grabbing; }
 
-  /* رنگ‌دهی برای سفید/سیاه */
-  .white .piece-icon{ color: var(--ivory); stroke: #6b5e3c; stroke-width:1.2; }
-  .black .piece-icon{ color: var(--black-piece); stroke: rgba(255,255,255,0.02); stroke-width:1.0; }
+  /* آیکون SVG پرکننده فقط با currentColor */
+  .piece svg{ width:100%; height:100%; display:block; fill:currentColor; }
+
+  /* رنگ‌دهی یکنواخت برای سفید و سیاه */
+  .white .piece-icon{ color: var(--ivory); }
+  .black .piece-icon{ color: var(--black-piece); }
 
   /* سایه و برجستگی مهره‌ها */
-  .white .piece{ filter: drop-shadow(0 3px 2px rgba(0,0,0,.15)); }
-  .black .piece{ filter: drop-shadow(0 4px 3px rgba(0,0,0,.45)); }
+  .white .piece{ filter: drop-shadow(0 4px 6px rgba(0,0,0,0.18)); }
+  .black .piece{ filter: drop-shadow(0 5px 6px rgba(0,0,0,0.45)); }
 
-  /* افکت قرار گرفتن موس روی مهره‌ها */
-  .piece:hover{ transform: translateY(-4px); transition: transform .08s ease; cursor:grab; }
+  .piece:hover{ transform: translateY(-4px); }
 
-  /* شماره‌گذاری ستون/ردیف (اختیاری) */
+  /* ستون‌ها (اختیاری) */
   .coords{ margin-top:10px; display:flex;justify-content:center;gap:6px;color:#3b2f22 }
-  .coords span{ width:64px;text-align:center;font-weight:600;opacity:.8 }
+  .coords span{ width:calc(var(--board-size) / 8 - var(--gap)); text-align:center;font-weight:600;opacity:.9 }
 
-  /* توضیح کوتاه در پایین */
   .note{ margin-top:12px;text-align:center;color:#5b4937; font-size:14px; }
 </style>
 </head>
 <body>
   <div class="board-wrap" role="main" aria-label="صفحه شطرنج">
-    <!-- SVG symbols (آیکون‌ها) -->
+    <!-- SVG symbols: همه به صورت fill-only (رفع مشکل خطوط و رنگ نامتجانس) -->
     <svg width="0" height="0" style="position:absolute">
       <defs>
-        <!-- King: تاج و صلیب -->
+        <!-- King: ساده و خوانا -->
         <symbol id="king" viewBox="0 0 45 45">
-          <g fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
-            <path d="M22.5 11.5v-6" stroke-width="2.5"/>
-            <path d="M20 6h5" stroke-width="2.5"/>
-            <path d="M8 30c6-6 14-8 14-8s8 2 14 8c-7 4-14 4-14 4s-7 0-14-4z" stroke-width="1.2" fill="currentColor"/>
-            <path d="M11 28c6-6 12-6 12-6s6 0 12 6" stroke-width="1.2" fill="none"/>
-            <circle cx="22.5" cy="25" r="2.2" fill="rgba(0,0,0,0.06)" />
+          <g>
+            <path d="M22.5 4c-0.8 0-1.5 0.7-1.5 1.5V8h-4c-0.8 0-1.4 0.6-1.4 1.4v2.6c0 0.8 0.6 1.4 1.4 1.4h4v2.1c0 0.8 0.7 1.5 1.5 1.5s1.5-0.7 1.5-1.5V13h4c0.8 0 1.4-0.6 1.4-1.4V9.4c0-0.8-0.6-1.4-1.4-1.4h-4V5.5C24 4.7 23.3 4 22.5 4zM12 30c3-5 8-7 10-7s7 2 10 7c-7 5-13 5-13 5s-6 0-13-5z"/>
+            <circle cx="22.5" cy="22" r="2.2" opacity="0.06" fill="#000"/>
           </g>
         </symbol>
 
-        <!-- Bishop: کلاهک مورب (میتر) -->
+        <!-- Bishop: میتر ساده -->
         <symbol id="bishop" viewBox="0 0 45 45">
-          <g fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
-            <path d="M22.5 10c-3 3-10 10-10 16 0 6 8 8 10 8s10-2 10-8c0-6-7-13-10-16z" stroke-width="1.2" />
-            <path d="M18 18c2-2 5-2 7 0" stroke-width="1.6" fill="none" stroke="#ffffff50"/>
-            <path d="M22.5 6v6" stroke-width="2.2" />
-            <circle cx="22.5" cy="27" r="1.8" fill="rgba(0,0,0,0.06)"/>
+          <g>
+            <path d="M22.5 8c-5 5-12 12-12 18 0 5 7 7 12 7s12-2 12-7c0-6-7-13-12-18z"/>
+            <path d="M22.5 6v6" fill="#000" opacity="0.06"/>
           </g>
         </symbol>
 
-        <!-- Knight: سر اسب (ساده‌شده) -->
+        <!-- Knight: سر اسب واضح و بدون stroke -->
         <symbol id="knight" viewBox="0 0 45 45">
-          <g fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
-            <path d="M10 30c2-8 12-11 12-11s-1-5 3-8c3-2 7-1 9 1 0 0-2 3-4 5-3 3-1 7-1 7s5 1 6 5c1 4-4 7-4 7s-6 0-16 0c-1 0-3-2-5-5z" stroke-width="1.1"/>
-            <circle cx="22" cy="18" r="1.6" fill="#fff3"/>
+          <g>
+            <path d="M10 30c2-8 12-11 12-11s-1-5 3-8c3-2 7-1 9 1 0 0-2 3-4 5-3 3-1 7-1 7s5 1 6 5c1 4-4 7-4 7s-6 0-16 0c-1 0-3-2-5-5z"/>
+            <circle cx="22.5" cy="18.5" r="1.6" opacity="0.12" fill="#000"/>
           </g>
         </symbol>
 
-        <!-- Other simple pieces (rook, queen, pawn) -->
+        <!-- Rook -->
         <symbol id="rook" viewBox="0 0 45 45">
-          <g fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
-            <rect x="12" y="12" width="21" height="4" rx="0.8" />
-            <path d="M12 16v11c0 2 2 4 4 4h13c2 0 4-2 4-4V16" stroke-width="1.1" fill="currentColor"/>
+          <g>
+            <rect x="12" y="12" width="21" height="4" rx="0.8"/>
+            <path d="M12 16v11c0 2 2 4 4 4h13c2 0 4-2 4-4V16" />
             <rect x="14" y="28" width="17" height="4" rx="1"/>
           </g>
         </symbol>
 
+        <!-- Queen -->
         <symbol id="queen" viewBox="0 0 45 45">
-          <g fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
-            <path d="M8 30c6-7 13-9 14-9s8 2 14 9c-7 4-14 4-14 4s-7 0-14-4z" stroke-width="1.1"/>
-            <path d="M22.5 13c-2 2-3 6-3 6s2 1 3 1 3-1 3-1-1-4-3-6z" stroke-width="1.2"/>
+          <g>
+            <path d="M8 30c6-7 13-9 14-9s8 2 14 9c-7 4-14 4-14 4s-7 0-14-4z"/>
+            <path d="M22.5 13c-2 2-3 6-3 6s2 1 3 1 3-1 3-1-1-4-3-6z" opacity="0.06" fill="#000"/>
           </g>
         </symbol>
 
+        <!-- Pawn -->
         <symbol id="pawn" viewBox="0 0 45 45">
-          <g fill="currentColor" stroke="currentColor">
+          <g>
             <circle cx="22.5" cy="15" r="4.8"/>
             <path d="M14 32c4-3 12-3 17 0-6 4-11 4-17 0z" />
           </g>
@@ -158,18 +169,14 @@
       <span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span>
     </div>
 
-    <div class="note">اگر می‌خواهید شکل اسب/فیل/شاه دقیق‌تر یا بزرگ‌تر باشد بگویید تا مسیر SVG را اصلاح کنم.</div>
+    <div class="note">برای تغییر اندازه مهره‌ها، رنگ عاجی یا جزئیات بیشتر در SVGها بگو تا ویرایش کنم.</div>
   </div>
 
 <script>
-  // ساختار صفحه و قرار دادن مهره‌ها با FEN استاندارد شروع
   const boardEl = document.getElementById('board');
-
-  // تولید لیست خانه‌ها از a8 تا h1
   const files = ['a','b','c','d','e','f','g','h'];
   const ranks = [8,7,6,5,4,3,2,1];
 
-  // تابع کمکی برای ساخت عنصر خانه
   function makeSquare(file,rank) {
     const sq = document.createElement('div');
     const index = (files.indexOf(file) + ranks.indexOf(rank)) % 2;
@@ -180,14 +187,14 @@
     return sq;
   }
 
-  // ساخت گرید
+  // ساخت گرید (پاک و سپس اضافه)
+  boardEl.innerHTML = '';
   for (let r of ranks){
     for (let f of files){
       boardEl.appendChild(makeSquare(f,r));
     }
   }
 
-  // مپ کاراکتر FEN به آیکون و رنگ
   const pieceMap = {
     'K': {id:'king', color:'white'},
     'Q': {id:'queen', color:'white'},
@@ -203,21 +210,20 @@
     'p': {id:'pawn', color:'black'}
   };
 
-  // FEN شروع
   const startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
-  // تابع قرار دادن مهره در خانه مشخص
   function placePiece(squareEl, pieceChar){
-    if(!pieceChar) return;
+    if(!pieceChar || !squareEl) return;
     const mapping = pieceMap[pieceChar];
     if(!mapping) return;
     const holder = document.createElement('div');
     holder.className = mapping.color + " piece";
     holder.innerHTML = '<svg class="piece-icon" viewBox="0 0 45 45" aria-hidden="true"><use href="#'+mapping.id+'"></use></svg>';
+    // پاک کردن مهره قبلی (در صورت بارگذاری مجدد)
+    squareEl.innerHTML = '';
     squareEl.appendChild(holder);
   }
 
-  // تبدیل FEN به آرایه از خانه‌ها
   function loadFEN(fen){
     const rows = fen.split('/');
     let rank = 8;
@@ -239,8 +245,6 @@
   }
 
   loadFEN(startFEN);
-
-  // اگر بخواهید بعداً مهره‌ها را جابه‌جا کنید، می‌توانید این توابع را گسترش دهید.
 </script>
 </body>
 </html>
