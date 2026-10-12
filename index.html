@@ -9,232 +9,158 @@
 
 <style>
 :root {
-  --bg: #0B1220;
-  --panel: #182438;
-  --gold: #E5BD65;
-  --text: #E7EDF5;
-  --muted: #9BAFC4;
-  --light: #F0DCC0;
-  --dark: #557C68;
+  --bg:#0B1220;
+  --panel:#182438;
+  --gold:#E5BD65;
+  --text:#E7EDF5;
+  --muted:#9BAFC4;
+  --light:#F0DCC0;
+  --dark:#557C68;
 }
-
-* { box-sizing: border-box; }
-
+* { box-sizing:border-box; }
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Arial, sans-serif;
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
 }
-
-header {
-  text-align: center;
-  padding: 22px 12px 12px;
-}
-
-.logo {
-  color: var(--gold);
-  font-size: 30px;
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-
-.subtitle {
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 6px;
-}
-
-main {
-  width: min(100% - 24px, 850px);
-  margin: 0 auto 35px;
-}
-
+header { text-align:center; padding:22px 12px 14px; }
+.logo { color:var(--gold); font-size:30px; font-weight:800; }
+.subtitle { color:var(--muted); font-size:13px; margin-top:6px; }
+main { width:min(100% - 24px,850px); margin:0 auto 30px; }
 .layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(200px, 0.65fr);
-  gap: 16px;
-  align-items: start;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(190px,.65fr);
+  gap:16px;
+  align-items:start;
 }
-
 .panel {
-  background: var(--panel);
-  border: 1px solid #2A3A50;
-  border-radius: 14px;
-  padding: 14px;
+  background:var(--panel);
+  border:1px solid #2A3A50;
+  border-radius:14px;
+  padding:14px;
 }
-
 .status {
-  color: var(--gold);
-  font-weight: bold;
-  text-align: center;
-  padding: 10px 4px 14px;
-  min-height: 43px;
+  color:var(--gold);
+  text-align:center;
+  font-weight:bold;
+  min-height:42px;
+  padding:10px 2px;
 }
-
 .board {
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  width: 100%;
-  aspect-ratio: 1;
-  overflow: hidden;
-  border: 3px solid #24354A;
-  border-radius: 5px;
+  display:grid;
+  grid-template-columns:repeat(8,minmax(0,1fr));
+  width:100%;
+  aspect-ratio:1;
+  border:3px solid #24354A;
+  border-radius:4px;
+  overflow:hidden;
 }
-
 .square {
-  position: relative;
-  border: 0;
-  border-radius: 0;
-  padding: 0;
-  margin: 0;
-  min-width: 0;
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  position:relative;
+  min-width:0;
+  min-height:0;
+  aspect-ratio:1;
+  padding:0;
+  margin:0;
+  border:0;
+  border-radius:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
 }
-
-.square.light { background: var(--light); }
-.square.dark { background: var(--dark); }
-
-.square.selected {
-  box-shadow: inset 0 0 0 4px var(--gold);
+.square.light { background:var(--light); }
+.square.dark { background:var(--dark); }
+.square.selected { box-shadow:inset 0 0 0 4px var(--gold); }
+.square.last { box-shadow:inset 0 0 0 4px #E5BD6570; }
+.square.legal::after {
+  content:"";
+  position:absolute;
+  width:25%;
+  height:25%;
+  border-radius:50%;
+  background:#101A2B70;
+  z-index:2;
+  pointer-events:none;
 }
-
-.square.last::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: #E5BD6530;
-  pointer-events: none;
+.square.legal.has-piece::after {
+  width:85%;
+  height:85%;
+  background:transparent;
+  border:4px solid #E5BD65C0;
 }
-
-.square.legal::before {
-  content: "";
-  position: absolute;
-  width: 25%;
-  height: 25%;
-  border-radius: 50%;
-  background: #101A2B65;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.square.legal.has-piece::before {
-  width: 85%;
-  height: 85%;
-  background: transparent;
-  border: 4px solid #E5BD65C0;
-}
-
 .piece-svg {
-  display: block;
-  width: 88%;
-  height: 88%;
-  position: relative;
-  z-index: 2;
-  pointer-events: none;
-  overflow: visible;
-  filter: drop-shadow(0 1.5px 1px #0004);
+  display:block;
+  width:88%;
+  height:88%;
+  position:relative;
+  z-index:1;
+  overflow:visible;
+  pointer-events:none;
+  filter:drop-shadow(0 2px 1px #0004);
 }
-
+.white-piece {
+  color:#F0DCC0;
+  fill:#F0DCC0;
+  stroke:#24354A;
+}
+.black-piece {
+  color:#17202C;
+  fill:#17202C;
+  stroke:#E7EDF5;
+}
 .coordinates {
-  position: absolute;
-  font-size: clamp(8px, 1.6vw, 12px);
-  font-weight: bold;
-  pointer-events: none;
-  z-index: 3;
-  opacity: .8;
+  position:absolute;
+  z-index:3;
+  font-size:clamp(8px,1.6vw,12px);
+  font-weight:bold;
+  opacity:.85;
+  pointer-events:none;
+  stroke:none;
 }
-
-.file-label { right: 3px; bottom: 1px; }
-.rank-label { left: 3px; top: 1px; }
-.square.light .coordinates { color: var(--dark); }
-.square.dark .coordinates { color: var(--light); }
-
+.file-label { right:3px; bottom:1px; }
+.rank-label { left:3px; top:1px; }
+.square.light .coordinates { color:var(--dark); }
+.square.dark .coordinates { color:var(--light); }
 .controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 12px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
 }
-
-button.action {
-  background: #24354A;
-  color: var(--text);
-  border: 1px solid #3B4D63;
-  border-radius: 9px;
-  padding: 11px 7px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: bold;
+.action {
+  padding:11px 6px;
+  background:#24354A;
+  color:var(--text);
+  border:1px solid #3B4D63;
+  border-radius:9px;
+  font-weight:bold;
+  font-size:13px;
+  cursor:pointer;
 }
-
-button.action.primary {
-  background: var(--gold);
-  color: #182438;
-  border-color: var(--gold);
-}
-
-button.action:active { transform: scale(.98); }
-
-.section-title {
-  color: var(--gold);
-  font-size: 16px;
-  font-weight: bold;
-  margin: 2px 0 12px;
-}
-
-.info {
-  font-size: 13px;
-  line-height: 1.9;
-  color: var(--muted);
-  margin-bottom: 16px;
-}
-
-.history {
-  min-height: 100px;
-  max-height: 300px;
-  overflow-y: auto;
-  font-size: 13px;
-}
-
+.action.primary { background:var(--gold); color:#182438; }
+.section-title { color:var(--gold); font-weight:bold; margin:3px 0 12px; }
+.info { color:var(--muted); font-size:13px; line-height:1.9; margin-bottom:18px; }
+.history { max-height:300px; overflow-y:auto; font-size:13px; }
 .move-row {
-  display: grid;
-  grid-template-columns: 35px 1fr 1fr;
-  gap: 5px;
-  padding: 7px 5px;
-  border-bottom: 1px solid #2A3A50;
+  display:grid;
+  grid-template-columns:35px 1fr 1fr;
+  gap:5px;
+  padding:7px 5px;
+  border-bottom:1px solid #2A3A50;
 }
-
-.move-number { color: var(--muted); }
-.move { color: var(--text); }
-
-.note {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.8;
-  margin-top: 14px;
-}
-
-footer {
-  color: #73869D;
-  font-size: 12px;
-  text-align: center;
-  padding: 18px 0 8px;
-}
-
-@media (max-width: 600px) {
-  header { padding-top: 16px; }
-  .logo { font-size: 27px; }
-  .layout { grid-template-columns: 1fr; }
-  .panel { padding: 10px; }
-  .side-panel { display: grid; grid-template-columns: 1fr; gap: 8px; }
-  .info { margin-bottom: 8px; }
-  .history { max-height: 190px; }
+.move-number { color:var(--muted); }
+.note { color:var(--muted); font-size:12px; line-height:1.8; margin-top:14px; }
+footer { color:#73869D; font-size:12px; text-align:center; padding:20px 0 8px; }
+@media(max-width:600px) {
+  header { padding-top:16px; }
+  .logo { font-size:27px; }
+  .layout { grid-template-columns:1fr; }
+  .panel { padding:10px; }
+  .history { max-height:180px; }
+  .info { margin-bottom:8px; }
 }
 </style>
 </head>
@@ -248,33 +174,25 @@ footer {
 <main>
   <div class="layout">
     <section class="panel">
-      <div class="status" id="status">در حال آماده‌سازی بازی...</div>
-      <div class="board" id="board" aria-label="Chess board"></div>
-
+      <div class="status" id="status">در حال آماده‌سازی...</div>
+      <div class="board" id="board"></div>
       <div class="controls">
-        <button class="action primary" id="reset">شروع بازی جدید</button>
+        <button class="action primary" id="reset">بازی جدید</button>
         <button class="action" id="flip">چرخاندن صفحه</button>
       </div>
     </section>
 
-    <aside class="panel side-panel">
-      <div>
-        <div class="section-title">وضعیت بازی</div>
-        <div class="info" id="turnInfo">نوبت سفید</div>
-      </div>
-
-      <div>
-        <div class="section-title">حرکت‌ها</div>
-        <div class="history" id="history"></div>
-      </div>
-
+    <aside class="panel">
+      <div class="section-title">وضعیت بازی</div>
+      <div class="info" id="turnInfo">نوبت سفید</div>
+      <div class="section-title">حرکت‌ها</div>
+      <div class="history" id="history"></div>
       <div class="note">
-        برای حرکت، ابتدا مهره را انتخاب کن و سپس خانهٔ مقصد را بزن.
-        برای ارتقای پیاده، فعلاً وزیر انتخاب می‌شود.
+        مهره را انتخاب کن و خانهٔ مقصد را بزن.
+        پیاده‌ای که به انتهای صفحه برسد، به وزیر تبدیل می‌شود.
       </div>
     </aside>
   </div>
-
   <footer>CrownChess · Play for the crown</footer>
 </main>
 
@@ -284,142 +202,81 @@ const statusEl = document.getElementById("status");
 const turnInfoEl = document.getElementById("turnInfo");
 const historyEl = document.getElementById("history");
 
-let game;
+let game = null;
 let selected = null;
 let legalMoves = [];
 let lastMove = null;
 let flipped = false;
 
-function createGame() {
-  if (typeof Chess === "undefined") {
-    statusEl.textContent = "بازی بارگذاری نشد؛ اتصال اینترنت را بررسی کن.";
-    return;
-  }
+/* هر مهره شکل SVG اختصاصی و توپر دارد */
+const pieceArt = {
+  k: `
+    <path d="M44 8H56V20H68V32H56V41
+      C64 46 67 54 67 63L72 75L81 83V91H19V83
+      L28 75L33 63C33 54 36 46 44 41V32H32V20H44Z"/>
+  `,
+  q: `
+    <path d="M24 31L34 41L43 29L47 42H53L57 29L66 41L76 31
+      L70 66L76 78L82 84V91H18V84L24 78L30 66Z"/>
+    <circle cx="23" cy="24" r="7"/>
+    <circle cx="43" cy="19" r="7"/>
+    <circle cx="57" cy="19" r="7"/>
+    <circle cx="77" cy="24" r="7"/>
+    <circle cx="50" cy="12" r="7"/>
+  `,
+  r: `
+    <path d="M20 12H36V24H43V12H57V24H64V12H80V38
+      L70 45L73 73L82 82V91H18V82L27 73L30 45L20 38Z"/>
+  `,
+  b: `
+    <path d="M50 10C37 10 30 21 34 32
+      C36 39 42 43 45 46L36 72L26 81L20 91H80
+      L74 81L64 72L55 46C63 40 68 32 65 24
+      C63 16 57 10 50 10Z"/>
+    <path d="M40 25L58 44L53 49L36 31Z"
+      fill="currentColor" stroke="none"/>
+  `,
+  n: `
+    <path d="M19 91L22 80L31 73L34 61L27 48L28 36
+      L38 22L51 13L67 18L79 31L76 43L65 48L57 39
+      L49 34L44 43L52 53L64 62L70 75L81 83V91Z"/>
+    <circle cx="62" cy="28" r="3" fill="currentColor" stroke="none"/>
+  `,
+  p: `
+    <circle cx="50" cy="26" r="14"/>
+    <path d="M39 40H61L57 51L64 72L74 81L80 91H20
+      L26 81L36 72L43 51Z"/>
+  `
+};
 
-  game = new Chess();
-  selected = null;
-  legalMoves = [];
-  lastMove = null;
-  render();
+function makePiece(piece) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox","0 0 100 100");
+  svg.setAttribute("class","piece-svg " +
+    (piece.color === "w" ? "white-piece" : "black-piece"));
+  svg.setAttribute("aria-hidden","true");
+  svg.innerHTML = pieceArt[piece.type];
+  return svg;
 }
 
 function visibleSquares() {
   const files = flipped
     ? ["h","g","f","e","d","c","b","a"]
     : ["a","b","c","d","e","f","g","h"];
-
   const ranks = flipped
     ? [1,2,3,4,5,6,7,8]
     : [8,7,6,5,4,3,2,1];
-
   const result = [];
-  ranks.forEach(rank => {
-    files.forEach(file => result.push(file + rank));
-  });
+  ranks.forEach(rank => files.forEach(file => result.push(file + rank)));
   return result;
 }
 
-/* شکل‌های SVG اختصاصی و توپر مهره‌ها */
-function pieceShape(type) {
-  const shapes = {
-    p: `
-      <path d="M50 15
-        C40 15 34 23 35 32
-        C36 39 41 43 45 45
-        L39 69 L29 77 L25 87
-        L75 87 L71 77 L61 69 L55 45
-        C60 42 65 37 65 31
-        C65 22 59 15 50 15 Z"/>
-    `,
-    r: `
-      <path d="M26 15 L40 15 L40 25 L47 25
-        L47 15 L53 15 L53 25 L60 25 L60 15
-        L74 15 L72 36 L65 41 L68 73
-        L77 81 L79 89 L21 89 L23 81
-        L32 73 L35 41 L28 36 Z"/>
-    `,
-    n: `
-      <path d="M25 87 L24 79 L31 72 L35 61
-        L29 48 L30 36 L40 22 L53 15
-        L70 20 L78 32 L75 44 L65 48
-        L59 43 L53 37 L49 44 L55 53
-        L65 61 L70 73 L79 81 L79 89
-        L21 89 Z"/>
-      <path d="M53 25 L63 30 L57 34 Z"
-        fill="currentColor" stroke="none"/>
-    `,
-    b: `
-      <path d="M50 12
-        C39 12 32 21 36 31
-        C38 37 43 41 46 44
-        L37 69 L28 78 L23 87
-        L77 87 L72 78 L63 69 L54 44
-        C63 38 67 30 63 22
-        C60 16 55 12 50 12 Z"/>
-      <path d="M46 20 L55 31 L47 37 L43 30 Z"
-        fill="currentColor" stroke="none"/>
-    `,
-    q: `
-      <path d="M25 27
-        C19 27 17 19 23 16
-        C29 13 33 19 30 24
-        L40 34 L47 22
-        C42 17 46 10 51 10
-        C58 10 60 18 54 22
-        L62 34 L72 24
-        C68 18 74 13 79 16
-        C85 20 81 28 75 28
-        L69 70 L76 79 L79 88
-        L21 88 L24 79 L31 70 Z"/>
-      <path d="M30 47 L70 47 L68 60 L32 60 Z"
-        fill="currentColor" stroke="none"/>
-    `,
-    k: `
-      <path d="M44 10 L56 10 L56 23 L68 23
-        L68 34 L56 34 L56 43 L63 49
-        L67 71 L77 80 L79 89 L21 89
-        L23 80 L33 71 L37 49 L44 43
-        L44 34 L32 34 L32 23 L44 23 Z"/>
-    `
-  };
-
-  return shapes[type] || shapes.p;
-}
-  
-  function makePiece(piece) {
-  const white = piece.color === "w";
-  const fill = white ? "#F0DCC0" : "#17202C";
-  const stroke = white ? "#24354A" : "#E7EDF5";
-
-  const svg = document.createElementNS(
-    "http://www.w3.org/2000/svg", "svg"
-  );
-
-  svg.setAttribute("viewBox", "0 0 100 100");
-  svg.setAttribute("class", "piece-svg");
-
-  const path = document.createElementNS(
-    "http://www.w3.org/2000/svg", "path"
-  );
-
-  path.setAttribute("d", pieceShape(piece.type));
-  path.setAttribute("fill", fill);
-  path.setAttribute("stroke", stroke);
-  path.setAttribute("stroke-width", "2.5");
-  path.setAttribute("stroke-linejoin", "round");
-
-  svg.appendChild(path);
-  return svg;
-  }
-
 function render() {
   if (!game) return;
-
   boardEl.innerHTML = "";
-  const squares = visibleSquares();
   const position = game.board();
 
-  squares.forEach((sq) => {
+  visibleSquares().forEach(sq => {
     const file = sq.charCodeAt(0) - 97;
     const rank = Number(sq[1]);
     const row = 8 - rank;
@@ -429,36 +286,29 @@ function render() {
     button.type = "button";
     button.className = "square " +
       ((row + file) % 2 === 0 ? "light" : "dark");
-    button.setAttribute("aria-label", sq);
 
     if (selected === sq) button.classList.add("selected");
-
-    if (lastMove &&
-        (lastMove.from === sq || lastMove.to === sq)) {
+    if (lastMove && (lastMove.from === sq || lastMove.to === sq)) {
       button.classList.add("last");
     }
-
     if (legalMoves.some(m => m.to === sq)) {
       button.classList.add("legal");
       if (piece) button.classList.add("has-piece");
     }
 
-    if (piece) {
-      button.appendChild(makePiece(piece));
-    }
+    if (piece) button.appendChild(makePiece(piece));
 
     if (file === (flipped ? 7 : 0)) {
-      const rankLabel = document.createElement("span");
-      rankLabel.className = "coordinates rank-label";
-      rankLabel.textContent = rank;
-      button.appendChild(rankLabel);
+      const label = document.createElement("span");
+      label.className = "coordinates rank-label";
+      label.textContent = rank;
+      button.appendChild(label);
     }
-
     if (rank === (flipped ? 8 : 1)) {
-      const fileLabel = document.createElement("span");
-      fileLabel.className = "coordinates file-label";
-      fileLabel.textContent = sq[0];
-      button.appendChild(fileLabel);
+      const label = document.createElement("span");
+      label.className = "coordinates file-label";
+      label.textContent = sq[0];
+      button.appendChild(label);
     }
 
     button.addEventListener("click", () => onSquareClick(sq));
@@ -474,14 +324,9 @@ function onSquareClick(sq) {
   const piece = game.get(sq);
 
   if (selected && legalMoves.some(m => m.to === sq)) {
-    const move = game.move({
-      from: selected,
-      to: sq,
-      promotion: "q"
-    });
-
+    const move = game.move({from:selected, to:sq, promotion:"q"});
     if (move) {
-      lastMove = { from: move.from, to: move.to };
+      lastMove = {from:move.from, to:move.to};
       selected = null;
       legalMoves = [];
       render();
@@ -491,39 +336,33 @@ function onSquareClick(sq) {
 
   if (piece && piece.color === game.turn()) {
     selected = sq;
-    legalMoves = game.moves({
-      square: sq,
-      verbose: true
-    });
+    legalMoves = game.moves({square:sq, verbose:true});
   } else {
     selected = null;
     legalMoves = [];
   }
-
   render();
 }
 
 function updateInfo() {
-  const history = game.history();
   historyEl.innerHTML = "";
+  const moves = game.history();
 
-  for (let i = 0; i < history.length; i += 2) {
+  for (let i = 0; i < moves.length; i += 2) {
     const row = document.createElement("div");
     row.className = "move-row";
 
-    const number = document.createElement("span");
-    number.className = "move-number";
-    number.textContent = (Math.floor(i / 2) + 1) + ".";
+    const num = document.createElement("span");
+    num.className = "move-number";
+    num.textContent = (Math.floor(i / 2) + 1) + ".";
 
     const white = document.createElement("span");
-    white.className = "move";
-    white.textContent = history[i];
+    white.textContent = moves[i];
 
     const black = document.createElement("span");
-    black.className = "move";
-    black.textContent = history[i + 1] || "";
+    black.textContent = moves[i + 1] || "";
 
-    row.append(number, white, black);
+    row.append(num, white, black);
     historyEl.appendChild(row);
   }
 
@@ -548,14 +387,25 @@ function updateInfo() {
   }
 }
 
-document.getElementById("reset").addEventListener("click", createGame);
+document.getElementById("reset").addEventListener("click", () => {
+  game = new Chess();
+  selected = null;
+  legalMoves = [];
+  lastMove = null;
+  render();
+});
 
 document.getElementById("flip").addEventListener("click", () => {
   flipped = !flipped;
   render();
 });
 
-createGame();
+if (typeof Chess === "undefined") {
+  statusEl.textContent = "برای بارگذاری بازی، اتصال اینترنت را بررسی کن.";
+} else {
+  game = new Chess();
+  render();
+}
 </script>
 </body>
 </html>
