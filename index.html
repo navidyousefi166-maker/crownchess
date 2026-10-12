@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrownChess | Rule the Board</title>
+<style>
+:root {
+  --bg: #0b0d12;
+  --panel: #151922;
+  --gold: #e5bd65;
+  --text: #f4f0e7;
+  --muted: #9ca3af;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 7%;
+  border-bottom: 1px solid #292d36;
+}
+.logo { color: var(--gold); font-size: 24px; font-weight: 800; }
+.logo span { color: white; }
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  margin-left: 20px;
+  font-size: 14px;
+}
+nav a:hover { color: var(--gold); }
+.hero {
+  text-align: center;
+  padding: 75px 20px 55px;
+  background: radial-gradient(ellipse at top, #272315 0%, #0b0d12 65%);
+}
+.crown { font-size: 48px; }
+.tag {
+  color: var(--gold);
+  letter-spacing: 4px;
+  font-size: 11px;
+  font-weight: bold;
+}
+h1 {
+  font-size: clamp(42px, 8vw, 76px);
+  margin: 18px 0;
+  letter-spacing: -3px;
+}
+h1 span { color: var(--gold); }
+.hero p {
+  color: var(--muted);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.8;
+}
+.btn {
+  display: inline-block;
+  margin-top: 28px;
+  padding: 14px 25px;
+  background: var(--gold);
+  color: #17130a;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  border: 0;
+  cursor: pointer;
+}
+section { padding: 48px 7%; }
+.section-head { text-align: center; margin-bottom: 28px; }
+.section-head h2 { font-size: 30px; margin-bottom: 10px; }
+.section-head p { color: var(--muted); }
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid #292d36;
+  border-radius: 10px;
+  padding: 25px;
+}
+.card .symbol { font-size: 30px; }
+.card h3 { color: var(--gold); margin-bottom: 10px; }
+.card p { color: var(--muted); line-height: 1.7; font-size: 14px; }
+.card button {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid #776238;
+  padding: 10px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.board-area {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) minmax(200px, 1fr);
+  gap: 30px;
+  align-items: center;
+  max-width: 850px;
+  margin: auto;
+}
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  border: 4px solid #333;
+  aspect-ratio: 1;
+}
+.square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  font-size: clamp(18px, 4vw, 38px);
+}
+.light { background: #e6d7b8; }
+.dark { background: #647b69; }
+.board-info p { color: var(--muted); line-height: 1.8; }
+.status { color: var(--gold) !important; }
+footer {
+  border-top: 1px solid #292d36;
+  padding: 25px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+@media(max-width: 650px) {
+  header { padding: 18px 5%; }
+  nav a { margin-left: 9px; font-size: 12px; }
+  .board-area { grid-template-columns: 1fr; }
+  .board { max-width: 420px; width: 100%; margin: auto; }
+  .board-info { text-align: center; }
+  h1 { letter-spacing: -1px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">♛ <span>CROWN</span>CHESS</div>
+  <nav>
+    <a href="#cups">Cups</a>
+    <a href="#board">Board</a>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="crown">♛</div>
+    <div class="tag">THE NEXT MOVE IN CHESS</div>
+    <h1>RULE THE <span>BOARD.</span></h1>
+    <p>Chess is more than a game. It's a battle of ideas, nerve and precision. Enter the arena and fight for the crown.</p>
+    <a class="btn" href="#cups">Explore the Cups ↓</a>
+  </div>
+
+  <section id="cups">
+    <div class="section-head">
+      <h2>Choose Your Arena</h2>
+      <p>Three ways to fight for the crown.</p>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="symbol">⚡</div>
+        <h3>Crown Cup: Impact</h3>
+        <p>A more dramatic chess experience. Brilliant moves deserve glory, and blunders have consequences.</p>
+        <button onclick="showCup('Impact')">Explore Impact</button>
+      </div>
+      <div class="card">
+        <div class="symbol">♟</div>
+        <h3>Crown Cup: Classic</h3>
+        <p>Pure chess. No distractions, no spectacle. Just your mind against your opponent's.</p>
+        <button onclick="showCup('Classic')">Explore Classic</button>
+      </div>
+      <div class="card">
+        <div class="symbol">🎲</div>
+        <h3>Crown Cup: Roulette</h3>
+        <p>Unpredictable openings. Adapt to a position you didn't choose and prove your versatility.</p>
+        <button onclick="showCup('Roulette')">Explore Roulette</button>
+      </div>
+    </div>
+    <p id="cup-message" style="text-align:center;color:#e5bd65;margin-top:25px;"></p>
+  </section>
+
+  <section id="board">
+    <div class="section-head">
+      <h2>The Board</h2>
+      <p>A first glimpse of the battlefield.</p>
+    </div>
+    <div class="board-area">
+      <div class="board" id="chessboard"></div>
+      <div class="board-info">
+        <div class="tag">CROWNCHESS PROTOTYPE</div>
+        <h2>Every move matters.</h2>
+        <p>This is our first visual prototype. The board is a preview, not yet a playable chess game. Next, we'll build the real rules, legal moves and online matches.</p>
+        <p class="status">● SYSTEM: INITIALIZING</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>© 2026 CrownChess · Every crown must be earned.</footer>
+
+<script>
+function showCup(name) {
+  const messages = {
+    Impact: "Impact selected — dramatic move feedback is on our roadmap.",
+    Classic: "Classic selected — pure chess, coming soon.",
+    Roulette: "Roulette selected — random opening challenges, coming soon."
+  };
+  document.getElementById("cup-message").textContent = messages[name];
+}
+
+const pieces = [
+  "♜","♞","♝","♛","♚","♝","♞","♜",
+  "♟","♟","♟","♟","♟","♟","♟","♟",
+  "","","","","","","","",
+  "","","","","","","","",
+  "","","","","","","","",
+  "","","","","","","","",
+  "♙","♙","♙","♙","♙","♙","♙","♙",
+  "♖","♘","♗","♕","♔","♗","♘","♖"
+];
+
+const board = document.getElementById("chessboard");
+pieces.forEach((piece, i) => {
+  const square = document.createElement("div");
+  square.className = "square " +
+    (Math.floor(i / 8) + i % 8) % 2 === 0 ? "square light" : "square dark";
+  square.textContent = piece;
+  if (i < 16) square.style.color = "#171717";
+  if (i >= 48) square.style.color = "#ffffff";
+  board.appendChild(square);
+});
+</script>
+</body>
+</html>
