@@ -3,16 +3,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CrownChess | Rule the Board</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CrownChess — Rule the Board</title>
 <style>
-  :root {
+:root {
   --bg: #0B1220;
   --panel: #182438;
-  --gold: #67D5D0;
-  --text: #DCE7F2;
+  --gold: #E5BD65;
+  --text: #E7EDF5;
   --muted: #9BAFC4;
-  }
+  --light: #F0DCC0;
+  --dark: #557C68;
+}
 * { box-sizing: border-box; }
 body {
   margin: 0;
@@ -21,221 +23,328 @@ body {
   font-family: Arial, sans-serif;
 }
 header {
+  padding: 18px 6%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 22px 7%;
-  border-bottom: 1px solid #292d36;
+  border-bottom: 1px solid #29364a;
 }
-.logo { color: var(--gold); font-size: 24px; font-weight: 800; }
-.logo span { color: white; }
-nav a {
-  color: var(--muted);
-  text-decoration: none;
-  margin-left: 20px;
-  font-size: 14px;
-}
-nav a:hover { color: var(--gold); }
-.hero {
-  text-align: center;
-  padding: 75px 20px 55px;
-  background: radial-gradient(ellipse at top, #272315 0%, #0b0d12 65%);
-}
-.crown { font-size: 48px; }
-.tag {
-  color: var(--gold);
-  letter-spacing: 4px;
-  font-size: 11px;
-  font-weight: bold;
-}
-h1 {
-  font-size: clamp(42px, 8vw, 76px);
-  margin: 18px 0;
-  letter-spacing: -3px;
-}
-h1 span { color: var(--gold); }
-.hero p {
-  color: var(--muted);
-  max-width: 520px;
-  margin: 0 auto;
-  line-height: 1.8;
-}
-.btn {
-  display: inline-block;
-  margin-top: 28px;
-  padding: 14px 25px;
-  background: var(--gold);
-  color: #17130a;
-  text-decoration: none;
-  border-radius: 5px;
-  font-weight: bold;
-  border: 0;
-  cursor: pointer;
-}
-section { padding: 48px 7%; }
-.section-head { text-align: center; margin-bottom: 28px; }
-.section-head h2 { font-size: 30px; margin-bottom: 10px; }
-.section-head p { color: var(--muted); }
-.cards {
+.logo { color: var(--gold); font-size: 22px; font-weight: 800; }
+.logo span { color: var(--text); }
+main { max-width: 1050px; margin: auto; padding: 30px 16px 55px; }
+.intro { text-align: center; margin-bottom: 25px; }
+.tag { color: var(--gold); letter-spacing: 3px; font-size: 11px; }
+h1 { font-size: clamp(30px, 6vw, 48px); margin: 12px 0; }
+p { color: var(--muted); line-height: 1.65; }
+.game {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 18px;
+  grid-template-columns: minmax(0, 560px) minmax(220px, 1fr);
+  gap: 22px;
+  align-items: start;
 }
-.card {
-  background: var(--panel);
-  border: 1px solid #292d36;
-  border-radius: 10px;
-  padding: 25px;
-}
-.card .symbol { font-size: 30px; }
-.card h3 { color: var(--gold); margin-bottom: 10px; }
-.card p { color: var(--muted); line-height: 1.7; font-size: 14px; }
-.card button {
-  background: transparent;
-  color: var(--gold);
-  border: 1px solid #776238;
-  padding: 10px 14px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-.board-area {
-  display: grid;
-  grid-template-columns: minmax(260px, 420px) minmax(200px, 1fr);
-  gap: 30px;
-  align-items: center;
-  max-width: 850px;
-  margin: auto;
+.board-wrap {
+  padding: 8px;
+  background: #263246;
+  border: 1px solid #39465b;
+  border-radius: 8px;
+  width: 100%;
 }
 .board {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  border: 4px solid #333;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  width: 100%;
   aspect-ratio: 1;
+  overflow: hidden;
 }
 .square {
+  border: 0;
+  border-radius: 0;
+  position: relative;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   aspect-ratio: 1;
-  font-size: clamp(18px, 4vw, 38px);
+  min-width: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-.light { background: #e6d7b8; }
-.dark { background: #647b69; }
-.board-info p { color: var(--muted); line-height: 1.8; }
-.status { color: var(--gold) !important; }
+.square.light { background: var(--light); }
+.square.dark { background: var(--dark); }
+.square.selected { box-shadow: inset 0 0 0 4px var(--gold); }
+.square.last { background-image: linear-gradient(#e5bd6570, #e5bd6570); }
+.square.legal::after {
+  content: "";
+  position: absolute;
+  width: 25%;
+  height: 25%;
+  border-radius: 50%;
+  background: #172b23a0;
+  pointer-events: none;
+}
+.square.legal.has-piece::after {
+  width: 85%;
+  height: 85%;
+  background: transparent;
+  border: 4px solid #172b2399;
+}
+.piece {
+  font-family: "DejaVu Sans", "Segoe UI Symbol", "Noto Sans Symbols 2", serif;
+  font-size: clamp(23px, 7.2vw, 55px);
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px #0004);
+}
+.white-piece { color: #fffdf5; text-shadow: 0 1px 2px #182438, 1px 0 #182438, -1px 0 #182438, 0 -1px #182438; }
+.black-piece { color: #17202c; text-shadow: 0 1px 1px #ffffff60; }
+.panel {
+  background: var(--panel);
+  border: 1px solid #2a384d;
+  border-radius: 10px;
+  padding: 20px;
+}
+.panel h2 { margin-top: 0; font-size: 21px; }
+.status {
+  color: var(--gold);
+  font-weight: bold;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+.small { font-size: 13px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+button.action {
+  background: var(--gold);
+  color: #171b22;
+  border: 0;
+  border-radius: 5px;
+  padding: 12px 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+button.secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid #506078;
+}
+button:focus-visible { outline: 3px solid white; outline-offset: 2px; }
+#history {
+  max-height: 155px;
+  overflow: auto;
+  padding-left: 22px;
+  color: var(--muted);
+  line-height: 1.8;
+}
 footer {
-  border-top: 1px solid #292d36;
-  padding: 25px;
   text-align: center;
+  border-top: 1px solid #29364a;
+  padding: 22px 10px;
   color: var(--muted);
   font-size: 12px;
 }
-@media(max-width: 650px) {
-  header { padding: 18px 5%; }
-  nav a { margin-left: 9px; font-size: 12px; }
-  .board-area { grid-template-columns: 1fr; }
-  .board { max-width: 420px; width: 100%; margin: auto; }
-  .board-info { text-align: center; }
-  h1 { letter-spacing: -1px; }
+@media(max-width: 700px) {
+  header { padding: 16px; }
+  main { padding: 24px 12px 40px; }
+  .game { grid-template-columns: minmax(0, 1fr); }
+  .board-wrap { max-width: 560px; margin: auto; }
+  .panel { padding: 17px; }
+  .piece { font-size: clamp(25px, 9vw, 55px); }
 }
 </style>
 </head>
 <body>
 <header>
   <div class="logo">♛ <span>CROWN</span>CHESS</div>
-  <nav>
-    <a href="#cups">Cups</a>
-    <a href="#board">Board</a>
-  </nav>
+  <div class="tag">PLAY · THINK · CONQUER</div>
 </header>
 
 <main>
-  <div class="hero">
-    <div class="crown">♛</div>
-    <div class="tag">THE NEXT MOVE IN CHESS</div>
-    <h1>RULE THE <span>BOARD.</span></h1>
-    <p>Chess is more than a game. It's a battle of ideas, nerve and precision. Enter the arena and fight for the crown.</p>
-    <a class="btn" href="#cups">Explore the Cups ↓</a>
+  <div class="intro">
+    <div class="tag">YOUR FIRST REAL GAME</div>
+    <h1>Rule the Board.</h1>
+    <p>Choose a piece, then choose its destination.</p>
   </div>
 
-  <section id="cups">
-    <div class="section-head">
-      <h2>Choose Your Arena</h2>
-      <p>Three ways to fight for the crown.</p>
+  <div class="game">
+    <div class="board-wrap">
+      <div class="board" id="board" aria-label="Chess board"></div>
     </div>
-    <div class="cards">
-      <div class="card">
-        <div class="symbol">⚡</div>
-        <h3>Crown Cup: Impact</h3>
-        <p>A more dramatic chess experience. Brilliant moves deserve glory, and blunders have consequences.</p>
-        <button onclick="showCup('Impact')">Explore Impact</button>
+    <aside class="panel">
+      <div class="tag">CROWNCHESS ARENA</div>
+      <h2>Classic Chess</h2>
+      <div id="status" class="status">Loading chess...</div>
+      <p id="detail" class="small">White moves first.</p>
+      <div class="buttons">
+        <button class="action" id="reset">New Game</button>
+        <button class="action secondary" id="flip">Flip Board</button>
       </div>
-      <div class="card">
-        <div class="symbol">♟</div>
-        <h3>Crown Cup: Classic</h3>
-        <p>Pure chess. No distractions, no spectacle. Just your mind against your opponent's.</p>
-        <button onclick="showCup('Classic')">Explore Classic</button>
-      </div>
-      <div class="card">
-        <div class="symbol">🎲</div>
-        <h3>Crown Cup: Roulette</h3>
-        <p>Unpredictable openings. Adapt to a position you didn't choose and prove your versatility.</p>
-        <button onclick="showCup('Roulette')">Explore Roulette</button>
-      </div>
-    </div>
-    <p id="cup-message" style="text-align:center;color:#e5bd65;margin-top:25px;"></p>
-  </section>
-
-  <section id="board">
-    <div class="section-head">
-      <h2>The Board</h2>
-      <p>A first glimpse of the battlefield.</p>
-    </div>
-    <div class="board-area">
-      <div class="board" id="chessboard"></div>
-      <div class="board-info">
-        <div class="tag">CROWNCHESS PROTOTYPE</div>
-        <h2>Every move matters.</h2>
-        <p>This is our first visual prototype. The board is a preview, not yet a playable chess game. Next, we'll build the real rules, legal moves and online matches.</p>
-        <p class="status">● SYSTEM: INITIALIZING</p>
-      </div>
-    </div>
-  </section>
+      <h3>Move History</h3>
+      <ol id="history"><li>No moves yet</li></ol>
+      <p class="small">This is a local game for two people sharing one device. Online multiplayer is a future step.</p>
+    </aside>
+  </div>
 </main>
 
 <footer>© 2026 CrownChess · Every crown must be earned.</footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <script>
-function showCup(name) {
-  const messages = {
-    Impact: "Impact selected — dramatic move feedback is on our roadmap.",
-    Classic: "Classic selected — pure chess, coming soon.",
-    Roulette: "Roulette selected — random opening challenges, coming soon."
-  };
-  document.getElementById("cup-message").textContent = messages[name];
+const boardEl = document.getElementById("board");
+const statusEl = document.getElementById("status");
+const detailEl = document.getElementById("detail");
+const historyEl = document.getElementById("history");
+
+let game;
+let selected = null;
+let legalMoves = [];
+let flipped = false;
+let lastMove = null;
+
+const symbols = {
+  wk: "♔", wq: "♕", wr: "♖", wb: "♗", wn: "♘", wp: "♙",
+  bk: "♚", bq: "♛", br: "♜", bb: "♝", bn: "♞", bp: "♟"
+};
+
+function startGame() {
+  game = new Chess();
+  selected = null;
+  legalMoves = [];
+  lastMove = null;
+  render();
 }
 
-const pieces = [
-  "♜","♞","♝","♛","♚","♝","♞","♜",
-  "♟","♟","♟","♟","♟","♟","♟","♟",
-  "","","","","","","","",
-  "","","","","","","","",
-  "","","","","","","","",
-  "","","","","","","","",
-  "♙","♙","♙","♙","♙","♙","♙","♙",
-  "♖","♘","♗","♕","♔","♗","♘","♖"
-];
+function squareName(row, col) {
+  const files = "abcdefgh";
+  return files[col] + (8 - row);
+}
 
-const board = document.getElementById("chessboard");
-pieces.forEach((piece, i) => {
-  const square = document.createElement("div");
-  square.className = "square " +
-    (Math.floor(i / 8) + i % 8) % 2 === 0 ? "square light" : "square dark";
-  square.textContent = piece;
-  if (i < 16) square.style.color = "#171717";
-  if (i >= 48) square.style.color = "#ffffff";
-  board.appendChild(square);
+function visibleSquares() {
+  const rows = [];
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      rows.push(flipped ? squareName(7-r, 7-c) : squareName(r,c));
+    }
+  }
+  return rows;
+}
+
+function render() {
+  if (!game) return;
+  boardEl.innerHTML = "";
+  const squares = visibleSquares();
+  const position = game.board();
+
+  squares.forEach((sq) => {
+    const file = sq.charCodeAt(0) - 97;
+    const rank = Number(sq[1]);
+    const row = 8 - rank;
+    const piece = position[row][file];
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "square " +
+      ((row + file) % 2 === 0 ? "light" : "dark");
+    button.setAttribute("aria-label", sq);
+
+    if (selected === sq) button.classList.add("selected");
+    if (lastMove && (lastMove.from === sq || lastMove.to === sq)) {
+      button.classList.add("last");
+    }
+    if (legalMoves.some(m => m.to === sq)) {
+      button.classList.add("legal");
+      if (piece) button.classList.add("has-piece");
+    }
+
+    if (piece) {
+      const span = document.createElement("span");
+      span.className = "piece " +
+        (piece.color === "w" ? "white-piece" : "black-piece");
+      span.textContent = symbols[piece.color + piece.type];
+      button.appendChild(span);
+    }
+    button.addEventListener("click", () => onSquareClick(sq));
+    boardEl.appendChild(button);
+  });
+
+  updateInfo();
+}
+
+function onSquareClick(sq) {
+  if (game.game_over()) return;
+
+  const piece = game.get(sq);
+
+  if (selected && legalMoves.some(m => m.to === sq)) {
+    const movingPiece = game.get(selected);
+    const moveOptions = { from: selected, to: sq };
+
+    if (movingPiece && movingPiece.type === "p" &&
+        (sq[1] === "8" || sq[1] === "1")) {
+      moveOptions.promotion = "q";
+    }
+
+    const result = game.move(moveOptions);
+    if (result) {
+      lastMove = { from: result.from, to: result.to };
+      selected = null;
+      legalMoves = [];
+      render();
+      return;
+    }
+  }
+
+  if (piece && piece.color === game.turn()) {
+    selected = sq;
+    legalMoves = game.moves({ square: sq, verbose: true });
+  } else {
+    selected = null;
+    legalMoves = [];
+  }
+  render();
+}
+
+function updateInfo() {
+  if (game.in_checkmate()) {
+    statusEl.textContent = "CHECKMATE!";
+    detailEl.textContent = (game.turn() === "w" ? "Black" : "White") +
+      " wins. The crown has been claimed.";
+  } else if (game.in_draw()) {
+    statusEl.textContent = "DRAW";
+    detailEl.textContent = "The game has ended in a draw.";
+  } else {
+    statusEl.textContent = game.turn() === "w" ? "White to move" : "Black to move";
+    detailEl.textContent = game.in_check() ?
+      "Check! The king must be protected." :
+      "Select one of your pieces to see legal moves.";
+  }
+
+  const history = game.history();
+  historyEl.innerHTML = "";
+  if (!history.length) {
+    const li = document.createElement("li");
+    li.textContent = "No moves yet";
+    historyEl.appendChild(li);
+  } else {
+    for (let i = 0; i < history.length; i += 2) {
+      const li = document.createElement("li");
+      li.textContent = history[i] +
+        (history[i + 1] ? "   " + history[i + 1] : "");
+      historyEl.appendChild(li);
+    }
+  }
+}
+
+document.getElementById("reset").addEventListener("click", startGame);
+document.getElementById("flip").addEventListener("click", () => {
+  flipped = !flipped;
+  render();
 });
+
+if (typeof Chess === "undefined") {
+  statusEl.textContent = "Connection required";
+  detailEl.textContent = "The chess rules library could not load. Check your internet connection and refresh the page.";
+} else {
+  startGame();
+}
 </script>
 </body>
 </html>
