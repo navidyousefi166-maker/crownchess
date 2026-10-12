@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0B1220">
 <title>Kingsfall — Every King Can Fall</title>
 
@@ -10,198 +11,104 @@
 
 <style>
 :root {
-  --navy: #0B1220;
-  --panel: #131D2D;
-  --panel2: #192538;
+  --bg: #0B1220;
+  --panel: #151F30;
   --gold: #E5BD65;
-  --ivory: #F0E8D5;
-  --green: #71916A;
-  --text: #F7F4EC;
-  --muted: #AAB4C3;
-  --border: #29374A;
+  --light: #F0E8D5;
+  --dark: #71916A;
+  --white-piece: #FFFCF2;
+  --black-piece: #17202C;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  min-height: 100%;
-  background: var(--navy);
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  background:
-    radial-gradient(ellipse at top, #17243A 0%, var(--navy) 65%);
-  color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-
-button {
-  font: inherit;
+  padding: 18px 12px 30px;
+  background: var(--bg);
+  color: #F7F4EC;
+  font-family: system-ui, sans-serif;
 }
 
 .app {
   width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 18px 14px 30px;
+  max-width: 900px;
+  margin: auto;
 }
 
 header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
+  gap: 10px;
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.brand-icon {
-  width: 45px;
-  height: 45px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #8E713A;
-  border-radius: 12px;
   color: var(--gold);
-  background: #111B2B;
-  font-size: 29px;
-}
-
-.brand-name {
-  color: var(--gold);
-  font-size: clamp(21px, 5vw, 29px);
+  font-size: 27px;
   font-weight: 900;
-  letter-spacing: 1.5px;
-  line-height: 1.2;
+  letter-spacing: 2px;
 }
 
 .tagline {
-  margin-top: 4px;
-  color: var(--muted);
+  color: #AAB4C3;
   font-size: 11px;
   letter-spacing: 1px;
 }
 
-.status-pill {
-  border: 1px solid #334157;
-  border-radius: 30px;
-  padding: 7px 11px;
-  color: #D5DCE5;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 310px);
-  align-items: start;
-  gap: 20px;
-}
-
-.board-section {
-  width: 100%;
-  min-width: 0;
-}
-
-.player-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 49px;
-  padding: 9px 12px;
-  margin-bottom: 10px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: rgba(19, 29, 45, 0.92);
-}
-
-.player-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.player-token {
-  width: 25px;
-  height: 25px;
-  flex: 0 0 25px;
-  border-radius: 7px;
-  display: grid;
-  place-items: center;
-  font-size: 17px;
-}
-
-.white-token {
-  color: #17202C;
-  background: var(--ivory);
-}
-
-.black-token {
-  color: #F7F4EC;
-  background: #273448;
-}
-
-.player-name {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.player-caption {
-  color: var(--muted);
+.badge {
+  border: 1px solid #35445A;
+  border-radius: 20px;
+  padding: 7px 10px;
+  color: #C5CFDB;
   font-size: 11px;
-  margin-top: 2px;
 }
 
-.turn-indicator {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--green);
-  flex: 0 0 9px;
+.game {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 245px;
+  align-items: start;
+  gap: 18px;
 }
 
-.turn-indicator.black-turn {
-  background: var(--gold);
+.board-area { min-width: 0; }
+
+.player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  margin: 0 0 9px;
+  background: var(--panel);
+  border: 1px solid #29374A;
+  border-radius: 10px;
+  font-size: 13px;
 }
 
-/* صفحهٔ شطرنج: مربع دقیق، شبکهٔ ۸ در ۸ */
-.board-frame {
+.player + .board-wrap { margin-top: 0; }
+
+.board-wrap {
   width: 100%;
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 5px;
-  border: 1px solid #8D713D;
-  border-radius: 5px;
-  background: #172235;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.32);
+  max-width: 650px;
+  margin: auto;
+  padding: 4px;
+  border: 1px solid #947640;
+  background: #111B2B;
 }
 
+/* The board itself defines the exact size of every square. */
 #board {
   width: 100%;
-  aspect-ratio: 1 / 1;
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
   grid-template-rows: repeat(8, minmax(0, 1fr));
-  gap: 0;
-  padding: 0;
-  margin: 0;
-  overflow: hidden;
+  aspect-ratio: 1 / 1;
   direction: ltr;
+  gap: 0;
+  overflow: hidden;
 }
 
-/* تمام خانه‌ها در هر دو جهت دقیقاً هم‌اندازه‌اند */
 .square {
   position: relative;
   display: flex;
@@ -211,144 +118,101 @@ header {
   height: 100%;
   min-width: 0;
   min-height: 0;
-  aspect-ratio: 1 / 1;
   padding: 0;
   margin: 0;
   border: 0;
   border-radius: 0;
+  appearance: none;
   overflow: hidden;
   cursor: pointer;
+  aspect-ratio: auto;
   -webkit-tap-highlight-color: transparent;
 }
 
-.square.light {
-  background: var(--ivory);
-}
-
-.square.dark {
-  background: var(--green);
-}
-
-.square.last-move.light {
-  background: #E5D89B;
-}
-
-.square.last-move.dark {
-  background: #A2B46E;
-}
+.square.light { background: var(--light); }
+.square.dark { background: var(--dark); }
+.square.last { background: #D8CC91; }
+.square.last.dark { background: #9BAE70; }
 
 .square.selected {
-  box-shadow: inset 0 0 0 4px rgba(229, 189, 101, 0.95);
+  box-shadow: inset 0 0 0 4px var(--gold);
   z-index: 1;
 }
 
-.square.in-check {
-  background: #C85C58 !important;
-}
+.square.check { background: #C84E4E !important; }
 
 .piece {
   display: block;
-  width: 84%;
-  height: 84%;
-  max-width: 100%;
-  max-height: 100%;
+  width: 88%;
+  height: 88%;
   pointer-events: none;
   overflow: visible;
-  flex: 0 0 auto;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 }
 
-.white-piece {
-  color: #FFF9EC;
-}
-
-.black-piece {
-  color: #17202C;
-}
-
-.legal-dot {
-  position: absolute;
-  width: 25%;
-  height: 25%;
-  border-radius: 50%;
-  background: rgba(18, 28, 42, 0.30);
-  pointer-events: none;
-}
-
-.square:has(.piece) .legal-dot {
-  width: 92%;
-  height: 92%;
-  border: 5px solid rgba(18, 28, 42, 0.25);
-  background: transparent;
-}
-
-.coordinates {
+.coord {
   position: absolute;
   left: 3px;
-  bottom: 1px;
+  bottom: 2px;
   z-index: 2;
-  font-size: clamp(8px, 1.8vw, 11px);
+  font-size: clamp(8px, 1.8vw, 12px);
   font-weight: 800;
   line-height: 1;
   pointer-events: none;
 }
 
-.square.light .coordinates {
-  color: #66845E;
+.light .coord { color: #56754F; }
+.dark .coord { color: #F8F0DF; }
+
+.dot {
+  position: absolute;
+  width: 25%;
+  height: 25%;
+  border-radius: 50%;
+  background: #14203366;
+  pointer-events: none;
 }
 
-.square.dark .coordinates {
-  color: #F3EBD7;
+.capture-mark {
+  position: absolute;
+  inset: 4%;
+  border: 4px solid #14203355;
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.board-message {
-  min-height: 38px;
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: var(--muted);
+.message {
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  color: #C0CAD7;
   font-size: 13px;
+  text-align: center;
 }
 
-.board-message strong {
-  color: var(--gold);
-}
-
-.controls {
+.buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 9px;
-  margin-top: 12px;
 }
 
-.control-button {
-  min-height: 43px;
-  padding: 9px 10px;
-  border: 1px solid #35445A;
-  border-radius: 10px;
-  color: var(--text);
+button.action {
+  border: 1px solid #3A4960;
+  border-radius: 9px;
+  padding: 11px 8px;
   background: var(--panel);
+  color: #F7F4EC;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  font: inherit;
 }
 
-.control-button:hover {
-  background: var(--panel2);
-  border-color: var(--gold);
-}
-
-.control-button.primary {
+button.action.primary {
   color: #17202C;
   background: var(--gold);
   border-color: var(--gold);
   font-weight: 800;
 }
 
-.control-button:active {
-  transform: scale(0.98);
-}
+button.action:active { transform: scale(.98); }
 
 .sidebar {
   display: flex;
@@ -358,609 +222,413 @@ header {
 }
 
 .panel {
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(19, 29, 45, 0.92);
+  border: 1px solid #29374A;
+  border-radius: 12px;
+  background: var(--panel);
   overflow: hidden;
 }
 
-.panel-heading {
-  padding: 14px 15px;
-  border-bottom: 1px solid var(--border);
+.panel-title {
+  padding: 13px 14px;
   color: var(--gold);
-  font-weight: 800;
   font-size: 14px;
+  font-weight: 800;
+  border-bottom: 1px solid #29374A;
 }
 
 .panel-body {
-  padding: 14px 15px;
-}
-
-.game-state {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 13px;
-}
-
-.state-symbol {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
-  border-radius: 10px;
-  color: var(--gold);
-  background: #253247;
-  font-size: 21px;
-}
-
-.state-title {
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.state-subtitle {
-  margin-top: 3px;
-  color: var(--muted);
+  padding: 13px 14px;
+  color: #D2D9E3;
   font-size: 12px;
-}
-
-.rule-line {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  margin-top: 11px;
-  color: #CFD5DF;
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-.rule-bullet {
-  color: var(--gold);
-  font-weight: 900;
-}
-
-.move-list {
-  max-height: 300px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #42516A transparent;
-}
-
-.move-row {
-  display: grid;
-  grid-template-columns: 35px 1fr 1fr;
-  gap: 7px;
-  align-items: center;
-  min-height: 35px;
-  padding: 5px 13px;
-  border-bottom: 1px solid rgba(53, 68, 90, 0.5);
-  font-size: 13px;
-}
-
-.move-row:nth-child(even) {
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.move-number {
-  color: #8390A2;
-  font-size: 11px;
-}
-
-.move-white,
-.move-black {
-  color: #F1F3F6;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-weight: 700;
-}
-
-.empty-history {
-  padding: 20px 14px;
-  color: #8996A8;
-  text-align: center;
-  font-size: 12px;
-}
-
-.footer {
-  margin-top: 22px;
-  text-align: center;
-  color: #718096;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
-.footer strong {
-  color: var(--gold);
-}
-
-.error-screen {
-  display: none;
-  padding: 24px;
-  margin-top: 30px;
-  border: 1px solid #714A42;
-  border-radius: 12px;
-  color: #F0D6D1;
-  background: #291B20;
-  text-align: center;
   line-height: 1.8;
 }
 
-@media (max-width: 760px) {
-  .app {
-    padding: 13px 10px 24px;
-  }
-
-  header {
-    margin-bottom: 16px;
-  }
-
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 17px;
-  }
-
-  .board-section {
-    width: 100%;
-  }
-
-  .board-frame {
-    width: 100%;
-    max-width: min(100%, 620px);
-  }
-
-  .sidebar {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .move-list {
-    max-height: 220px;
-  }
-
-  .status-pill {
-    font-size: 10px;
-    padding: 6px 8px;
-  }
+#history {
+  max-height: 280px;
+  overflow-y: auto;
 }
 
-@media (max-width: 360px) {
-  .app {
-    padding-left: 7px;
-    padding-right: 7px;
+.move {
+  display: grid;
+  grid-template-columns: 30px 1fr 1fr;
+  gap: 5px;
+  padding: 7px 12px;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.move:nth-child(even) {
+  background: #FFFFFF08;
+}
+
+.move-number { color: #8D9AAD; }
+
+.empty {
+  padding: 20px 10px;
+  text-align: center;
+  color: #8D9AAD;
+}
+
+footer {
+  padding-top: 24px;
+  text-align: center;
+  color: #7D8A9E;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+footer strong { color: var(--gold); }
+
+#error {
+  display: none;
+  padding: 15px;
+  margin-top: 15px;
+  border: 1px solid #9B4949;
+  border-radius: 10px;
+  color: #FFD9D9;
+}
+
+@media (max-width: 680px) {
+  body { padding: 13px 9px 25px; }
+
+  .game {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
   }
 
-  .board-frame {
-    padding: 3px;
+  .brand { font-size: 23px; }
+
+  .board-wrap {
+    max-width: 620px;
   }
 
-  .brand-icon {
-    width: 38px;
-    height: 38px;
-    font-size: 24px;
-  }
+  .sidebar { gap: 12px; }
+  #history { max-height: 180px; }
+}
 
-  .tagline {
-    font-size: 9px;
-  }
-
-  .player-bar {
-    padding: 8px;
-  }
+@media (max-width: 350px) {
+  body { padding-left: 5px; padding-right: 5px; }
+  .board-wrap { padding: 2px; }
 }
 </style>
 </head>
 
 <body>
 <div class="app">
-
   <header>
-    <div class="brand">
-      <div class="brand-icon">♚</div>
-      <div>
-        <div class="brand-name">KINGSFALL</div>
-        <div class="tagline">EVERY KING CAN FALL.</div>
-      </div>
+    <div>
+      <div class="brand">♚ KINGSFALL</div>
+      <div class="tagline">EVERY KING CAN FALL.</div>
     </div>
-    <div class="status-pill" id="topStatus">LOCAL MATCH</div>
+    <div class="badge">LOCAL MATCH</div>
   </header>
 
-  <main class="layout">
-
-    <section class="board-section">
-
-      <div class="player-bar">
-        <div class="player-info">
-          <div class="player-token black-token">♚</div>
-          <div>
-            <div class="player-name">Black</div>
-            <div class="player-caption">Black pieces</div>
-          </div>
-        </div>
-        <div class="turn-indicator" id="blackIndicator"></div>
+  <main class="game">
+    <section class="board-area">
+      <div class="player">
+        <span>♚ &nbsp; Black</span>
+        <span id="blackTurn"></span>
       </div>
 
-      <div class="board-frame">
-        <div id="board" role="group" aria-label="Chess board"></div>
+      <div class="board-wrap">
+        <div id="board" aria-label="Chess board"></div>
       </div>
 
-      <div class="player-bar" style="margin-top:10px;margin-bottom:0">
-        <div class="player-info">
-          <div class="player-token white-token">♔</div>
-          <div>
-            <div class="player-name">White</div>
-            <div class="player-caption">White pieces</div>
-          </div>
-        </div>
-        <div class="turn-indicator" id="whiteIndicator"></div>
+      <div class="player" style="margin-top:9px">
+        <span>♔ &nbsp; White</span>
+        <span id="whiteTurn">●</span>
       </div>
 
-      <div class="board-message" id="boardMessage" aria-live="polite">
-        White to move
+      <div class="message" id="message">White to move</div>
+
+      <div class="buttons">
+        <button class="action primary" id="reset">↻ New Game</button>
+        <button class="action" id="flip">⇅ Flip Board</button>
       </div>
 
-      <div class="controls">
-        <button class="control-button primary" id="newGameButton">
-          ↻ New Game
-        </button>
-        <button class="control-button" id="flipButton">
-          ⇅ Flip Board
-        </button>
-      </div>
-
+      <div id="error"></div>
     </section>
 
     <aside class="sidebar">
+      <section class="panel">
+        <div class="panel-title">Game Status</div>
+        <div class="panel-body" id="status">
+          White to move.<br>
+          Select a piece to see its legal moves.
+        </div>
+      </section>
 
       <section class="panel">
-        <div class="panel-heading">Game Status</div>
+        <div class="panel-title">Move History</div>
+        <div id="history"><div class="empty">No moves yet</div></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">How to Play</div>
         <div class="panel-body">
-          <div class="game-state">
-            <div class="state-symbol" id="stateSymbol">♟</div>
-            <div>
-              <div class="state-title" id="stateTitle">Game in progress</div>
-              <div class="state-subtitle" id="stateSubtitle">White's turn</div>
-            </div>
-          </div>
-
-          <div class="rule-line">
-            <span class="rule-bullet">◆</span>
-            <span>Legal moves are highlighted when you select a piece.</span>
-          </div>
-
-          <div class="rule-line">
-            <span class="rule-bullet">◆</span>
-            <span>Play locally with two players on the same device.</span>
-          </div>
-
-          <div class="rule-line">
-            <span class="rule-bullet">◆</span>
-            <span>Promotion automatically changes a pawn into a queen.</span>
-          </div>
+          Select a piece to display legal moves.<br>
+          Tap a highlighted square to move.<br>
+          Pawns promote to queens automatically.
         </div>
       </section>
-
-      <section class="panel">
-        <div class="panel-heading">Move History</div>
-        <div class="move-list" id="moveList">
-          <div class="empty-history">No moves yet</div>
-        </div>
-      </section>
-
     </aside>
   </main>
 
-  <div class="error-screen" id="errorScreen">
-    <strong>Chess library could not be loaded.</strong>
-    <br>
-    Please check your internet connection and reload this page.
-  </div>
-
-  <footer class="footer">
-    <strong>KINGSFALL</strong> · EVERY KING CAN FALL.
-  </footer>
-
+  <footer><strong>KINGSFALL</strong> · EVERY KING CAN FALL.</footer>
 </div>
 
 <script>
-(function () {
-  "use strict";
-
-  const boardElement = document.getElementById("board");
-  const errorScreen = document.getElementById("errorScreen");
+(() => {
+  const board = document.getElementById("board");
+  const message = document.getElementById("message");
+  const status = document.getElementById("status");
+  const history = document.getElementById("history");
 
   if (typeof Chess === "undefined") {
-    errorScreen.style.display = "block";
-    boardElement.style.display = "none";
+    document.getElementById("error").style.display = "block";
+    document.getElementById("error").textContent =
+      "Chess rules failed to load. Check your internet connection and reload.";
     return;
   }
 
-  let game = new Chess();
-  let selectedSquare = null;
-  let legalTargets = [];
+  const game = new Chess();
+  const files = "abcdefgh";
   let flipped = false;
+  let selected = null;
+  let targets = [];
   let lastMove = null;
 
-  const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
-
   /*
-    Piece illustrations use a consistent SVG viewBox so every
-    piece fits within its square without changing square dimensions.
+    Classic Staunton-inspired piece silhouettes.
+    Each SVG uses the same viewBox and fits inside its square.
   */
-  const piecePaths = {
-    p: `
-      <circle cx="50" cy="23" r="12"/>
-      <path d="M42 37
-               C42 33 58 33 58 37
-               L61 49
-               C62 57 68 63 72 70
-               L78 78
-               L22 78
-               L28 70
-               C32 63 38 57 39 49 Z"/>
-      <path d="M19 81 Q50 76 81 81 L84 88 L16 88 Z"/>
-    `,
-    r: `
-      <path d="M22 15 H34 V25 H43 V15 H57 V25 H66 V15 H78
-               L75 43 L69 48 L72 76 L81 81 V88 H19 V81
-               L28 76 L31 48 L25 43 Z"/>
-      <path d="M34 43 H66 M32 76 H68"
-            fill="none" stroke="currentColor"
-            stroke-width="4" stroke-linecap="round"/>
-    `,
-    n: `
-      <path d="M23 82 L26 68
-               C23 57 27 44 37 34
-               L49 20 L60 15 L67 25
-               L77 30 L73 39 L62 40
-               L55 49 L64 56 L73 71
-               L79 82 Z"/>
-      <path d="M37 34 L34 49 L45 44 L49 36
-               L42 29 Z"/>
-      <circle cx="59" cy="29" r="3.4"
-              fill="#17202C" stroke="none"/>
-      <path d="M32 69 L57 69"
-            fill="none" stroke="currentColor"
-            stroke-width="4" stroke-linecap="round"/>
-    `,
-    b: `
-      <path d="M50 13
-               C38 13 34 24 40 33
-               C45 39 43 45 36 53
-               C31 59 30 66 27 73
-               L73 73
-               C70 66 69 59 64 53
-               C57 45 55 39 60 33
-               C66 24 62 13 50 13 Z"/>
-      <path d="M56 19 L43 39"
-            fill="none" stroke="currentColor"
-            stroke-width="4" stroke-linecap="round"/>
-      <path d="M23 77 Q50 73 77 77 L82 88 H18 Z"/>
-    `,
-    q: `
-      <circle cx="19" cy="23" r="6"/>
-      <circle cx="39" cy="15" r="6"/>
-      <circle cx="61" cy="15" r="6"/>
-      <circle cx="81" cy="23" r="6"/>
-      <path d="M20 31 L31 52 L39 26 L50 49
-               L61 26 L69 52 L80 31
-               L73 73 H27 Z"/>
-      <path d="M24 77 Q50 73 76 77 L81 88 H19 Z"/>
-    `,
+  const shapes = {
     k: `
-      <path d="M45 10 H55 V20 H66 V29 H55 V39
-               H64 C66 48 70 55 73 65
-               L78 76 L84 81 V88 H16 V81
-               L22 76 L27 65
-               C30 55 34 48 36 39 H45 V29
-               H34 V20 H45 Z"/>
-      <path d="M35 49 H65 M29 72 H71"
-            fill="none" stroke="currentColor"
-            stroke-width="4" stroke-linecap="round"/>
-    `
+      <path d="M44 8h12v11h11v10H56v9
+      c2 7 7 12 10 20l8 18 7 5v7H19v-7l7-5
+      8-18c3-8 8-13 10-20v-9H33V19h11z"/>
+      <path d="M50 1v15M43 8h14"
+      fill="none" stroke="currentColor" stroke-width="4"/>`,
+    q: `
+      <path d="M19 28l12 25 7-28 12 25 12-25 7 28
+      12-25-7 44H26z"/>
+      <circle cx="19" cy="22" r="5"/>
+      <circle cx="38" cy="19" r="5"/>
+      <circle cx="50" cy="14" r="5"/>
+      <circle cx="62" cy="19" r="5"/>
+      <circle cx="81" cy="22" r="5"/>
+      <path d="M24 76h52l5 10H19z"/>`,
+    r: `
+      <path d="M23 14h13v10h8V14h12v10h8V14h13l-3 29
+      -6 5 4 27H28l4-27-6-5z"/>
+      <path d="M34 47h32M31 75h38"
+      fill="none" stroke="currentColor" stroke-width="3"/>`,
+    b: `
+      <path d="M50 12c-12 0-17 12-10 22 4 5 4 10-2 17
+      -6 7-9 15-11 24h46c-2-9-5-17-11-24-6-7-6-12-2-17
+      7-10 2-22-10-22z"/>
+      <path d="M57 18L43 38"
+      fill="none" stroke="currentColor" stroke-width="4"/>
+      <path d="M23 78h54l5 9H18z"/>`,
+    n: `
+      <path d="M23 83l4-17c-3-12 2-24 12-32l12-14
+      13-5 7 12 10 7-5 10-14 1-7 11 10 9 7 18z"/>
+      <path d="M39 34l-4 15 13-7 4-9-8-6z"/>
+      <circle cx="61" cy="30" r="3.5"
+      fill="currentColor" stroke="none"/>
+      <path d="M31 70h29"
+      fill="none" stroke="currentColor" stroke-width="3"/>`,
+    p: `
+      <circle cx="50" cy="26" r="12"/>
+      <path d="M42 39c-1 8-5 14-11 22l-7 14h52l-7-14
+      c-6-8-10-14-11-22z"/>
+      <path d="M22 78h56l5 9H17z"/>`
   };
 
-  function createPieceSVG(piece) {
-    const isWhite = piece.color === "w";
-    const fill = isWhite ? "#FFF9EC" : "#17202C";
-    const stroke = isWhite ? "#263247" : "#E0E5EC";
-    const type = piece.type;
-
+  function pieceSVG(piece) {
+    const white = piece.color === "w";
+    const fill = white ? "#FFFCF2" : "#17202C";
+    const stroke = white ? "#243047" : "#F1EBDD";
     return `
-      <svg class="piece ${isWhite ? "white-piece" : "black-piece"}"
-           viewBox="0 0 100 100"
-           xmlns="http://www.w3.org/2000/svg"
-           aria-hidden="true">
-        <g fill="${fill}"
-           stroke="${stroke}"
-           stroke-width="2.8"
-           stroke-linejoin="round"
-           stroke-linecap="round">
-          ${piecePaths[type]}
+      <svg class="piece" viewBox="0 0 100 100"
+           aria-hidden="true" focusable="false">
+        <g fill="${fill}" stroke="${stroke}" stroke-width="2.8"
+           stroke-linejoin="round" stroke-linecap="round">
+          ${shapes[piece.type]}
         </g>
-      </svg>
-    `;
+      </svg>`;
   }
 
-  function squareName(fileIndex, rank) {
-    return files[fileIndex] + rank;
+  function kingSquare(color) {
+    for (const file of files) {
+      for (let rank = 1; rank <= 8; rank++) {
+        const sq = file + rank;
+        const p = game.get(sq);
+        if (p && p.type === "k" && p.color === color) return sq;
+      }
+    }
+    return null;
   }
 
-  function getDisplaySquares() {
-    const squares = [];
+  function drawBoard() {
+    board.innerHTML = "";
+    const checkKing = game.in_check() ? kingSquare(game.turn()) : null;
 
     for (let row = 0; row < 8; row++) {
       const rank = flipped ? row + 1 : 8 - row;
 
       for (let col = 0; col < 8; col++) {
         const fileIndex = flipped ? 7 - col : col;
-        squares.push({
-          name: squareName(fileIndex, rank),
-          row,
-          col,
-          rank,
-          fileIndex
-        });
+        const file = files[fileIndex];
+        const sqName = file + rank;
+        const sq = document.createElement("button");
+        sq.type = "button";
+        sq.className = "square";
+        sq.dataset.sq = sqName;
+        sq.setAttribute("aria-label", sqName);
+
+        const isLight = (fileIndex + rank) % 2 === 1;
+        sq.classList.add(isLight ? "light" : "dark");
+
+        if (lastMove && (sqName === lastMove.from ||
+                         sqName === lastMove.to)) {
+          sq.classList.add("last");
+        }
+        if (sqName === selected) sq.classList.add("selected");
+        if (sqName === checkKing) sq.classList.add("check");
+
+        const piece = game.get(sqName);
+        if (piece) sq.insertAdjacentHTML("beforeend", pieceSVG(piece));
+
+        if (targets.includes(sqName)) {
+          const marker = document.createElement("span");
+          marker.className = piece ? "capture-mark" : "dot";
+          sq.appendChild(marker);
+        }
+
+        const showFile = flipped ? rank === 1 : rank === 8;
+        const showRank = flipped ? fileIndex === 7 : fileIndex === 0;
+
+        if (showFile || showRank) {
+          const coord = document.createElement("span");
+          coord.className = "coord";
+          coord.textContent = showFile && showRank
+            ? file + rank
+            : showFile ? file : String(rank);
+          sq.appendChild(coord);
+        }
+
+        sq.addEventListener("click", () => clickSquare(sqName));
+        board.appendChild(sq);
       }
     }
 
-    return squares;
+    drawStatus();
+    drawHistory();
   }
 
-  function renderBoard() {
-    boardElement.innerHTML = "";
+  function clickSquare(sq) {
+    if (game.game_over()) return;
 
-    const displaySquares = getDisplaySquares();
-    const checkedKing = game.in_check()
-      ? findKingSquare(game.turn())
-      : null;
+    if (selected && targets.includes(sq)) {
+      let result = null;
+      try {
+        result = game.move({ from: selected, to: sq, promotion: "q" });
+      } catch (_) {}
 
-    displaySquares.forEach(function (item) {
-      const square = document.createElement("button");
-      square.type = "button";
-      square.className = "square";
-      square.dataset.square = item.name;
-      square.setAttribute("aria-label", item.name);
-
-      const isLight = (item.fileIndex + item.rank) % 2 === 1;
-      square.classList.add(isLight ? "light" : "dark");
-
-      if (
-        lastMove &&
-        (item.name === lastMove.from || item.name === lastMove.to)
-      ) {
-        square.classList.add("last-move");
-      }
-
-      if (item.name === selectedSquare) {
-        square.classList.add("selected");
-      }
-
-      if (item.name === checkedKing) {
-        square.classList.add("in-check");
-      }
-
-      const piece = game.get(item.name);
-
-      if (piece) {
-        square.insertAdjacentHTML("beforeend", createPieceSVG(piece));
-      }
-
-      if (legalTargets.includes(item.name)) {
-        const dot = document.createElement("span");
-        dot.className = "legal-dot";
-        square.appendChild(dot);
-      }
-
-      const showFile = flipped ? item.rank === 1 : item.rank === 8;
-      const showRank = flipped ? item.fileIndex === 7 : item.fileIndex === 0;
-
-      if (showFile || showRank) {
-        const coordinate = document.createElement("span");
-        coordinate.className = "coordinates";
-
-        if (showFile && showRank) {
-          coordinate.textContent = files[item.fileIndex] + item.rank;
-        } else if (showFile) {
-          coordinate.textContent = files[item.fileIndex];
-        } else {
-          coordinate.textContent = item.rank;
-        }
-
-        square.appendChild(coordinate);
-      }
-
-      square.addEventListener("click", onSquareClick);
-      boardElement.appendChild(square);
-    });
-
-    updateStatus();
-    renderMoveHistory();
-  }
-
-  function findKingSquare(color) {
-    for (const file of files) {
-      for (let rank = 1; rank <= 8; rank++) {
-        const name = file + rank;
-        const piece = game.get(name);
-
-        if (piece && piece.type === "k" && piece.color === color) {
-          return name;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  function onSquareClick(event) {
-    if (game.game_over()) {
+      if (result) lastMove = { from: result.from, to: result.to };
+      selected = null;
+      targets = [];
+      drawBoard();
       return;
     }
 
-    const squareNameClicked = event.currentTarget.dataset.square;
-    const piece = game.get(squareNameClicked);
-
-    if (selectedSquare && legalTargets.includes(squareNameClicked)) {
-      makeMove(selectedSquare, squareNameClicked);
-      return;
-    }
-
+    const piece = game.get(sq);
     if (piece && piece.color === game.turn()) {
-      selectedSquare = squareNameClicked;
-      legalTargets = game.moves({
-        square: selectedSquare,
-        verbose: true
-      }).map(function (move) {
-        return move.to;
-      });
-
-      renderBoard();
-      return;
+      selected = sq;
+      targets = game.moves({ square: sq, verbose: true })
+        .map(move => move.to);
+    } else {
+      selected = null;
+      targets = [];
     }
 
-    selectedSquare = null;
-    legalTargets = [];
-    renderBoard();
+    drawBoard();
   }
 
-  function makeMove(from, to) {
-    let move;
-
-    try {
-      move = game.move({
-        from: from,
-        to: to,
-        promotion: "q"
-      });
-    } catch (error) {
-      move = null;
-    }
-
-    if (move) {
-      lastMove = {
-        from: move.from,
-        to: move.to
-      };
-    }
-
-    selectedSquare = null;
-    legalTargets = [];
-    renderBoard();
-  }
-
-  function updateStatus() {
-    const whiteIndicator = document.getElementById("whiteIndicator");
-    const blackIndicator = document.getElementById("blackIndicator");
-    const boardMessage = document.getElementById("boardMessage");
-    const stateTitle = document.getElementById("stateTitle");
-    const stateSubtitle = document.getElementById("stateSubtitle");
-    const stateSymbol = document.getElementById("stateSymbol");
-    const topStatus = document.getElementById("topStatus");
-
-    whiteIndicator.classList.toggle("black-turn", game.turn() !== "w");
-    blackIndicator.classList.toggle("black-turn", game.turn() === "w");
+  function drawStatus() {
+    const turn = game.turn() === "w" ? "White" : "Black";
+    document.getElementById("whiteTurn").textContent =
+      game.turn() === "w" ? "● Your turn" : "";
+    document.getElementById("blackTurn").textContent =
+      game.turn() === "b" ? "● Your turn" : "";
 
     if (game.in_checkmate()) {
-      const winner = game.turn() === "w" ? "Black" : "Whi
+      const winner = game.turn() === "w" ? "Black" : "White";
+      message.textContent = "Checkmate — " + winner + " wins!";
+      status.textContent = "Checkmate! " + winner + " wins.";
+    } else if (game.in_stalemate()) {
+      message.textContent = "Stalemate — Draw";
+      status.textContent = "No legal moves. The game is drawn.";
+    } else if (game.in_draw()) {
+      message.textContent = "Draw";
+      status.textContent = "The game has ended in a draw.";
+    } else if (game.in_check()) {
+      message.textContent = "Check! " + turn + " must respond.";
+      status.textContent = turn + " is in check.";
+    } else {
+      message.textContent = turn + " to move";
+      status.textContent = turn + " to move. Select a piece to see legal moves.";
+    }
+  }
+
+  function drawHistory() {
+    const moves = game.history();
+    history.innerHTML = "";
+
+    if (!moves.length) {
+      history.innerHTML = '<div class="empty">No moves yet</div>';
+      return;
+    }
+
+    for (let i = 0; i < moves.length; i += 2) {
+      const row = document.createElement("div");
+      row.className = "move";
+
+      const number = document.createElement("span");
+      number.className = "move-number";
+      number.textContent = (Math.floor(i / 2) + 1) + ".";
+
+      const white = document.createElement("span");
+      white.textContent = moves[i];
+
+      const black = document.createElement("span");
+      black.textContent = moves[i + 1] || "";
+
+      row.append(number, white, black);
+      history.appendChild(row);
+    }
+
+    history.scrollTop = history.scrollHeight;
+  }
+
+  document.getElementById("reset").addEventListener("click", () => {
+    game.reset();
+    selected = null;
+    targets = [];
+    lastMove = null;
+    drawBoard();
+  });
+
+  document.getElementById("flip").addEventListener("click", () => {
+    flipped = !flipped;
+    selected = null;
+    targets = [];
+    drawBoard();
+  });
+
+  drawBoard();
+})();
+</script>
+</body>
+</html>
