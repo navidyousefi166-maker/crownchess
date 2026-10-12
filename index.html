@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="fa">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0B1220">
 <title>Kingsfall — Every King Can Fall</title>
 
@@ -11,743 +10,957 @@
 
 <style>
 :root {
-  --bg: #0B1220;
-  --panel: #151F30;
-  --panel2: #1C293D;
+  --navy: #0B1220;
+  --panel: #131D2D;
+  --panel2: #192538;
   --gold: #E5BD65;
-  --text: #E7EDF5;
-  --muted: #93A4BA;
-  --light: #E8D5B8;
-  --dark: #537765;
-  --white-piece: #FFF9EC;
-  --black-piece: #17202C;
-  --border: #2B3A50;
+  --ivory: #F0E8D5;
+  --green: #71916A;
+  --text: #F7F4EC;
+  --muted: #AAB4C3;
+  --border: #29374A;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  min-height: 100%;
+  background: var(--navy);
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse at top, #17243A 0%, var(--navy) 65%);
   color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 button {
   font: inherit;
 }
 
-header {
-  padding: 23px 16px 18px;
-  text-align: center;
-  border-bottom: 1px solid #253147;
+.app {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 18px 14px 30px;
 }
 
-.logo {
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-icon {
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #8E713A;
+  border-radius: 12px;
   color: var(--gold);
-  font-size: clamp(26px, 5vw, 36px);
+  background: #111B2B;
+  font-size: 29px;
+}
+
+.brand-name {
+  color: var(--gold);
+  font-size: clamp(21px, 5vw, 29px);
   font-weight: 900;
-  letter-spacing: 3px;
+  letter-spacing: 1.5px;
+  line-height: 1.2;
 }
 
 .tagline {
-  margin-top: 7px;
+  margin-top: 4px;
   color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 2px;
-}
-
-main {
-  width: min(100% - 24px, 1040px);
-  margin: 24px auto 35px;
-}
-
-.topline {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.page-title {
-  font-size: 19px;
-  font-weight: bold;
-}
-
-.live-label {
-  color: var(--gold);
   font-size: 11px;
   letter-spacing: 1px;
-  border: 1px solid #66552F;
-  border-radius: 20px;
-  padding: 6px 10px;
+}
+
+.status-pill {
+  border: 1px solid #334157;
+  border-radius: 30px;
+  padding: 7px 11px;
+  color: #D5DCE5;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(230px, .75fr);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 310px);
   align-items: start;
+  gap: 20px;
 }
 
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 15px;
-  padding: 15px;
+.board-section {
+  width: 100%;
   min-width: 0;
 }
 
-.game-status {
-  min-height: 40px;
-  padding: 8px 4px 13px;
-  text-align: center;
-  color: var(--gold);
-  font-weight: bold;
-  font-size: 14px;
+.player-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 49px;
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(19, 29, 45, 0.92);
 }
 
-.board {
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.player-token {
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+}
+
+.white-token {
+  color: #17202C;
+  background: var(--ivory);
+}
+
+.black-token {
+  color: #F7F4EC;
+  background: #273448;
+}
+
+.player-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.player-caption {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.turn-indicator {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  flex: 0 0 9px;
+}
+
+.turn-indicator.black-turn {
+  background: var(--gold);
+}
+
+/* صفحهٔ شطرنج: مربع دقیق، شبکهٔ ۸ در ۸ */
+.board-frame {
   width: 100%;
-  aspect-ratio: 1;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 5px;
+  border: 1px solid #8D713D;
+  border-radius: 5px;
+  background: #172235;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.32);
+}
+
+#board {
+  width: 100%;
+  aspect-ratio: 1 / 1;
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  overflow: hidden;
-  border: 3px solid #34465A;
-  border-radius: 3px;
-  user-select: none;
-}
-
-.square {
-  position: relative;
-  min-width: 0;
-  min-height: 0;
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+  gap: 0;
   padding: 0;
   margin: 0;
-  border: none;
-  border-radius: 0;
+  overflow: hidden;
+  direction: ltr;
+}
+
+/* تمام خانه‌ها در هر دو جهت دقیقاً هم‌اندازه‌اند */
+.square {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
 .square.light {
-  background: var(--light);
+  background: var(--ivory);
 }
 
 .square.dark {
-  background: var(--dark);
+  background: var(--green);
+}
+
+.square.last-move.light {
+  background: #E5D89B;
+}
+
+.square.last-move.dark {
+  background: #A2B46E;
 }
 
 .square.selected {
-  box-shadow: inset 0 0 0 4px var(--gold);
-}
-
-.square.last {
-  box-shadow: inset 0 0 0 4px #E5BD6580;
-}
-
-.square.legal::after {
-  content: "";
-  position: absolute;
-  width: 24%;
-  height: 24%;
-  border-radius: 50%;
-  background: #13202A70;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.square.legal.has-piece::after {
-  width: 86%;
-  height: 86%;
-  border-radius: 50%;
-  border: 4px solid #E5BD65D0;
-  background: transparent;
-}
-
-.piece-svg {
-  display: block;
-  width: 91%;
-  height: 91%;
-  position: relative;
+  box-shadow: inset 0 0 0 4px rgba(229, 189, 101, 0.95);
   z-index: 1;
-  overflow: visible;
+}
+
+.square.in-check {
+  background: #C85C58 !important;
+}
+
+.piece {
+  display: block;
+  width: 84%;
+  height: 84%;
+  max-width: 100%;
+  max-height: 100%;
   pointer-events: none;
-  filter: drop-shadow(0 2px 1px #0004);
+  overflow: visible;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 }
 
 .white-piece {
-  color: var(--white-piece);
-  fill: var(--white-piece);
-  stroke: #25354A;
+  color: #FFF9EC;
 }
 
 .black-piece {
-  color: var(--black-piece);
-  fill: var(--black-piece);
-  stroke: #E7EDF5;
+  color: #17202C;
+}
+
+.legal-dot {
+  position: absolute;
+  width: 25%;
+  height: 25%;
+  border-radius: 50%;
+  background: rgba(18, 28, 42, 0.30);
+  pointer-events: none;
+}
+
+.square:has(.piece) .legal-dot {
+  width: 92%;
+  height: 92%;
+  border: 5px solid rgba(18, 28, 42, 0.25);
+  background: transparent;
 }
 
 .coordinates {
   position: absolute;
-  z-index: 3;
-  pointer-events: none;
-  font-size: clamp(8px, 1.5vw, 12px);
-  font-weight: bold;
-  opacity: .85;
-}
-
-.rank-label {
-  top: 2px;
   left: 3px;
-}
-
-.file-label {
-  right: 3px;
   bottom: 1px;
+  z-index: 2;
+  font-size: clamp(8px, 1.8vw, 11px);
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .square.light .coordinates {
-  color: var(--dark);
+  color: #66845E;
 }
 
 .square.dark .coordinates {
-  color: var(--light);
+  color: #F3EBD7;
+}
+
+.board-message {
+  min-height: 38px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.board-message strong {
+  color: var(--gold);
 }
 
 .controls {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 9px;
-  margin-top: 13px;
+  margin-top: 12px;
 }
 
-.action {
-  min-height: 42px;
-  padding: 10px 7px;
-  background: var(--panel2);
+.control-button {
+  min-height: 43px;
+  padding: 9px 10px;
+  border: 1px solid #35445A;
+  border-radius: 10px;
   color: var(--text);
-  border: 1px solid #3B4C62;
-  border-radius: 9px;
+  background: var(--panel);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: bold;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.action:active {
-  transform: scale(.98);
-}
-
-.action.primary {
-  background: var(--gold);
-  color: #17202C;
+.control-button:hover {
+  background: var(--panel2);
   border-color: var(--gold);
 }
 
-.action:hover {
-  filter: brightness(1.08);
+.control-button.primary {
+  color: #17202C;
+  background: var(--gold);
+  border-color: var(--gold);
+  font-weight: 800;
 }
 
-.section-title {
+.control-button:active {
+  transform: scale(0.98);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(19, 29, 45, 0.92);
+  overflow: hidden;
+}
+
+.panel-heading {
+  padding: 14px 15px;
+  border-bottom: 1px solid var(--border);
   color: var(--gold);
+  font-weight: 800;
   font-size: 14px;
-  font-weight: bold;
-  margin: 3px 0 12px;
 }
 
-.divider {
-  height: 1px;
-  background: var(--border);
-  margin: 16px 0;
+.panel-body {
+  padding: 14px 15px;
 }
 
-.player {
+.game-state {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
-  background: var(--panel2);
-  padding: 12px;
-  border-radius: 9px;
-  margin-bottom: 9px;
+  margin-bottom: 13px;
 }
 
-.player-name {
-  font-weight: bold;
-  font-size: 13px;
-}
-
-.player-sub {
-  color: var(--muted);
-  font-size: 11px;
-  margin-top: 4px;
-}
-
-.player-mark {
+.state-symbol {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 10px;
   color: var(--gold);
-  font-size: 20px;
+  background: #253247;
+  font-size: 21px;
 }
 
-.turn-info {
+.state-title {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.state-subtitle {
+  margin-top: 3px;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.9;
-  margin: 12px 0;
+  font-size: 12px;
 }
 
-.history {
-  min-height: 65px;
-  max-height: 280px;
+.rule-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 11px;
+  color: #CFD5DF;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.rule-bullet {
+  color: var(--gold);
+  font-weight: 900;
+}
+
+.move-list {
+  max-height: 300px;
   overflow-y: auto;
-  font-size: 13px;
+  scrollbar-width: thin;
+  scrollbar-color: #42516A transparent;
 }
 
 .move-row {
   display: grid;
   grid-template-columns: 35px 1fr 1fr;
-  gap: 5px;
-  padding: 9px 7px;
-  border-bottom: 1px solid var(--border);
+  gap: 7px;
+  align-items: center;
+  min-height: 35px;
+  padding: 5px 13px;
+  border-bottom: 1px solid rgba(53, 68, 90, 0.5);
+  font-size: 13px;
 }
 
-.move-row:nth-child(odd) {
-  background: #FFFFFF05;
+.move-row:nth-child(even) {
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .move-number {
-  color: var(--muted);
+  color: #8390A2;
+  font-size: 11px;
+}
+
+.move-white,
+.move-black {
+  color: #F1F3F6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 700;
 }
 
 .empty-history {
-  color: var(--muted);
-  font-size: 12px;
-  padding: 10px 2px;
-}
-
-.note {
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.9;
-  margin-top: 16px;
-}
-
-footer {
-  color: #73869D;
-  font-size: 11px;
+  padding: 20px 14px;
+  color: #8996A8;
   text-align: center;
-  padding: 25px 10px 10px;
-  letter-spacing: 1px;
+  font-size: 12px;
 }
 
-@media (max-width: 650px) {
+.footer {
+  margin-top: 22px;
+  text-align: center;
+  color: #718096;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.footer strong {
+  color: var(--gold);
+}
+
+.error-screen {
+  display: none;
+  padding: 24px;
+  margin-top: 30px;
+  border: 1px solid #714A42;
+  border-radius: 12px;
+  color: #F0D6D1;
+  background: #291B20;
+  text-align: center;
+  line-height: 1.8;
+}
+
+@media (max-width: 760px) {
+  .app {
+    padding: 13px 10px 24px;
+  }
+
   header {
-    padding: 19px 12px 15px;
-  }
-
-  .logo {
-    letter-spacing: 2px;
-  }
-
-  main {
-    width: min(100% - 16px, 500px);
-    margin-top: 17px;
+    margin-bottom: 16px;
   }
 
   .layout {
     grid-template-columns: minmax(0, 1fr);
+    gap: 17px;
+  }
+
+  .board-section {
+    width: 100%;
+  }
+
+  .board-frame {
+    width: 100%;
+    max-width: min(100%, 620px);
+  }
+
+  .sidebar {
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 12px;
   }
 
-  .panel {
-    padding: 10px;
+  .move-list {
+    max-height: 220px;
   }
 
-  .board {
-    border-width: 2px;
+  .status-pill {
+    font-size: 10px;
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .app {
+    padding-left: 7px;
+    padding-right: 7px;
   }
 
-  .game-status {
-    min-height: 35px;
-    padding-top: 7px;
+  .board-frame {
+    padding: 3px;
   }
 
-  .history {
-    max-height: 200px;
+  .brand-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 24px;
   }
 
-  .player {
-    padding: 10px;
+  .tagline {
+    font-size: 9px;
+  }
+
+  .player-bar {
+    padding: 8px;
   }
 }
 </style>
 </head>
 
 <body>
+<div class="app">
 
-<header>
-  <div class="logo">KINGSFALL</div>
-  <div class="tagline">EVERY KING CAN FALL.</div>
-</header>
+  <header>
+    <div class="brand">
+      <div class="brand-icon">♚</div>
+      <div>
+        <div class="brand-name">KINGSFALL</div>
+        <div class="tagline">EVERY KING CAN FALL.</div>
+      </div>
+    </div>
+    <div class="status-pill" id="topStatus">LOCAL MATCH</div>
+  </header>
 
-<main>
-  <div class="topline">
-    <div class="page-title">Chess Arena</div>
-    <div class="live-label">LOCAL MATCH</div>
-  </div>
+  <main class="layout">
 
-  <div class="layout">
+    <section class="board-section">
 
-    <section class="panel">
-      <div class="game-status" id="status">در حال آماده‌سازی...</div>
-      <div class="board" id="board"></div>
+      <div class="player-bar">
+        <div class="player-info">
+          <div class="player-token black-token">♚</div>
+          <div>
+            <div class="player-name">Black</div>
+            <div class="player-caption">Black pieces</div>
+          </div>
+        </div>
+        <div class="turn-indicator" id="blackIndicator"></div>
+      </div>
+
+      <div class="board-frame">
+        <div id="board" role="group" aria-label="Chess board"></div>
+      </div>
+
+      <div class="player-bar" style="margin-top:10px;margin-bottom:0">
+        <div class="player-info">
+          <div class="player-token white-token">♔</div>
+          <div>
+            <div class="player-name">White</div>
+            <div class="player-caption">White pieces</div>
+          </div>
+        </div>
+        <div class="turn-indicator" id="whiteIndicator"></div>
+      </div>
+
+      <div class="board-message" id="boardMessage" aria-live="polite">
+        White to move
+      </div>
 
       <div class="controls">
-        <button class="action primary" id="reset">بازی جدید</button>
-        <button class="action" id="flip">چرخاندن صفحه</button>
+        <button class="control-button primary" id="newGameButton">
+          ↻ New Game
+        </button>
+        <button class="control-button" id="flipButton">
+          ⇅ Flip Board
+        </button>
       </div>
+
     </section>
 
-    <aside class="panel">
-      <div class="section-title">بازیکنان</div>
+    <aside class="sidebar">
 
-      <div class="player">
-        <div>
-          <div class="player-name">بازیکن سفید</div>
-          <div class="player-sub">White pieces</div>
+      <section class="panel">
+        <div class="panel-heading">Game Status</div>
+        <div class="panel-body">
+          <div class="game-state">
+            <div class="state-symbol" id="stateSymbol">♟</div>
+            <div>
+              <div class="state-title" id="stateTitle">Game in progress</div>
+              <div class="state-subtitle" id="stateSubtitle">White's turn</div>
+            </div>
+          </div>
+
+          <div class="rule-line">
+            <span class="rule-bullet">◆</span>
+            <span>Legal moves are highlighted when you select a piece.</span>
+          </div>
+
+          <div class="rule-line">
+            <span class="rule-bullet">◆</span>
+            <span>Play locally with two players on the same device.</span>
+          </div>
+
+          <div class="rule-line">
+            <span class="rule-bullet">◆</span>
+            <span>Promotion automatically changes a pawn into a queen.</span>
+          </div>
         </div>
-        <div class="player-mark">♔</div>
-      </div>
+      </section>
 
-      <div class="player">
-        <div>
-          <div class="player-name">بازیکن سیاه</div>
-          <div class="player-sub">Black pieces</div>
+      <section class="panel">
+        <div class="panel-heading">Move History</div>
+        <div class="move-list" id="moveList">
+          <div class="empty-history">No moves yet</div>
         </div>
-        <div class="player-mark">♚</div>
-      </div>
+      </section>
 
-      <div class="turn-info" id="turnInfo">نوبت سفید</div>
-
-      <div class="divider"></div>
-
-      <div class="section-title">تاریخچه حرکات</div>
-      <div class="history" id="history">
-        <div class="empty-history">هنوز حرکتی انجام نشده است.</div>
-      </div>
-
-      <div class="note">
-        مهره را انتخاب کن و سپس خانه مقصد را بزن.
-        این نسخه برای بازی دو نفره روی یک دستگاه طراحی شده است.
-        ارتقای پیاده به وزیر به‌صورت خودکار انجام می‌شود.
-      </div>
     </aside>
+  </main>
 
+  <div class="error-screen" id="errorScreen">
+    <strong>Chess library could not be loaded.</strong>
+    <br>
+    Please check your internet connection and reload this page.
   </div>
 
-  <footer>KINGSFALL · EVERY KING CAN FALL.</footer>
-</main>
+  <footer class="footer">
+    <strong>KINGSFALL</strong> · EVERY KING CAN FALL.
+  </footer>
+
+</div>
 
 <script>
-const boardEl = document.getElementById("board");
-const statusEl = document.getElementById("status");
-const turnInfoEl = document.getElementById("turnInfo");
-const historyEl = document.getElementById("history");
+(function () {
+  "use strict";
 
-let game = null;
-let selected = null;
-let legalMoves = [];
-let lastMove = null;
-let flipped = false;
+  const boardElement = document.getElementById("board");
+  const errorScreen = document.getElementById("errorScreen");
 
-/* طرح توپر مهره‌ها */
-const pieceArt = {
-  k: `
-    <path d="
-      M44 5H56V15H66V26H56V35
-      C65 41 69 49 68 60
-      L74 74L84 83V92H16V83
-      L26 74L32 60
-      C31 49 35 41 44 35V26H34V15H44Z
-    "/>
-    <path d="M46 7H54V17H46Z"
-      fill="var(--piece-stroke)" stroke="none"/>
-    <path d="M38 21H62V25H38Z"
-      fill="var(--piece-stroke)" stroke="none"/>
-  `,
+  if (typeof Chess === "undefined") {
+    errorScreen.style.display = "block";
+    boardElement.style.display = "none";
+    return;
+  }
 
-  q: `
-    <path d="
-      M24 31L34 41L43 29L47 42H53
-      L57 29L66 41L76 31L70 66
-      L76 78L83 84V92H17V84
-      L24 78L30 66Z
-    "/>
-    <circle cx="23" cy="24" r="7"/>
-    <circle cx="43" cy="19" r="7"/>
-    <circle cx="57" cy="19" r="7"/>
-    <circle cx="77" cy="24" r="7"/>
-    <circle cx="50" cy="12" r="7"/>
-  `,
+  let game = new Chess();
+  let selectedSquare = null;
+  let legalTargets = [];
+  let flipped = false;
+  let lastMove = null;
 
-  r: `
-    <path d="
-      M19 12H35V24H43V12H57V24H65V12H81V38
-      L71 45L74 74L83 83V92H17V83L26 74
-      L29 45L19 38Z
-    "/>
-    <path d="M30 50H70" fill="none"
-      stroke="var(--piece-stroke)" stroke-width="3"/>
-  `,
+  const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
-  b: `
-    <path d="
-      M50 9C39 9 31 18 31 29
-      C31 37 37 43 43 47L35 70
-      L26 80L19 92H81L74 80L65 70
-      L57 47C64 41 69 35 69 27
-      C69 17 61 9 50 9Z
-    "/>
-    <path d="M42 19L57 37" fill="none"
-      stroke="var(--piece-stroke)" stroke-width="4"
-      stroke-linecap="round"/>
-  `,
+  /*
+    Piece illustrations use a consistent SVG viewBox so every
+    piece fits within its square without changing square dimensions.
+  */
+  const piecePaths = {
+    p: `
+      <circle cx="50" cy="23" r="12"/>
+      <path d="M42 37
+               C42 33 58 33 58 37
+               L61 49
+               C62 57 68 63 72 70
+               L78 78
+               L22 78
+               L28 70
+               C32 63 38 57 39 49 Z"/>
+      <path d="M19 81 Q50 76 81 81 L84 88 L16 88 Z"/>
+    `,
+    r: `
+      <path d="M22 15 H34 V25 H43 V15 H57 V25 H66 V15 H78
+               L75 43 L69 48 L72 76 L81 81 V88 H19 V81
+               L28 76 L31 48 L25 43 Z"/>
+      <path d="M34 43 H66 M32 76 H68"
+            fill="none" stroke="currentColor"
+            stroke-width="4" stroke-linecap="round"/>
+    `,
+    n: `
+      <path d="M23 82 L26 68
+               C23 57 27 44 37 34
+               L49 20 L60 15 L67 25
+               L77 30 L73 39 L62 40
+               L55 49 L64 56 L73 71
+               L79 82 Z"/>
+      <path d="M37 34 L34 49 L45 44 L49 36
+               L42 29 Z"/>
+      <circle cx="59" cy="29" r="3.4"
+              fill="#17202C" stroke="none"/>
+      <path d="M32 69 L57 69"
+            fill="none" stroke="currentColor"
+            stroke-width="4" stroke-linecap="round"/>
+    `,
+    b: `
+      <path d="M50 13
+               C38 13 34 24 40 33
+               C45 39 43 45 36 53
+               C31 59 30 66 27 73
+               L73 73
+               C70 66 69 59 64 53
+               C57 45 55 39 60 33
+               C66 24 62 13 50 13 Z"/>
+      <path d="M56 19 L43 39"
+            fill="none" stroke="currentColor"
+            stroke-width="4" stroke-linecap="round"/>
+      <path d="M23 77 Q50 73 77 77 L82 88 H18 Z"/>
+    `,
+    q: `
+      <circle cx="19" cy="23" r="6"/>
+      <circle cx="39" cy="15" r="6"/>
+      <circle cx="61" cy="15" r="6"/>
+      <circle cx="81" cy="23" r="6"/>
+      <path d="M20 31 L31 52 L39 26 L50 49
+               L61 26 L69 52 L80 31
+               L73 73 H27 Z"/>
+      <path d="M24 77 Q50 73 76 77 L81 88 H19 Z"/>
+    `,
+    k: `
+      <path d="M45 10 H55 V20 H66 V29 H55 V39
+               H64 C66 48 70 55 73 65
+               L78 76 L84 81 V88 H16 V81
+               L22 76 L27 65
+               C30 55 34 48 36 39 H45 V29
+               H34 V20 H45 Z"/>
+      <path d="M35 49 H65 M29 72 H71"
+            fill="none" stroke="currentColor"
+            stroke-width="4" stroke-linecap="round"/>
+    `
+  };
 
-  n: `
-    <path d="
-      M17 92L21 80L30 73L33 61L26 49
-      L25 37L31 27L42 17L54 11L67 15
-      L79 28L83 39L76 47L66 48L59 40
-      L51 34L45 39L49 47L60 57L67 67
-      L71 77L82 84V92Z
-    "/>
-    <path d="M35 28L43 21L51 19L58 23L50 26L43 32Z"
-      fill="var(--piece-stroke)" stroke="none"/>
-    <circle cx="64" cy="28" r="3.5"
-      fill="var(--piece-stroke)" stroke="none"/>
-  `,
+  function createPieceSVG(piece) {
+    const isWhite = piece.color === "w";
+    const fill = isWhite ? "#FFF9EC" : "#17202C";
+    const stroke = isWhite ? "#263247" : "#E0E5EC";
+    const type = piece.type;
 
-  p: `
-    <circle cx="50" cy="26" r="14"/>
-    <path d="
-      M39 40H61L57 51L64 72L74 81
-      L80 92H20L26 81L36 72L43 51Z
-    "/>
-  `
-};
+    return `
+      <svg class="piece ${isWhite ? "white-piece" : "black-piece"}"
+           viewBox="0 0 100 100"
+           xmlns="http://www.w3.org/2000/svg"
+           aria-hidden="true">
+        <g fill="${fill}"
+           stroke="${stroke}"
+           stroke-width="2.8"
+           stroke-linejoin="round"
+           stroke-linecap="round">
+          ${piecePaths[type]}
+        </g>
+      </svg>
+    `;
+  }
 
-function makePiece(piece) {
-  const svg = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "svg"
-  );
+  function squareName(fileIndex, rank) {
+    return files[fileIndex] + rank;
+  }
 
-  svg.setAttribute("viewBox", "0 0 100 100");
-  svg.setAttribute("class",
-    "piece-svg " +
-    (piece.color === "w" ? "white-piece" : "black-piece")
-  );
-  svg.setAttribute("aria-hidden", "true");
+  function getDisplaySquares() {
+    const squares = [];
 
-  const isWhite = piece.color === "w";
-  const fill = isWhite ? "#FFF9EC" : "#17202C";
-  const stroke = isWhite ? "#25354A" : "#E7EDF5";
+    for (let row = 0; row < 8; row++) {
+      const rank = flipped ? row + 1 : 8 - row;
 
-  svg.style.color = fill;
-  svg.style.fill = fill;
-  svg.style.stroke = stroke;
-  svg.style.setProperty("--piece-stroke", stroke);
-
-  svg.innerHTML = pieceArt[piece.type];
-  return svg;
-}
-
-function visibleSquares() {
-  const files = flipped
-    ? ["h","g","f","e","d","c","b","a"]
-    : ["a","b","c","d","e","f","g","h"];
-
-  const ranks = flipped
-    ? [1,2,3,4,5,6,7,8]
-    : [8,7,6,5,4,3,2,1];
-
-  const result = [];
-
-  ranks.forEach(rank => {
-    files.forEach(file => result.push(file + rank));
-  });
-
-  return result;
-}
-
-function render() {
-  if (!game) return;
-
-  boardEl.innerHTML = "";
-  const position = game.board();
-
-  visibleSquares().forEach(sq => {
-    const file = sq.charCodeAt(0) - 97;
-    const rank = Number(sq[1]);
-    const row = 8 - rank;
-    const piece = position[row][file];
-
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "square " +
-      ((row + file) % 2 === 0 ? "light" : "dark");
-
-    if (selected === sq) button.classList.add("selected");
-
-    if (lastMove &&
-        (lastMove.from === sq || lastMove.to === sq)) {
-      button.classList.add("last");
+      for (let col = 0; col < 8; col++) {
+        const fileIndex = flipped ? 7 - col : col;
+        squares.push({
+          name: squareName(fileIndex, rank),
+          row,
+          col,
+          rank,
+          fileIndex
+        });
+      }
     }
 
-    if (legalMoves.some(m => m.to === sq)) {
-      button.classList.add("legal");
-      if (piece) button.classList.add("has-piece");
-    }
+    return squares;
+  }
 
-    if (piece) button.appendChild(makePiece(piece));
+  function renderBoard() {
+    boardElement.innerHTML = "";
 
-    if (file === (flipped ? 7 : 0)) {
-      const label = document.createElement("span");
-      label.className = "coordinates rank-label";
-      label.textContent = rank;
-      button.appendChild(label);
-    }
+    const displaySquares = getDisplaySquares();
+    const checkedKing = game.in_check()
+      ? findKingSquare(game.turn())
+      : null;
 
-    if (rank === (flipped ? 8 : 1)) {
-      const label = document.createElement("span");
-      label.className = "coordinates file-label";
-      label.textContent = sq[0];
-      button.appendChild(label);
-    }
+    displaySquares.forEach(function (item) {
+      const square = document.createElement("button");
+      square.type = "button";
+      square.className = "square";
+      square.dataset.square = item.name;
+      square.setAttribute("aria-label", item.name);
 
-    button.addEventListener("click", () => onSquareClick(sq));
-    boardEl.appendChild(button);
-  });
+      const isLight = (item.fileIndex + item.rank) % 2 === 1;
+      square.classList.add(isLight ? "light" : "dark");
 
-  updateInfo();
-}
+      if (
+        lastMove &&
+        (item.name === lastMove.from || item.name === lastMove.to)
+      ) {
+        square.classList.add("last-move");
+      }
 
-function onSquareClick(sq) {
-  if (!game || game.game_over()) return;
+      if (item.name === selectedSquare) {
+        square.classList.add("selected");
+      }
 
-  const piece = game.get(sq);
+      if (item.name === checkedKing) {
+        square.classList.add("in-check");
+      }
 
-  if (selected && legalMoves.some(m => m.to === sq)) {
-    const move = game.move({
-      from: selected,
-      to: sq,
-      promotion: "q"
+      const piece = game.get(item.name);
+
+      if (piece) {
+        square.insertAdjacentHTML("beforeend", createPieceSVG(piece));
+      }
+
+      if (legalTargets.includes(item.name)) {
+        const dot = document.createElement("span");
+        dot.className = "legal-dot";
+        square.appendChild(dot);
+      }
+
+      const showFile = flipped ? item.rank === 1 : item.rank === 8;
+      const showRank = flipped ? item.fileIndex === 7 : item.fileIndex === 0;
+
+      if (showFile || showRank) {
+        const coordinate = document.createElement("span");
+        coordinate.className = "coordinates";
+
+        if (showFile && showRank) {
+          coordinate.textContent = files[item.fileIndex] + item.rank;
+        } else if (showFile) {
+          coordinate.textContent = files[item.fileIndex];
+        } else {
+          coordinate.textContent = item.rank;
+        }
+
+        square.appendChild(coordinate);
+      }
+
+      square.addEventListener("click", onSquareClick);
+      boardElement.appendChild(square);
     });
 
-    if (move) {
-      lastMove = { from: move.from, to: move.to };
-      selected = null;
-      legalMoves = [];
-      render();
+    updateStatus();
+    renderMoveHistory();
+  }
+
+  function findKingSquare(color) {
+    for (const file of files) {
+      for (let rank = 1; rank <= 8; rank++) {
+        const name = file + rank;
+        const piece = game.get(name);
+
+        if (piece && piece.type === "k" && piece.color === color) {
+          return name;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function onSquareClick(event) {
+    if (game.game_over()) {
       return;
     }
+
+    const squareNameClicked = event.currentTarget.dataset.square;
+    const piece = game.get(squareNameClicked);
+
+    if (selectedSquare && legalTargets.includes(squareNameClicked)) {
+      makeMove(selectedSquare, squareNameClicked);
+      return;
+    }
+
+    if (piece && piece.color === game.turn()) {
+      selectedSquare = squareNameClicked;
+      legalTargets = game.moves({
+        square: selectedSquare,
+        verbose: true
+      }).map(function (move) {
+        return move.to;
+      });
+
+      renderBoard();
+      return;
+    }
+
+    selectedSquare = null;
+    legalTargets = [];
+    renderBoard();
   }
 
-  if (piece && piece.color === game.turn()) {
-    selected = sq;
-    legalMoves = game.moves({
-      square: sq,
-      verbose: true
-    });
-  } else {
-    selected = null;
-    legalMoves = [];
+  function makeMove(from, to) {
+    let move;
+
+    try {
+      move = game.move({
+        from: from,
+        to: to,
+        promotion: "q"
+      });
+    } catch (error) {
+      move = null;
+    }
+
+    if (move) {
+      lastMove = {
+        from: move.from,
+        to: move.to
+      };
+    }
+
+    selectedSquare = null;
+    legalTargets = [];
+    renderBoard();
   }
 
-  render();
-}
+  function updateStatus() {
+    const whiteIndicator = document.getElementById("whiteIndicator");
+    const blackIndicator = document.getElementById("blackIndicator");
+    const boardMessage = document.getElementById("boardMessage");
+    const stateTitle = document.getElementById("stateTitle");
+    const stateSubtitle = document.getElementById("stateSubtitle");
+    const stateSymbol = document.getElementById("stateSymbol");
+    const topStatus = document.getElementById("topStatus");
 
-function updateInfo() {
-  historyEl.innerHTML = "";
-  const moves = game.history();
+    whiteIndicator.classList.toggle("black-turn", game.turn() !== "w");
+    blackIndicator.classList.toggle("black-turn", game.turn() === "w");
 
-  if (moves.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "empty-history";
-    empty.textContent = "هنوز حرکتی انجام نشده است.";
-    historyEl.appendChild(empty);
-  }
-
-  for (let i = 0; i < moves.length; i += 2) {
-    const row = document.createElement("div");
-    row.className = "move-row";
-
-    const num = document.createElement("span");
-    num.className = "move-number";
-    num.textContent = (Math.floor(i / 2) + 1) + ".";
-
-    const white = document.createElement("span");
-    white.textContent = moves[i];
-
-    const black = document.createElement("span");
-    black.textContent = moves[i + 1] || "";
-
-    row.append(num, white, black);
-    historyEl.appendChild(row);
-  }
-
-  historyEl.scrollTop = historyEl.scrollHeight;
-
-  const side = game.turn() === "w" ? "سفید" : "سیاه";
-
-  if (game.in_checkmate()) {
-    statusEl.textContent =
-      "کیش‌ومات! " +
-      (game.turn() === "w" ? "سیاه" : "سفید") +
-      " برنده شد!";
-    turnInfoEl.textContent = "بازی تمام شد";
-
-  } else if (game.in_draw()) {
-    statusEl.textContent = "بازی مساوی شد.";
-    turnInfoEl.textContent = "نتیجه: مساوی";
-
-  } else if (game.in_check()) {
-    statusEl.textContent = "کیش! نوبت " + side;
-    turnInfoEl.textContent = "شاه در خطر است؛ نوبت " + side;
-
-  } else {
-    statusEl.textContent = "نوبت " + side;
-    turnInfoEl.textContent = "بازی ادامه دارد؛ نوبت " + side;
-  }
-}
-
-document.getElementById("reset").addEventListener("click", () => {
-  game = new Chess();
-  selected = null;
-  legalMoves = [];
-  lastMove = null;
-  render();
-});
-
-document.getElementById("flip").addEventListener("click", () => {
-  flipped = !flipped;
-  render();
-});
-
-if (typeof Chess === "undefined") {
-  statusEl.textContent =
-    "بارگذاری شطرنج ناموفق بود؛ اتصال اینترنت را بررسی کن.";
-} else {
-  game = new Chess();
-  render();
-}
-</script>
-
-</body>
-</html>
+    if (game.in_checkmate()) {
+      const winner = game.turn() === "w" ? "Black" : "Whi
