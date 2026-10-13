@@ -86,7 +86,7 @@ dialog::backdrop{background:#020611c9;backdrop-filter:blur(4px)}
 .switch button{border:0;background:none;color:var(--gold)}
 #authMessage{font-size:12px;color:#8bd5a7;margin-top:9px;min-height:18px}
 #authMessage.error{color:#ef8b83}
-:root{--bg:#26030c;--panel:#20040b;--line:#5d1d2b;--text:#f8edf0;--muted:#c2a7ad;--gold:#edc56b;--light:#f0dfc6;--dark:#7a5745}
+  :root{--bg:#26030c;--panel:#20040b;--line:#5d1d2b;--text:#f8edf0;--muted:#c2a7ad;--gold:#edc56b;--light:#f0dfc6;--dark:#7a5745}
 html,body{background:#26030c}
 body{min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#571124 0%,#300610 43%,#1b0208 100%);color:var(--text)}
 .wrap{width:min(1440px,calc(100% - 36px))}
@@ -186,13 +186,11 @@ dialog{background:#26060f;border-color:#783042}
       <button class="btn" id="signOut" hidden>Sign Out</button>
     </div>
   </header>
-
   <div class="quickbar">
     <button class="quickplay" id="quickPlay">QUICK PLAY</button>
     <span class="quickstate" id="quickState">5-minute game · Match by wins</span>
     <button class="btn" id="cancelQueue" hidden style="margin-right:8px">Cancel</button>
   </div>
-
   <section class="computer-panel" aria-label="Play against computer">
     <div class="computer-head">
       <div>
@@ -207,7 +205,6 @@ dialog{background:#26060f;border-color:#783042}
       <div class="rating-scale"><span>800 · Beginner</span><span>1400 · Club</span><span>2000 · Expert</span></div>
     </div>
   </section>
-
   <main>
     <section class="layout">
       <div class="players-stack desktop-players">
@@ -230,7 +227,6 @@ dialog{background:#26060f;border-color:#783042}
           <div class="clock" id="whiteClock">05:00</div>
         </div>
       </div>
-
       <div class="board-panel">
         <div class="players-stack mobile-players">
           <div class="player-card empty" id="blackCardMobile">
@@ -262,7 +258,6 @@ dialog{background:#26060f;border-color:#783042}
           <span>Tap a piece, then a square</span>
         </div>
       </div>
-
       <aside class="side">
         <h2>Game console</h2>
         <div class="status" id="status">White to move</div>
@@ -279,10 +274,8 @@ dialog{background:#26060f;border-color:#783042}
       </aside>
     </section>
   </main>
-
   <footer>© Kingsfall · Every King Can Fall. &nbsp; Accounts powered by Supabase.</footer>
 </div>
-
 <dialog id="authDialog">
   <form class="modal" id="authForm">
     <div class="modal-head">
@@ -308,7 +301,6 @@ dialog{background:#26060f;border-color:#783042}
     </div>
   </form>
 </dialog>
-
 <dialog id="profileDialog">
   <form class="profile-modal" id="profileForm">
     <div class="modal-head">
@@ -330,7 +322,6 @@ dialog{background:#26060f;border-color:#783042}
     <div id="profileMessage"></div>
   </form>
 </dialog>
-
 <dialog id="promotionDialog">
   <div class="modal">
     <div class="modal-head">
@@ -342,22 +333,18 @@ dialog{background:#26060f;border-color:#783042}
     <div class="promo-grid" id="promoGrid"></div>
   </div>
 </dialog>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
 "use strict";
-
 var SUPABASE_URL="https://cyqactlxetfjyjvklpox.supabase.co";
 var SUPABASE_KEY="sb_publishable_5kPdWhNs53AY_PB29pRGBw_pvXiB0_k";
 var REDIRECT="https://navidyousefi166-maker.github.io/crownchess/";
 var sb=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
-
 function $(id){return document.getElementById(id)}
 var boardEl=$("board");
 var historyEl=$("history");
-
 var game=null;
 var selected=null;
 var targets=[];
@@ -379,15 +366,12 @@ var computerMode=false;
 var computerBusy=false;
 var computerRating=1400;
 var computerTimer=null;
-
 var names={k:"King",q:"Queen",r:"Rook",b:"Bishop",n:"Knight",p:"Pawn"};
 var files="abcdefgh";
-
 function defaultAvatar(){
   var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#172337"/><circle cx="50" cy="36" r="19" fill="#9AA9BE"/><path d="M16 92c3-23 16-34 34-34s31 11 34 34" fill="#9AA9BE"/></svg>';
   return "data:image/svg+xml,"+encodeURIComponent(svg);
 }
-
 function setPlayer(color,player){
   var prefix=color.toLowerCase();
   var card=$(prefix+"Card");
@@ -407,12 +391,10 @@ function setPlayer(color,player){
     mc.classList.toggle("empty",!player);
   }
 }
-
 function fmtClock(sec){
   sec=Math.max(0,Math.floor(sec));
   return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
 }
-
 function paintClocks(){
   var colors=["white","black"];
   for(var i=0;i<colors.length;i++){
@@ -433,7 +415,6 @@ function paintClocks(){
     }
   }
 }
-
 function resetClocks(){
   clockWhite=300;
   clockBlack=300;
@@ -441,7 +422,6 @@ function resetClocks(){
   clockExpired=false;
   paintClocks();
 }
-
 function tickClock(){
   if(computerMode||!game||game.game_over()||clockExpired){
     lastClockAt=Date.now();
@@ -471,8 +451,7 @@ function tickClock(){
   paintClocks();
 }
 setInterval(tickClock,250);
-
-function renderPlayers(row){
+  function renderPlayers(row){
   if(!row){
     setPlayer("Black",null);
     setPlayer("White",null);
@@ -481,14 +460,12 @@ function renderPlayers(row){
   setPlayer("White",{username:row.white_username,wins:row.white_wins,avatar_url:row.white_avatar});
   setPlayer("Black",{username:row.black_username,wins:row.black_wins,avatar_url:row.black_avatar});
 }
-
 function setQuickState(text,opts){
   opts=opts||{};
   $("quickState").textContent=text;
   $("cancelQueue").hidden=!opts.cancel;
   $("quickPlay").disabled=!!(opts.lock||onlineGameId);
 }
-
 async function getCurrentProfile(){
   if(!sb)return null;
   var res=await sb.auth.getUser();
@@ -501,12 +478,10 @@ async function getCurrentProfile(){
   var avatar=(user.user_metadata&&user.user_metadata.avatar_url)||null;
   return {id:user.id,username:uname,avatar_url:avatar,wins:stats&&stats.wins!==undefined?stats.wins:0};
 }
-
 async function stopQueuePoll(){
   if(queuePoll){clearInterval(queuePoll);queuePoll=null}
   if(queueTimeout){clearTimeout(queueTimeout);queueTimeout=null}
 }
-
 async function leaveOnlineState(){
   computerMode=false;
   computerBusy=false;
@@ -523,7 +498,6 @@ async function leaveOnlineState(){
   setQuickState("5-minute game · Match by wins");
   renderPlayers(null);
 }
-
 async function pollQueue(){
   if(!sb||!currentUser)return;
   var res=await sb.from("kf_match_queue")
@@ -539,7 +513,6 @@ async function pollQueue(){
     await loadOnlineGame(data.game_id);
   }
 }
-
 async function loadOnlineGame(id){
   if(!sb)return;
   var res=await sb.from("kf_games").select("*").eq("id",id).maybeSingle();
@@ -569,7 +542,6 @@ async function loadOnlineGame(id){
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+id},function(payload){applyOnlineGame(payload.new)})
     .subscribe();
 }
-
 function applyOnlineGame(row){
   if(!row||row.id!==onlineGameId)return;
   onlineGame=row;
@@ -602,7 +574,6 @@ function applyOnlineGame(row){
     $("new").disabled=false;
   }
 }
-
 async function startQuickPlay(){
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
   computerMode=false;
@@ -635,14 +606,12 @@ async function startQuickPlay(){
     say("Quick Play error: "+(err.message||"Unknown error"));
   }
 }
-
 async function cancelQuickPlay(){
   await stopQueuePoll();
   try{if(sb)await sb.rpc("kf_cancel_quick_play")}catch(e){}
   setQuickState("5-minute game · Match by wins");
   say("Search cancelled.");
 }
-
 async function submitOnlineMove(m){
   if(!sb||!onlineGameId||!onlineGame)return;
   var result=null;
@@ -683,7 +652,7 @@ async function submitOnlineMove(m){
     say(msg);
   }
 }
-  function svg(p){
+function svg(p){
   var w=p.color==="w";
   var glyphMap={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
   var glyph=glyphMap[p.type];
@@ -697,10 +666,8 @@ async function submitOnlineMove(m){
     +'font-size="84" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+strokeW+'" '
     +'paint-order="stroke fill" filter="drop-shadow(0 2px 2px #0008)">'+glyph+'</text></svg>';
 }
-
 function sq(r,c){return files[c]+(8-r)}
 function say(t){$("message").textContent=t||""}
-
 function start(){
   resetClocks();
   if(!window.Chess){
@@ -715,14 +682,12 @@ function start(){
   say("");
   draw();
 }
-
 function draw(){
   if(!game)return;
   paintClocks();
   boardEl.innerHTML="";
   var targetsSet={};
   for(var k=0;k<targets.length;k++)targetsSet[targets[k].to]=true;
-
   for(var vr=0;vr<8;vr++){
     for(var vc=0;vc<8;vc++){
       var r=flipped?7-vr:vr;
@@ -754,7 +719,6 @@ function draw(){
       boardEl.appendChild(b);
     }
   }
-
   var turn=game.turn()==="w"?"White":"Black";
   var statusText;
   if(game.in_checkmate())statusText="Checkmate — "+(turn==="White"?"Black":"White")+" wins";
@@ -768,7 +732,6 @@ function draw(){
   }
   updateHistory();
 }
-
 function updateHistory(){
   var h=game.history();
   if(!h.length){historyEl.textContent="No moves yet.";return}
@@ -786,7 +749,6 @@ function updateHistory(){
   }
   historyEl.scrollTop=historyEl.scrollHeight;
 }
-
 function askPromotion(color){
   return new Promise(function(resolve){
     var dlg=$("promotionDialog");
@@ -807,9 +769,8 @@ function askPromotion(color){
     dlg.oncancel=function(e){e.preventDefault();dlg.close();resolve("q")};
     dlg.showModal();
   });
-}
-
-async function clickSquare(s){
+    }
+  async function clickSquare(s){
   if(!game)return;
   if(game.game_over()||clockExpired)return;
   if(computerMode&&(game.turn()==="b"||computerBusy)){say("The computer is thinking…");return}
@@ -859,7 +820,6 @@ async function clickSquare(s){
     draw();
   }
 }
-
 $("new").onclick=function(){
   if(computerMode){
     if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
@@ -877,9 +837,7 @@ $("new").onclick=function(){
   if(onlineGameId){say("You cannot reset an online game.");return}
   if(confirm("Start a new local game?"))start();
 };
-
 $("flip").onclick=function(){flipped=!flipped;draw()};
-
 $("undo").onclick=function(){
   if(computerMode){
     if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
@@ -903,7 +861,6 @@ $("undo").onclick=function(){
     draw();
   }
 };
-
 $("fen").onclick=async function(){
   try{
     await navigator.clipboard.writeText(game.fen());
@@ -912,22 +869,18 @@ $("fen").onclick=async function(){
     prompt("Copy this FEN position:",game.fen());
   }
 };
-
 $("quickPlay").onclick=startQuickPlay;
 $("cancelQueue").onclick=cancelQuickPlay;
-
 $("computerRating").addEventListener("input",function(){
   computerRating=Number($("computerRating").value);
   $("computerRatingLabel").textContent=String(computerRating);
 });
-
 $("computerPlay").onclick=function(){
   if(onlineGameId){say("Finish the online game first.");return}
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
   stopQueuePoll();
   computerMode=true;
   computerBusy=false;
-  ensureStockfish();
   onlineGameId=null;
   onlineGame=null;
   document.body.classList.remove("online");
@@ -953,105 +906,108 @@ $("computerPlay").onclick=function(){
   say("Computer game started. You play White.");
   draw();
 };
-
-var stockfishWorker=null;
-var stockfishReady=false;
-var stockfishUciReady=false;
-var stockfishThinking=false;
-var stockfishFallbackTimer=null;
-var STOCKFISH_BASE="https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/";
-
-function ensureStockfish(){
-  if(stockfishWorker)return;
-  try{
-    stockfishWorker=new Worker(STOCKFISH_BASE+"stockfish.js");
-    stockfishWorker.onmessage=function(e){
-      var line=String(e.data||"");
-      if(line.indexOf("uciok")!==-1){
-        stockfishUciReady=true;
-        stockfishWorker.postMessage("isready");
-        return;
-      }
-      if(line.indexOf("readyok")!==-1){
-        stockfishReady=true;
-        if(computerMode&&game&&game.turn()==="b"&&!stockfishThinking){
-          setTimeout(triggerStockfishGo,50);
-        }
-        return;
-      }
-      if(line.indexOf("bestmove ")===0){
-        clearTimeout(stockfishFallbackTimer);
-        stockfishThinking=false;
-        var parts=line.split(/\s+/);
-        var uci=parts[1];
-        if(!uci||uci==="(none)"){computerBusy=false;draw();return}
-        var from=uci.slice(0,2);
-        var to=uci.slice(2,4);
-        var promotion=uci.slice(4,5)||"q";
-        var m=game.move({from:from,to:to,promotion:promotion});
-        if(m)last={from:m.from,to:m.to};
-        computerBusy=false;
-        selected=null;
-        targets=[];
-        lastClockAt=Date.now();
-        draw();
-        if(game.game_over()){
-          if(game.in_checkmate())say("Checkmate — "+(game.turn()==="w"?"Computer":"you")+" wins.");
-          else say("Draw.");
-        }else{
-          say("Stockfish played "+(m?m.san:uci)+".");
-        }
-      }
-    };
-    stockfishWorker.onerror=function(){
-      try{if(stockfishWorker)stockfishWorker.terminate()}catch(e){}
-      stockfishWorker=null;
-      stockfishReady=false;
-      stockfishUciReady=false;
-      stockfishThinking=false;
-      computerBusy=false;
-      say("Stockfish could not load. Check your internet connection.");
-    };
-    stockfishWorker.postMessage("uci");
-  }catch(e){
-    stockfishWorker=null;
-    say("Stockfish could not start in this browser.");
+var PIECE_VALUES={p:100,n:320,b:330,r:500,q:900,k:20000};
+var PST={
+p:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
+n:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
+b:[-20,-10,-10,-10,-10,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,10,10,5,0,-10,-10,5,5,10,10,5,5,-10,-10,0,10,10,10,10,0,-10,-10,10,10,10,10,10,10,-10,-10,5,0,0,0,0,5,-10,-20,-10,-10,-10,-10,-10,-10,-20],
+r:[0,0,0,0,0,0,0,0,5,10,10,10,10,10,10,5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,0,0,0,5,5,0,0,0],
+q:[-20,-10,-10,-5,-5,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,5,5,5,0,-10,-5,0,5,5,5,5,0,-5,0,0,5,5,5,5,0,-5,-10,5,5,5,5,5,0,-10,-10,0,5,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20],
+k:[-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20]
+};
+function evaluateBoard(g){
+  if(g.in_checkmate())return g.turn()==="w"?-99999:99999;
+  if(g.in_draw()||g.in_stalemate()||g.in_threefold_repetition())return 0;
+  var score=0;
+  var b=g.board();
+  for(var r=0;r<8;r++){
+    for(var c=0;c<8;c++){
+      var piece=b[r][c];
+      if(!piece)continue;
+      var val=PIECE_VALUES[piece.type];
+      if(piece.color==="w")score+=val+PST[piece.type][r*8+c];
+      else score-=val+PST[piece.type][(7-r)*8+c];
+    }
+  }
+  return score;
+}
+function minimax(g,depth,alpha,beta,maximizing){
+  if(depth===0||g.game_over())return evaluateBoard(g);
+  var moves=g.moves({verbose:true});
+  moves.sort(function(a,b){
+    var av=(a.captured?PIECE_VALUES[a.captured]:0)+(a.promotion?PIECE_VALUES[a.promotion]:0);
+    var bv=(b.captured?PIECE_VALUES[b.captured]:0)+(b.promotion?PIECE_VALUES[b.promotion]:0);
+    return bv-av;
+  });
+  if(maximizing){
+    var best=-Infinity;
+    for(var i=0;i<moves.length;i++){
+      g.move(moves[i]);
+      var s=minimax(g,depth-1,alpha,beta,false);
+      g.undo();
+      if(s>best)best=s;
+      if(s>alpha)alpha=s;
+      if(beta<=alpha)break;
+    }
+    return best;
+  }else{
+    var best2=Infinity;
+    for(var j=0;j<moves.length;j++){
+      g.move(moves[j]);
+      var s2=minimax(g,depth-1,alpha,beta,true);
+      g.undo();
+      if(s2<best2)best2=s2;
+      if(s2<beta)beta=s2;
+      if(beta<=alpha)break;
+    }
+    return best2;
   }
 }
-
-function triggerStockfishGo(){
-  if(!computerMode||!game||game.game_over()||game.turn()!=="b")return;
-  if(!stockfishWorker||!stockfishReady||stockfishThinking)return;
-  computerBusy=true;
-  stockfishThinking=true;
-  var skill=Math.max(0,Math.min(20,Math.round((computerRating-800)/60)));
-  stockfishWorker.postMessage("setoption name Skill Level value "+skill);
-  stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
-  stockfishWorker.postMessage("position fen "+game.fen());
-  var depth=computerRating<1100?5:computerRating<1400?8:computerRating<1700?11:14;
-  stockfishWorker.postMessage("go depth "+depth);
-  stockfishFallbackTimer=setTimeout(function(){
-    if(stockfishThinking){
-      stockfishThinking=false;
-      computerBusy=false;
-      say("Stockfish is taking too long. Try again or restart the game.");
-    }
-  },25000);
-}
-
 function makeComputerMove(){
   computerTimer=null;
   if(!computerMode||!game||game.game_over()||game.turn()!=="b")return;
   computerBusy=true;
-  if(!stockfishWorker||!stockfishReady){
-    say("Stockfish is warming up…");
-    ensureStockfish();
-    return;
+  say("Computer is thinking…");
+  setTimeout(function(){
+    if(!computerMode||!game||game.turn()!=="b"){computerBusy=false;return}
+    var moves=game.moves({verbose:true});
+    if(!moves.length){computerBusy=false;return}
+    var depth,randomChance;
+    if(computerRating<1000){depth=1;randomChance=0.5}
+    else if(computerRating<1200){depth=1;randomChance=0.25}
+    else if(computerRating<1400){depth=2;randomChance=0.15}
+    else if(computerRating<1600){depth=2;randomChance=0.05}
+    else if(computerRating<1800){depth=3;randomChance=0}
+    else{depth=3;randomChance=0}
+    if(randomChance>0&&Math.random()<randomChance){
+      var rnd=moves[Math.floor(Math.random()*moves.length)];
+      var mr=game.move(rnd);
+      if(mr)last={from:mr.from,to:mr.to};
+      computerBusy=false;selected=null;targets=[];lastClockAt=Date.now();draw();
+      say("Computer played "+mr.san+".");
+      return;
+    }
+    var bestMove=null,bestScore=-Infinity;
+    moves.sort(function(){return Math.random()-0.5});
+    for(var i=0;i<moves.length;i++){
+      game.move(moves[i]);
+      var score=minimax(game,depth-1,-Infinity,Infinity,false);
+      game.undo();
+      if(score>bestScore){bestScore=score;bestMove=moves[i]}
+    }
+    if(!bestMove){computerBusy=false;return}
+    var m=game.move(bestMove);
+    if(m)last={from:m.from,to:m.to};
+    computerBusy=false;selected=null;targets=[];lastClockAt=Date.now();draw();
+    if(game.game_over()){
+      if(game.in_checkmate())say("Checkmate — "+(game.turn()==="w"?"Computer":"you")+" wins.");
+      else say("Draw.");
+    }else{
+      say("Computer played "+m.san+".");
+    }
+  },150);
   }
-  triggerStockfishGo();
-}
-
-function openAuth(m){
+  function openAuth(m){
   mode=m;
   $("authForm").reset();
   $("authMessage").textContent="";
@@ -1066,12 +1022,10 @@ function openAuth(m){
   $("signupName").required=up;
   $("authDialog").showModal();
 }
-
 $("signIn").onclick=function(){openAuth("signin")};
 $("signUp").onclick=function(){openAuth("signup")};
 $("close").onclick=function(){$("authDialog").close()};
 $("switch").onclick=function(){openAuth(mode==="signup"?"signin":"signup")};
-
 $("authForm").addEventListener("submit",async function(e){
   e.preventDefault();
   if(!sb){$("authMessage").textContent="Supabase did not load.";return}
@@ -1105,7 +1059,6 @@ $("authForm").addEventListener("submit",async function(e){
     submit.textContent=mode==="signup"?"Create account":"Sign In";
   }
 });
-
 async function updateAuth(){
   if(!sb)return;
   var res=await sb.auth.getSession();
@@ -1122,7 +1075,6 @@ async function updateAuth(){
   $("profile").hidden=!user;
   $("signOut").hidden=!user;
 }
-
 $("profile").onclick=async function(){
   if(!sb)return;
   var res=await sb.auth.getUser();
@@ -1136,9 +1088,7 @@ $("profile").onclick=async function(){
   $("avatarFile").value="";
   $("profileDialog").showModal();
 };
-
 $("profileClose").onclick=function(){$("profileDialog").close()};
-
 $("avatarFile").addEventListener("change",function(){
   var f=$("avatarFile").files?$("avatarFile").files[0]:null;
   if(!f)return;
@@ -1158,7 +1108,6 @@ $("avatarFile").addEventListener("change",function(){
   };
   reader.readAsDataURL(f);
 });
-
 $("uploadAvatar").onclick=async function(){
   if(!sb)return;
   var file=$("avatarFile").files?$("avatarFile").files[0]:null;
@@ -1201,7 +1150,6 @@ $("uploadAvatar").onclick=async function(){
     btn.textContent="Upload photo";
   }
 };
-
 $("profileForm").addEventListener("submit",async function(e){
   e.preventDefault();
   if(!sb)return;
@@ -1234,7 +1182,6 @@ $("profileForm").addEventListener("submit",async function(e){
     btn.textContent="Save username";
   }
 });
-
 $("signOut").onclick=async function(){
   if(!sb)return;
   var res=await sb.auth.signOut();
@@ -1245,17 +1192,14 @@ $("signOut").onclick=async function(){
     say("Signed out.");
   }
 };
-
 if(sb){
   sb.auth.onAuthStateChange(function(){updateAuth()});
   updateAuth().then(function(){getCurrentProfile().catch(function(){})});
 }else{
   say("Supabase client failed to load.");
 }
-
 renderPlayers(null);
 start();
-
 })();
 </script>
 </body>
