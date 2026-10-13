@@ -48,7 +48,7 @@ p{color:var(--muted)}
 .light{background:var(--light)}
 .dark{background:var(--dark)}
 .selected{box-shadow:inset 0 0 0 4px var(--gold)}
-.piece{width:83%;height:83%;filter:drop-shadow(0 1px 1px #0004);pointer-events:none}
+.piece{width:100%;height:100%;filter:drop-shadow(0 1px 1px #0004);pointer-events:none}
 .dot{position:absolute;width:23%;height:23%;border-radius:50%;background:#11182766}
 .ring{position:absolute;inset:5%;border:3px solid #11182766;border-radius:50%}
 .coords{position:absolute;left:3px;bottom:0;font-size:10px;font-weight:bold;opacity:.75;pointer-events:none}
@@ -86,7 +86,7 @@ dialog::backdrop{background:#020611c9;backdrop-filter:blur(4px)}
 .switch button{border:0;background:none;color:var(--gold)}
 #authMessage{font-size:12px;color:#8bd5a7;margin-top:9px;min-height:18px}
 #authMessage.error{color:#ef8b83}
-  :root{--bg:#26030c;--panel:#20040b;--line:#5d1d2b;--text:#f8edf0;--muted:#c2a7ad;--gold:#edc56b;--light:#f0dfc6;--dark:#7a5745}
+ :root{--bg:#26030c;--panel:#20040b;--line:#5d1d2b;--text:#f8edf0;--muted:#c2a7ad;--gold:#edc56b;--light:#f0dfc6;--dark:#7a5745}
 html,body{background:#26030c}
 body{min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#571124 0%,#300610 43%,#1b0208 100%);color:var(--text)}
 .wrap{width:min(1440px,calc(100% - 36px))}
@@ -119,7 +119,7 @@ body.computer-mode .board-label span:first-child{color:#d8b9c0}
 #board{max-width:760px;margin:0 auto;border:2px solid #8a6044;box-shadow:0 6px 20px #10000666}
 .light{background:linear-gradient(135deg,#fff0da,#ead7bb)}
 .dark{background:linear-gradient(135deg,#89664f,#6b4938)}
-.piece{width:88%;height:88%;filter:drop-shadow(0 3px 2px #0009) drop-shadow(0 0 1px #fff8)}
+.piece{width:100%;height:100%;filter:drop-shadow(0 3px 2px #0009) drop-shadow(0 0 1px #fff8)}
 .coords{color:#3c1d12;font-weight:900}
 .side h2{font-size:17px;margin:0 0 12px;padding:0 0 11px;border-bottom:1px solid #5b1e2b}
 .status,#history{background:#1c0309;border-color:#5d1d2b}
@@ -164,7 +164,7 @@ dialog{background:#26060f;border-color:#783042}
   .side{order:2;grid-column:auto;display:block;padding:11px}
   .board-label{font-size:10px;padding:7px 1px}
   .coords{font-size:8px}
-  .piece{width:91%;height:91%}
+  .piece{width:100%;height:100%}
   .side #history{height:115px}
   .computer-panel{padding:12px;margin-top:-4px}
   .computer-head{align-items:flex-start}
@@ -172,8 +172,8 @@ dialog{background:#26060f;border-color:#783042}
   .rating-scale{font-size:9px}
 }
 </style>
-</head>
-<body>
+</head> 
+  <body>
 <div class="wrap">
   <header>
     <div class="brand"><b>♛</b>KINGSFALL<span class="tag">EVERY KING CAN FALL.</span></div>
@@ -195,7 +195,7 @@ dialog{background:#26060f;border-color:#783042}
     <div class="computer-head">
       <div>
         <div class="computer-title">PLAY VS COMPUTER</div>
-        <div class="computer-sub">Practice anytime · No time limit</div>
+        <div class="computer-sub">Powered by Stockfish 16 · Practice anytime</div>
       </div>
       <button class="btn gold" id="computerPlay">Play computer</button>
     </div>
@@ -659,11 +659,14 @@ function svg(p){
   var fill=w?"#fffdf7":"#20100d";
   var stroke=w?"#2a1810":"#f0d8a8";
   var strokeW=w?"2.6":"1.4";
+  var fontSizes={k:100,q:100,r:100,b:106,n:124,p:106};
+  var fontSize=fontSizes[p.type]||100;
+  var yPos=88;
   var label=(w?"White ":"Black ")+names[p.type];
   return '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg">'
-    +'<text x="50" y="79" text-anchor="middle" '
+    +'<text x="50" y="'+yPos+'" text-anchor="middle" '
     +'font-family="DejaVu Sans,Arial Unicode MS,Segoe UI Symbol,serif" '
-    +'font-size="84" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+strokeW+'" '
+    +'font-size="'+fontSize+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+strokeW+'" '
     +'paint-order="stroke fill" filter="drop-shadow(0 2px 2px #0008)">'+glyph+'</text></svg>';
 }
 function sq(r,c){return files[c]+(8-r)}
@@ -769,8 +772,8 @@ function askPromotion(color){
     dlg.oncancel=function(e){e.preventDefault();dlg.close();resolve("q")};
     dlg.showModal();
   });
-    }
-  async function clickSquare(s){
+      }
+async function clickSquare(s){
   if(!game)return;
   if(game.game_over()||clockExpired)return;
   if(computerMode&&(game.turn()==="b"||computerBusy)){say("The computer is thinking…");return}
@@ -881,11 +884,12 @@ $("computerPlay").onclick=function(){
   stopQueuePoll();
   computerMode=true;
   computerBusy=false;
+  initStockfish();
   onlineGameId=null;
   onlineGame=null;
   document.body.classList.remove("online");
   document.body.classList.add("computer-mode");
-  $("gameClockLabel").textContent="KINGSFALL · NO TIME LIMIT";
+  $("gameClockLabel").textContent="KINGSFALL · STOCKFISH 16";
   clockExpired=false;
   lastClockAt=Date.now();
   paintClocks();
@@ -898,115 +902,165 @@ $("computerPlay").onclick=function(){
   var uname=(currentUser&&currentUser.user_metadata&&currentUser.user_metadata.username)||"You";
   var avatar=(currentUser&&currentUser.user_metadata&&currentUser.user_metadata.avatar_url)||null;
   setPlayer("White",{username:uname,wins:"—",avatar_url:avatar});
-  setPlayer("Black",{username:"Kingsfall Computer",wins:computerRating+" strength",avatar_url:null});
+  setPlayer("Black",{username:"Stockfish 16",wins:computerRating+" rating",avatar_url:null});
   $("new").disabled=false;
   $("undo").disabled=false;
-  setQuickState("Computer practice · No time limit");
+  setQuickState("Computer practice · Stockfish 16");
   $("computerPlay").textContent="Restart game";
-  say("Computer game started. You play White.");
+  say("Computer game started. You play White against Stockfish 16.");
   draw();
 };
-var PIECE_VALUES={p:100,n:320,b:330,r:500,q:900,k:20000};
-var PST={
-p:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
-n:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
-b:[-20,-10,-10,-10,-10,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,10,10,5,0,-10,-10,5,5,10,10,5,5,-10,-10,0,10,10,10,10,0,-10,-10,10,10,10,10,10,10,-10,-10,5,0,0,0,0,5,-10,-20,-10,-10,-10,-10,-10,-10,-20],
-r:[0,0,0,0,0,0,0,0,5,10,10,10,10,10,10,5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,0,0,0,5,5,0,0,0],
-q:[-20,-10,-10,-5,-5,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,5,5,5,0,-10,-5,0,5,5,5,5,0,-5,0,0,5,5,5,5,0,-5,-10,5,5,5,5,5,0,-10,-10,0,5,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20],
-k:[-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20]
-};
-function evaluateBoard(g){
-  if(g.in_checkmate())return g.turn()==="w"?-99999:99999;
-  if(g.in_draw()||g.in_stalemate()||g.in_threefold_repetition())return 0;
-  var score=0;
-  var b=g.board();
-  for(var r=0;r<8;r++){
-    for(var c=0;c<8;c++){
-      var piece=b[r][c];
-      if(!piece)continue;
-      var val=PIECE_VALUES[piece.type];
-      if(piece.color==="w")score+=val+PST[piece.type][r*8+c];
-      else score-=val+PST[piece.type][(7-r)*8+c];
-    }
-  }
-  return score;
-}
-function minimax(g,depth,alpha,beta,maximizing){
-  if(depth===0||g.game_over())return evaluateBoard(g);
-  var moves=g.moves({verbose:true});
-  moves.sort(function(a,b){
-    var av=(a.captured?PIECE_VALUES[a.captured]:0)+(a.promotion?PIECE_VALUES[a.promotion]:0);
-    var bv=(b.captured?PIECE_VALUES[b.captured]:0)+(b.promotion?PIECE_VALUES[b.promotion]:0);
-    return bv-av;
-  });
-  if(maximizing){
-    var best=-Infinity;
-    for(var i=0;i<moves.length;i++){
-      g.move(moves[i]);
-      var s=minimax(g,depth-1,alpha,beta,false);
-      g.undo();
-      if(s>best)best=s;
-      if(s>alpha)alpha=s;
-      if(beta<=alpha)break;
-    }
-    return best;
-  }else{
-    var best2=Infinity;
-    for(var j=0;j<moves.length;j++){
-      g.move(moves[j]);
-      var s2=minimax(g,depth-1,alpha,beta,true);
-      g.undo();
-      if(s2<best2)best2=s2;
-      if(s2<beta)beta=s2;
-      if(beta<=alpha)break;
-    }
-    return best2;
+
+/* ---------- Stockfish 16 Engine ---------- */
+var stockfishWorker = null;
+var stockfishReady = false;
+var stockfishThinking = false;
+var stockfishFallbackTimer = null;
+var stockfishAnalysisMode = false;
+var stockfishCallback = null;
+var STOCKFISH_BASE = "https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/";
+var STOCKFISH_FILE = "stockfish-nnue-16-single.js";
+
+function initStockfish() {
+  if (stockfishWorker) return;
+  try {
+    var workerCode =
+      'var Module = {\n' +
+      '  locateFile: function(path) { return "' + STOCKFISH_BASE + '" + path; }\n' +
+      '};\n' +
+      'importScripts("' + STOCKFISH_BASE + STOCKFISH_FILE + '");';
+    var blob = new Blob([workerCode], { type: "application/javascript" });
+    stockfishWorker = new Worker(URL.createObjectURL(blob));
+    stockfishWorker.onmessage = function (e) {
+      handleStockfishMessage(String(e.data || ""));
+    };
+    stockfishWorker.onerror = function () {
+      try { if (stockfishWorker) stockfishWorker.terminate(); } catch (err) {}
+      stockfishWorker = null;
+      stockfishReady = false;
+      stockfishThinking = false;
+      computerBusy = false;
+      say("Stockfish could not load. Check your internet connection.");
+    };
+    stockfishWorker.postMessage("uci");
+  } catch (err) {
+    stockfishWorker = null;
+    say("Stockfish could not start in this browser.");
   }
 }
-function makeComputerMove(){
-  computerTimer=null;
-  if(!computerMode||!game||game.game_over()||game.turn()!=="b")return;
-  computerBusy=true;
-  say("Computer is thinking…");
-  setTimeout(function(){
-    if(!computerMode||!game||game.turn()!=="b"){computerBusy=false;return}
-    var moves=game.moves({verbose:true});
-    if(!moves.length){computerBusy=false;return}
-    var depth,randomChance;
-    if(computerRating<1000){depth=1;randomChance=0.5}
-    else if(computerRating<1200){depth=1;randomChance=0.25}
-    else if(computerRating<1400){depth=2;randomChance=0.15}
-    else if(computerRating<1600){depth=2;randomChance=0.05}
-    else if(computerRating<1800){depth=3;randomChance=0}
-    else{depth=3;randomChance=0}
-    if(randomChance>0&&Math.random()<randomChance){
-      var rnd=moves[Math.floor(Math.random()*moves.length)];
-      var mr=game.move(rnd);
-      if(mr)last={from:mr.from,to:mr.to};
-      computerBusy=false;selected=null;targets=[];lastClockAt=Date.now();draw();
-      say("Computer played "+mr.san+".");
+
+function handleStockfishMessage(line) {
+  if (line.indexOf("uciok") !== -1) {
+    stockfishWorker.postMessage("isready");
+    return;
+  }
+  if (line.indexOf("readyok") !== -1) {
+    stockfishReady = true;
+    if (stockfishAnalysisMode && stockfishCallback) return;
+    if (computerMode && game && game.turn() === "b" && !stockfishThinking) {
+      setTimeout(triggerStockfishGo, 50);
+    }
+    return;
+  }
+  if (line.indexOf("bestmove ") === 0) {
+    clearTimeout(stockfishFallbackTimer);
+    stockfishThinking = false;
+    var parts = line.split(/\s+/);
+    var uci = parts[1];
+    if (!uci || uci === "(none)") {
+      computerBusy = false;
+      if (stockfishCallback) {
+        var cb = stockfishCallback;
+        stockfishCallback = null;
+        cb(null);
+      }
       return;
     }
-    var bestMove=null,bestScore=-Infinity;
-    moves.sort(function(){return Math.random()-0.5});
-    for(var i=0;i<moves.length;i++){
-      game.move(moves[i]);
-      var score=minimax(game,depth-1,-Infinity,Infinity,false);
-      game.undo();
-      if(score>bestScore){bestScore=score;bestMove=moves[i]}
+    var from = uci.slice(0, 2);
+    var to = uci.slice(2, 4);
+    var promotion = uci.slice(4, 5) || "q";
+    if (stockfishAnalysisMode) {
+      var cb2 = stockfishCallback;
+      stockfishCallback = null;
+      if (cb2) cb2({ from: from, to: to, promotion: promotion, uci: uci });
+      return;
     }
-    if(!bestMove){computerBusy=false;return}
-    var m=game.move(bestMove);
-    if(m)last={from:m.from,to:m.to};
-    computerBusy=false;selected=null;targets=[];lastClockAt=Date.now();draw();
-    if(game.game_over()){
-      if(game.in_checkmate())say("Checkmate — "+(game.turn()==="w"?"Computer":"you")+" wins.");
+    var m = game.move({ from: from, to: to, promotion: promotion });
+    if (m) last = { from: m.from, to: m.to };
+    computerBusy = false;
+    selected = null;
+    targets = [];
+    lastClockAt = Date.now();
+    draw();
+    if (game.game_over()) {
+      if (game.in_checkmate()) say("Checkmate — " + (game.turn() === "w" ? "Stockfish" : "you") + " wins.");
       else say("Draw.");
-    }else{
-      say("Computer played "+m.san+".");
+    } else {
+      say("Stockfish played " + (m ? m.san : uci) + ".");
     }
-  },150);
   }
+}
+
+function triggerStockfishGo() {
+  if (!computerMode || !game || game.game_over() || game.turn() !== "b") return;
+  if (!stockfishWorker || !stockfishReady || stockfishThinking) return;
+  computerBusy = true;
+  stockfishThinking = true;
+  stockfishAnalysisMode = false;
+  var skill = Math.max(0, Math.min(20, Math.round((computerRating - 800) / 60)));
+  stockfishWorker.postMessage("setoption name Skill Level value " + skill);
+  stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
+  stockfishWorker.postMessage("position fen " + game.fen());
+  var depth = computerRating < 1100 ? 3 : computerRating < 1400 ? 6 : computerRating < 1700 ? 10 : 14;
+  stockfishWorker.postMessage("go depth " + depth);
+  stockfishFallbackTimer = setTimeout(function () {
+    if (stockfishThinking) {
+      stockfishThinking = false;
+      computerBusy = false;
+      say("Stockfish is taking too long. Try again or restart the game.");
+    }
+  }, 30000);
+}
+
+function makeComputerMove() {
+  computerTimer = null;
+  if (!computerMode || !game || game.game_over() || game.turn() !== "b") return;
+  computerBusy = true;
+  if (!stockfishWorker) initStockfish();
+  if (!stockfishReady) {
+    say("Stockfish is warming up…");
+    return;
+  }
+  triggerStockfishGo();
+}
+
+/* ---------- Analysis API for future features ---------- */
+function analyzePosition(fen, depth, callback) {
+  if (!stockfishWorker) initStockfish();
+  var tryAnalyze = function () {
+    if (!stockfishWorker || !stockfishReady) {
+      setTimeout(tryAnalyze, 300);
+      return;
+    }
+    stockfishAnalysisMode = true;
+    stockfishCallback = callback;
+    stockfishThinking = true;
+    stockfishWorker.postMessage("setoption name Skill Level value 20");
+    stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
+    stockfishWorker.postMessage("position fen " + fen);
+    stockfishWorker.postMessage("go depth " + (depth || 16));
+    setTimeout(function () {
+      if (stockfishThinking && stockfishAnalysisMode) {
+        stockfishThinking = false;
+        stockfishAnalysisMode = false;
+        var cb = stockfishCallback;
+        stockfishCallback = null;
+        if (cb) cb(null);
+      }
+    }, 20000);
+  };
+  tryAnalyze();
+      }
   function openAuth(m){
   mode=m;
   $("authForm").reset();
