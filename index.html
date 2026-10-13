@@ -2613,4 +2613,95 @@ $("avatarFile").addEventListener("change",function(){
 });
 $("uploadAvatar").onclick=async function(){
   if(!sb)return;
-  var file=$("avatarFile").files?$
+  var file=$("avatarFile").files?$("avatarFile").files[0]:null;  if(!file){$("profileMessage").textContent="Choose a photo first.";$("profileMessage").classList.add("error");return}
+  var userRes=await sb.auth.getUser();
+  var user=userRes.data?userRes.data.user:null;
+  if(userRes.error||!user){$("profileMessage").textContent="Please sign in again.";$("profileMessage").classList.add("error");return}
+  var btn=$("uploadAvatar");btn.disabled=true;btn.textContent="Uploading…";
+  $("profileMessage").textContent="Uploading photo…";$("profileMessage").classList.remove("error");
+  try{
+    var ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
+    var path=user.id+"/avatar."+ext;
+    var upRes=await sb.storage.from("avatars").upload(path,file,{upsert:true,contentType:file.type,cacheControl:"3600"});
+    if(upRes.error)throw upRes.error;
+    var pub=sb.storage.from("avatars").getPublicUrl(path);
+    var avatarUrl=pub.data.publicUrl+"?v="+Date.now();
+    var metaRes=await sb.auth.updateUser({data:{avatar_url:avatarUrl}});
+    if(metaRes.error)throw metaRes.error;
+    $("avatarPreview").src=avatarUrl;$("avatarPreview").hidden=false;
+    await updateAuth();
+    $("profileMessage").textContent="Profile photo saved successfully.";
+    $("avatarFile").value="";
+  }catch(err){
+    $("profileMessage").textContent=(err.message||"Photo upload failed.");
+    $("profileMessage").classList.add("error");
+  }finally{btn.disabled=false;btn.textContent="Upload photo"}
+};
+$("profileForm").addEventListener("submit",async function(e){
+  e.preventDefault();
+  if(!sb)return;
+  var username=($("profileName").value||"").trim();
+  if(username.length<3||username.length>20){
+    $("profileMessage").textContent="Username must be 3–20 characters.";
+    $("profileMessage").classList.add("error");return;
+  }
+  if(!/^[A-Za-z0-9_ -]+$/.test(username)){
+    $("profileMessage").textContent="Username can only contain letters, numbers, spaces, underscores and hyphens.";
+    $("profileMessage").classList.add("error");return;
+  }
+  var btn=$("profileSave");btn.disabled=true;btn.textContent="Saving…";
+  $("profileMessage").textContent="";
+  try{
+    var res=await sb.auth.updateUser({data:{username:username}});
+    if(res.error)throw res.error;
+    await updateAuth();
+    $("profileMessage").textContent="Username saved successfully.";
+    setTimeout(function(){$("profileDialog").close()},700);
+  }catch(err){
+    $("profileMessage").textContent=err.message||"Could not save username.";
+    $("profileMessage").classList.add("error");
+  }finally{btn.disabled=false;btn.textContent="Save username"}
+});
+$("signOut").onclick=async function(){
+  if(!sb)return;
+  var res=await sb.auth.signOut();
+  if(res.error)say(res.error.message);
+  else{
+    await leaveOnlineState();
+    await updateAuth();
+    $("historySection").classList.remove("show");
+    say("Signed out.");
+  }
+};
+
+/* ============ INIT ============ */
+if(sb){
+  sb.auth.onAuthStateChange(function(){
+    updateAuth();
+    checkMyTournamentEntry().then(function(){
+      if($("tournDialog").open)renderTournDialog();
+      updateTournButton();
+    });
+    loadHistory();
+  });
+  updateAuth().then(function(){
+    getCurrentProfile().then(function(){
+      loadTournamentState();
+      loadChampion();
+      loadHistory();
+    }).catch(function(){});
+  });
+}else{
+  say("Supabase client failed to load.");
+}
+
+renderPlayers(null);
+start();
+startTournTick();
+startTournMatchWatcher();
+setInterval(loadChampion, 60000);
+
+})();
+</script>
+</body>
+</html>
