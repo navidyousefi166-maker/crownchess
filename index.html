@@ -171,6 +171,51 @@ dialog{background:#26060f;border-color:#783042}
   .computer-head .btn{font-size:11px;padding:8px}
   .rating-scale{font-size:9px}
 }
+ /* Analysis dialog */
+#analysisDialog{width:min(900px,calc(100% - 16px));max-height:95vh;overflow-y:auto;padding:0}
+.an-panel{padding:16px}
+.an-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+.an-head h2{margin:0;font-size:20px}
+.an-progress{background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:10px;font-size:13px;color:#d4b7be;margin-bottom:14px;text-align:center}
+.an-layout{display:grid;grid-template-columns:minmax(260px,1.1fr) minmax(180px,.9fr);gap:14px}
+.an-board-col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.an-eval-wrap{display:flex;gap:8px;align-items:stretch;min-width:0}
+.an-eval-bar{width:24px;background:#20100d;border-radius:5px;overflow:hidden;position:relative;border:1px solid #5d1d2b;flex:none}
+.an-eval-black{position:absolute;top:0;left:0;width:100%;background:#1a0f0d;transition:height .25s}
+.an-eval-white{position:absolute;bottom:0;left:0;width:100%;background:#f5e6cc;transition:height .25s}
+.an-eval-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;font-weight:900;color:#edc56b;text-shadow:0 0 3px #000,0 0 3px #000,0 0 3px #000;z-index:2;white-space:nowrap}
+#anBoard{flex:1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));aspect-ratio:1;border:2px solid #8a6044;border-radius:4px;overflow:hidden;min-width:0}
+#anBoard .square{position:relative;display:flex;align-items:center;justify-content:center;padding:0;border:0;background:none}
+#anBoard .light{background:linear-gradient(135deg,#fff0da,#ead7bb)}
+#anBoard .dark{background:linear-gradient(135deg,#89664f,#6b4938)}
+#anBoard .piece{width:100%;height:100%}
+.an-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.an-nav button{padding:10px 4px;font-size:14px;font-weight:800;background:#310812;border:1px solid #5d1d2b;color:#f8edf0;border-radius:6px;cursor:pointer}
+.an-nav button:hover{background:#4a0c1a}
+.an-moves-col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.an-moves{max-height:min(380px,48vh);overflow-y:auto;background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:8px;font-size:13px}
+.an-move-row{display:grid;grid-template-columns:28px 1fr 1fr;gap:4px;padding:2px 3px;border-radius:4px}
+.an-move-row:hover{background:#ffffff08}
+.an-move-row .num{color:#9a7a82;padding-top:4px;font-size:12px}
+.an-move{display:flex;justify-content:space-between;align-items:center;padding:4px 7px;border-radius:4px;cursor:pointer;font-weight:700;user-select:none;transition:background .1s}
+.an-move:hover{background:#ffffff10}
+.an-move.active{background:#4a0c1a;box-shadow:inset 0 0 0 1px #edc56b}
+.an-move .q{font-size:10px;font-weight:900;margin-left:5px;padding:1px 5px;border-radius:3px;line-height:1.4;flex:none}
+.q-best{background:#81b64c;color:#fff}
+.q-excellent{background:#96bc4b;color:#fff}
+.q-good{background:#95b776;color:#fff}
+.q-inaccuracy{background:#f7c631;color:#333}
+.q-mistake{background:#ffa459;color:#333}
+.q-blunder{background:#fa412d;color:#fff}
+.an-summary{background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:10px;font-size:12px;color:#d4b7be}
+.an-summary .stat-row{display:flex;justify-content:space-between;padding:3px 0}
+@media(max-width:700px){
+  #analysisDialog{width:calc(100% - 8px)}
+  .an-panel{padding:12px}
+  .an-layout{grid-template-columns:1fr;gap:10px}
+  .an-moves{max-height:180px}
+  .an-nav button{padding:9px 3px;font-size:13px}
+}
 </style>
 </head>
 <body>
@@ -332,6 +377,40 @@ dialog{background:#26060f;border-color:#783042}
       </div>
     </div>
     <div class="promo-grid" id="promoGrid"></div>
+  </div>
+</dialog>
+<dialog id="analysisDialog">
+  <div class="an-panel">
+    <div class="an-head">
+      <div>
+        <div class="kicker">GAME REVIEW</div>
+        <h2>Analysis</h2>
+      </div>
+      <button class="close" type="button" id="analysisClose">×</button>
+    </div>
+    <div class="an-progress" id="anProgress">Preparing analysis...</div>
+    <div class="an-layout">
+      <div class="an-board-col">
+        <div class="an-eval-wrap">
+          <div class="an-eval-bar">
+            <div class="an-eval-black" id="anEvalBlack" style="height:50%"></div>
+            <div class="an-eval-white" id="anEvalWhite" style="height:50%"></div>
+            <div class="an-eval-label" id="anEvalLabel">0.0</div>
+          </div>
+          <div id="anBoard"></div>
+        </div>
+        <div class="an-nav">
+          <button id="anStartBtn" type="button">⏮</button>
+          <button id="anPrevBtn" type="button">◀</button>
+          <button id="anNextBtn" type="button">▶</button>
+          <button id="anEndBtn" type="button">⏭</button>
+        </div>
+      </div>
+      <div class="an-moves-col">
+        <div class="an-moves" id="anMoves"></div>
+        <div class="an-summary" id="anSummary"></div>
+      </div>
+    </div>
   </div>
 </dialog>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -773,8 +852,8 @@ function askPromotion(color){
     dlg.oncancel=function(e){e.preventDefault();dlg.close();resolve("q")};
     dlg.showModal();
   });
-              }
- async function clickSquare(s){
+}
+async function clickSquare(s){
   if(!game)return;
   if(game.game_over()||clockExpired)return;
   if(computerMode&&(game.turn()==="b"||computerBusy)){say("The computer is thinking…");return}
@@ -911,15 +990,15 @@ $("computerPlay").onclick=function(){
   say("Computer game started. You play White against Stockfish.");
   draw();
 };
-
-/* ---------- Stockfish Engine ---------- */
+ /* ---------- Stockfish Engine (local file) ---------- */
 var stockfishWorker = null;
 var stockfishReady = false;
 var stockfishThinking = false;
 var stockfishFallbackTimer = null;
 var stockfishAnalysisMode = false;
 var stockfishCallback = null;
- var STOCKFISH_URL = "stockfish.js";
+var currentAnalyzeScore = null;
+var STOCKFISH_URL = "stockfish.js";
 
 function initStockfish() {
   if (stockfishWorker) return;
@@ -953,6 +1032,16 @@ function initStockfish() {
 }
 
 function handleStockfishMessage(line) {
+  if (line.indexOf("info ") === 0 && stockfishAnalysisMode) {
+    var cpM = line.match(/\bscore cp (-?\d+)/);
+    var mateM = line.match(/\bscore mate (-?\d+)/);
+    if (cpM) currentAnalyzeScore = parseInt(cpM[1], 10);
+    else if (mateM) {
+      var mn = parseInt(mateM[1], 10);
+      currentAnalyzeScore = mn > 0 ? (10000 - mn * 100) : (-10000 - mn * 100);
+    }
+    return;
+  }
   if (line.indexOf("uciok") !== -1) {
     stockfishWorker.postMessage("isready");
     return;
@@ -1011,8 +1100,13 @@ function triggerStockfishGo() {
   stockfishThinking = true;
   stockfishAnalysisMode = false;
   var skill = Math.max(0, Math.min(20, Math.round((computerRating - 800) / 60)));
-  stockfishWorker.postMessage("setoption name Skill Level value " + skill);
-  stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
+  if (computerRating < 1000) {
+    stockfishWorker.postMessage("setoption name UCI_LimitStrength value true");
+    stockfishWorker.postMessage("setoption name UCI_Elo value " + computerRating);
+  } else {
+    stockfishWorker.postMessage("setoption name Skill Level value " + skill);
+    stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
+  }
   stockfishWorker.postMessage("position fen " + game.fen());
   var depth = computerRating < 1100 ? 3 : computerRating < 1400 ? 6 : computerRating < 1700 ? 10 : 14;
   stockfishWorker.postMessage("go depth " + depth);
@@ -1063,29 +1157,261 @@ function analyzePosition(fen, depth, callback) {
   };
   tryAnalyze();
 }
+ /* ---------- Analysis ---------- */
+var analysisMoves = [];
+var analysisPositions = [];
+var analysisIndex = 0;
+var analysisRunning = false;
 
 $("analyze").onclick = function () {
-  if (!game || game.history().length < 2) { say("Not enough moves to analyze."); return; }
-  say("Analyzing game... Check console (F12) for results.");
+  if (!game || game.history().length < 1) {
+    say("Play some moves first.");
+    return;
+  }
+  openAnalysis();
+};
+$("analysisClose").onclick = function () {
+  analysisRunning = false;
+  $("analysisDialog").close();
+};
+$("anStartBtn").onclick = function () { gotoAnalysisIndex(0); };
+$("anPrevBtn").onclick = function () { gotoAnalysisIndex(analysisIndex - 1); };
+$("anNextBtn").onclick = function () { gotoAnalysisIndex(analysisIndex + 1); };
+$("anEndBtn").onclick = function () { gotoAnalysisIndex(analysisMoves.length); };
+
+function openAnalysis() {
+  analysisMoves = [];
+  analysisPositions = [];
+  analysisIndex = 0;
+  analysisRunning = false;
+  $("anMoves").innerHTML = "";
+  $("anSummary").innerHTML = "";
+  $("anEvalWhite").style.height = "50%";
+  $("anEvalBlack").style.height = "50%";
+  $("anEvalLabel").textContent = "0.0";
+  $("anProgress").textContent = "Preparing analysis...";
+  $("analysisDialog").showModal();
+  if (!stockfishWorker) initStockfish();
+  setTimeout(runFullAnalysis, 500);
+}
+
+async function runFullAnalysis() {
+  if (!stockfishWorker) {
+    $("anProgress").textContent = "Engine not available.";
+    return;
+  }
+  var waited = 0;
+  while (!stockfishReady && waited < 10000) {
+    await new Promise(function (r) { setTimeout(r, 200); });
+    waited += 200;
+  }
+  if (!stockfishReady) {
+    $("anProgress").textContent = "Engine did not load. Try again later.";
+    return;
+  }
   var history = game.history({ verbose: true });
   var chess = new Chess();
-  var idx = 0;
-  function step() {
-    if (idx >= history.length) { say("Analysis complete!"); return; }
-    var fen = chess.fen();
-    analyzePosition(fen, 12, function (result) {
-      var played = history[idx].from + history[idx].to + (history[idx].promotion || "");
-      var best = result ? result.uci : "—";
-      var tag = (played === best) ? "✅ Best" : "⚠️ Inaccuracy";
-      console.log("Move " + (idx + 1) + " (" + history[idx].color + "): " + played + " | Best: " + best + " | " + tag);
-      chess.move(history[idx]);
-      idx++;
-      step();
+  var positions = [chess.fen()];
+  for (var i = 0; i < history.length; i++) {
+    chess.move(history[i]);
+    positions.push(chess.fen());
+  }
+  var total = positions.length;
+  var posAnalyses = [];
+  analysisRunning = true;
+  for (var i = 0; i < total; i++) {
+    if (!analysisRunning) return;
+    $("anProgress").textContent = "Analyzing " + (i + 1) + " / " + total + " ...";
+    var result = await analyzeFenPromise(positions[i], 10);
+    posAnalyses.push(result);
+  }
+  var moves = [];
+  for (var j = 0; j < history.length; j++) {
+    var before = posAnalyses[j];
+    var after = posAnalyses[j + 1];
+    var playedUci = history[j].from + history[j].to + (((history[j].promotion || "q") + "").toLowerCase());
+    var bestUci = before && before.best ? before.best : null;
+    var evalBefore = before && before.score != null ? before.score : 0;
+    var evalAfter = after && after.score != null ? -after.score : 0;
+    var loss = evalBefore - evalAfter;
+    var quality;
+    if (bestUci && playedUci === bestUci) quality = "best";
+    else if (loss <= 30) quality = "excellent";
+    else if (loss <= 80) quality = "good";
+    else if (loss <= 150) quality = "inaccuracy";
+    else if (loss <= 400) quality = "mistake";
+    else quality = "blunder";
+    moves.push({
+      san: history[j].san,
+      color: history[j].color,
+      quality: quality,
+      evalBefore: evalBefore,
+      evalAfter: evalAfter,
+      best: bestUci,
+      fenAfter: positions[j + 1]
     });
   }
-  step();
-};
- function openAuth(m){
+  analysisMoves = moves;
+  analysisPositions = positions;
+  analysisRunning = false;
+  $("anProgress").textContent = "Analysis complete · click moves to review";
+  renderMoveList();
+  renderSummary();
+  gotoAnalysisIndex(0);
+}
+
+function analyzeFenPromise(fen, depth) {
+  return new Promise(function (resolve) {
+    var finished = false;
+    var timeout = setTimeout(function () {
+      if (finished) return;
+      finished = true;
+      stockfishAnalysisMode = false;
+      stockfishThinking = false;
+      stockfishCallback = null;
+      resolve({ best: null, score: null });
+    }, 5000);
+    currentAnalyzeScore = null;
+    stockfishAnalysisMode = true;
+    stockfishThinking = true;
+    stockfishCallback = function (result) {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
+      stockfishAnalysisMode = false;
+      stockfishThinking = false;
+      resolve({
+        best: result ? result.uci : null,
+        score: currentAnalyzeScore
+      });
+    };
+    stockfishWorker.postMessage("setoption name Skill Level value 20");
+    stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
+    stockfishWorker.postMessage("position fen " + fen);
+    stockfishWorker.postMessage("go depth " + depth);
+  });
+}
+
+function qualityMark(q) {
+  if (q === "best") return "★";
+  if (q === "excellent") return "✓";
+  if (q === "good") return "✓";
+  if (q === "inaccuracy") return "?!";
+  if (q === "mistake") return "?";
+  if (q === "blunder") return "??";
+  return "";
+}
+
+function renderMoveList() {
+  var el = $("anMoves");
+  el.innerHTML = "";
+  var num = 1;
+  var i = 0;
+  while (i < analysisMoves.length) {
+    var row = document.createElement("div");
+    row.className = "an-move-row";
+    var n = document.createElement("span");
+    n.className = "num";
+    n.textContent = num + ".";
+    row.appendChild(n);
+
+    var wm = analysisMoves[i];
+    var wCell = document.createElement("span");
+    wCell.className = "an-move";
+    wCell.dataset.idx = i;
+    wCell.innerHTML = wm.san + '<span class="q q-' + wm.quality + '">' + qualityMark(wm.quality) + '</span>';
+    (function (idx) { wCell.onclick = function () { gotoAnalysisIndex(idx + 1); }; })(i);
+    row.appendChild(wCell);
+    i++;
+
+    if (i < analysisMoves.length) {
+      var bm = analysisMoves[i];
+      var bCell = document.createElement("span");
+      bCell.className = "an-move";
+      bCell.dataset.idx = i;
+      bCell.innerHTML = bm.san + '<span class="q q-' + bm.quality + '">' + qualityMark(bm.quality) + '</span>';
+      (function (idx) { bCell.onclick = function () { gotoAnalysisIndex(idx + 1); }; })(i);
+      row.appendChild(bCell);
+      i++;
+    } else {
+      row.appendChild(document.createElement("span"));
+    }
+    el.appendChild(row);
+    num++;
+  }
+}
+
+function renderSummary() {
+  var counts = { best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, blunder: 0 };
+  analysisMoves.forEach(function (m) { counts[m.quality]++; });
+  var el = $("anSummary");
+  el.innerHTML =
+    '<div style="font-weight:800;margin-bottom:6px;">Move quality</div>' +
+    '<div class="stat-row"><span>★ Best</span><span>' + counts.best + '</span></div>' +
+    '<div class="stat-row"><span>✓ Excellent</span><span>' + counts.excellent + '</span></div>' +
+    '<div class="stat-row"><span>✓ Good</span><span>' + counts.good + '</span></div>' +
+    '<div class="stat-row"><span>?! Inaccuracy</span><span>' + counts.inaccuracy + '</span></div>' +
+    '<div class="stat-row"><span>? Mistake</span><span>' + counts.mistake + '</span></div>' +
+    '<div class="stat-row"><span>?? Blunder</span><span>' + counts.blunder + '</span></div>';
+}
+
+function gotoAnalysisIndex(idx) {
+  if (idx < 0) idx = 0;
+  if (idx > analysisMoves.length) idx = analysisMoves.length;
+  analysisIndex = idx;
+  var fen = idx === 0 ? analysisPositions[0] : analysisMoves[idx - 1].fenAfter;
+  renderAnalysisBoard(fen);
+  updateEvalBar(idx);
+  highlightActiveMove(idx);
+}
+
+function highlightActiveMove(idx) {
+  var cells = document.querySelectorAll("#anMoves .an-move");
+  for (var i = 0; i < cells.length; i++) {
+    cells[i].classList.toggle("active", parseInt(cells[i].dataset.idx, 10) === idx - 1);
+  }
+}
+
+function renderAnalysisBoard(fen) {
+  var tempGame = new Chess(fen);
+  var board = $("anBoard");
+  board.innerHTML = "";
+  for (var vr = 0; vr < 8; vr++) {
+    for (var vc = 0; vc < 8; vc++) {
+      var s = files[vc] + (8 - vr);
+      var p = tempGame.get(s);
+      var b = document.createElement("div");
+      b.className = "square " + ((vr + vc) % 2 === 0 ? "light" : "dark");
+      if (p) b.innerHTML = svg(p);
+      board.appendChild(b);
+    }
+  }
+}
+
+function updateEvalBar(idx) {
+  var evalCp = 0;
+  if (idx > 0) {
+    var m = analysisMoves[idx - 1];
+    var moverColor = m.color === "w" ? 1 : -1;
+    evalCp = (m.evalAfter || 0) * moverColor;
+  }
+  var whitePct = 100 / (1 + Math.pow(10, -evalCp / 400));
+  if (whitePct < 3) whitePct = 3;
+  if (whitePct > 97) whitePct = 97;
+  $("anEvalWhite").style.height = whitePct + "%";
+  $("anEvalBlack").style.height = (100 - whitePct) + "%";
+  var label;
+  if (Math.abs(evalCp) >= 9000) {
+    var mateIn = Math.round((10000 - Math.abs(evalCp)) / 100);
+    label = (evalCp > 0 ? "M" : "-M") + mateIn;
+  } else {
+    label = (evalCp >= 0 ? "+" : "") + (evalCp / 100).toFixed(1);
+  }
+  $("anEvalLabel").textContent = label;
+}
+
+/* ---------- Auth ---------- */
+function openAuth(m){
   mode=m;
   $("authForm").reset();
   $("authMessage").textContent="";
