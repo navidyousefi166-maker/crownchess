@@ -2724,4 +2724,28 @@ if(sb){
     checkMyTournamentEntry().then(function(){
       if($("tournDialog").open)renderTournDialog();
       updateTournButton();
+         });
+    loadHistory();
+  });
+  updateAuth().then(function(){
+    getCurrentProfile().then(function(){
+      loadTournamentState();
+      loadChampion();
+      loadHistory();
+    }).catch(function(){});
+  });
+}else{
+  say("Supabase client failed to load.");
+}
+
+renderPlayers(null);
+start();
+startTournTick();
+startTournMatchWatcher();
+setInterval(loadChampion, 60000);
+
+})();
+</script>
+</body>
+</html>
   
