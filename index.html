@@ -5,16 +5,129 @@
 <title>Kingsfall — Every King Can Fall.</title>
 <style>
 :root{--bg:#0B1220;--panel:#111B2C;--line:#2A3850;--text:#F5F7FA;--muted:#9AA9BE;--gold:#E5BD65;--light:#D6C7A5;--dark:#26364A}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -25%,#1b2b45,transparent 55%),var(--bg);color:var(--text);font:15px/1.5 system-ui,Arial,sans-serif}.wrap{width:min(1100px,calc(100% - 28px));margin:auto}header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 0;border-bottom:1px solid var(--line)}.brand{font-weight:900;letter-spacing:1px}.brand b{display:inline-grid;place-items:center;background:var(--gold);color:#111827;width:36px;height:36px;border-radius:10px;margin-right:8px;font-size:23px}.tag{display:block;color:var(--muted);font-size:10px;letter-spacing:2px}.actions{display:flex;gap:8px;align-items:center}button{font:inherit;cursor:pointer}.btn{padding:9px 13px;border:1px solid var(--line);border-radius:10px;background:#172337;color:var(--text);font-weight:700}.gold{background:var(--gold);border-color:var(--gold);color:#111827}#avatarThumb{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);display:none}#userBadge{font-size:12px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis}.avatar-preview{width:92px;height:92px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:#0b1422;display:block;margin:12px auto 6px}.avatar-help{font-size:12px;color:var(--muted);margin:6px 0 10px}.profile-modal{padding:20px}.profile-modal label{display:block;color:var(--muted);font-size:12px;margin:12px 0 5px}.profile-modal input{width:100%;padding:12px;border:1px solid #34445e;background:#0b1422;color:white;border-radius:9px}.profile-modal .submit{width:100%;margin-top:16px}#profileMessage{font-size:12px;color:#8bd5a7;margin-top:9px;min-height:18px}#profileMessage.error{color:#ef8b83}
-.quickbar{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:14px 0 22px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#101a2b;min-height:44px}.quickbar .quickplay{flex:1;border:0;border-radius:0;background:var(--gold);color:#111827;font-weight:900;letter-spacing:1.4px;padding:12px 16px}.quickbar .quickplay:disabled{opacity:.55;cursor:not-allowed}.quickstate{padding:0 12px;color:var(--muted);font-size:12px}.player-card{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:9px 11px;background:#0d1625;min-width:0}.player-card img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#172337;flex:none}.player-card .pname{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.player-card .pwins{font-size:12px;color:var(--muted)}.player-card .side-label{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:1px}.player-card.empty img{opacity:.25}.players-stack{display:grid;gap:8px;margin:0 0 10px}.players-stack.bottom{margin:10px 0 0}.online-only{display:none}body.online .online-only{display:block}body.computer-mode .clock{display:none!important}body.computer-mode .board-label span:first-child+span{display:none}body.computer-mode .board-label span:first-child{color:#d8b9c0}body.computer-mode .players-stack .player-card{min-height:92px}body.online #new,body.online #undo{opacity:.45}main{padding:26px 0 40px}.intro{margin-bottom:20px}.kicker{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:2px}h1{font-size:clamp(27px,4vw,40px);line-height:1.15;margin:8px 0}h1 span{color:var(--gold)}p{color:var(--muted)}.layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:20px}.board-panel,.side{padding:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#131e30,#0e1726)}#board{width:100%;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));aspect-ratio:1/1;direction:ltr;gap:0;overflow:hidden}.square{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-width:0;min-height:0;padding:0;margin:0;border:0;border-radius:0;appearance:none;overflow:hidden}.light{background:var(--light)}.dark{background:var(--dark)}.selected{box-shadow:inset 0 0 0 4px var(--gold)}.piece{width:83%;height:83%;filter:drop-shadow(0 1px 1px #0004);pointer-events:none}.dot{position:absolute;width:23%;height:23%;border-radius:50%;background:#11182766}.ring{position:absolute;inset:5%;border:3px solid #11182766;border-radius:50%}.coords{position:absolute;left:3px;bottom:0;font-size:10px;font-weight:bold;opacity:.75;pointer-events:none}.board-label{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;padding:10px 2px}.side h2{font-size:17px;margin:0 0 12px}.status{background:#0d1625;border:1px solid var(--line);border-radius:10px;padding:12px;font-weight:800}.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.controls button{font-size:12px;padding:9px 5px}h3{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin:18px 0 8px}#history{height:200px;overflow:auto;background:#0d1625;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:13px}.move{display:grid;grid-template-columns:30px 1fr 1fr;padding:5px}.move:nth-child(even){background:#ffffff08}#message{font-size:12px;color:#8bd5a7;min-height:20px;margin-top:8px}.hint{font-size:12px;color:var(--muted)}.computer-panel{display:block!important;visibility:visible!important;position:relative;z-index:2;margin:-8px 0 22px;padding:14px 16px;border:1px solid #713040;border-radius:8px;background:linear-gradient(120deg,#2b0710,#1b0309);box-shadow:0 8px 24px #11000630}.computer-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.computer-title{font-weight:900;letter-spacing:1.4px;color:#f7d58b}.computer-sub{font-size:12px;color:#d4b7be}.computer-strength{margin-top:13px}.computer-strength label{display:flex;justify-content:space-between;align-items:center;font-size:13px}.computer-strength label strong{color:#f0c96d;font-size:16px}.computer-strength input{width:100%;accent-color:#edc56b;margin:12px 0 2px}.rating-scale{display:flex;justify-content:space-between;color:#c2a7ad;font-size:10px;gap:8px}.computer-panel button:disabled{opacity:.55;cursor:not-allowed}@media(max-width:600px){.computer-panel{padding:12px;margin-top:-4px}.computer-head{align-items:flex-start}.computer-head .btn{font-size:11px;padding:8px}.rating-scale{font-size:9px}}
-footer{border-top:1px solid var(--line);padding:18px 0;color:var(--muted);font-size:12px}dialog{width:min(420px,calc(100% - 24px));background:#101a2b;color:var(--text);border:1px solid #34445e;border-radius:16px;padding:0}dialog::backdrop{background:#020611c9;backdrop-filter:blur(4px)}.modal{padding:20px}.modal-head{display:flex;justify-content:space-between;align-items:center}.modal-head h2{margin:0}.close{background:none;border:0;color:var(--muted);font-size:24px}.modal label{display:block;color:var(--muted);font-size:12px;margin:12px 0 5px}.modal input{width:100%;padding:12px;border:1px solid #34445e;background:#0b1422;color:white;border-radius:9px}.modal .submit{width:100%;margin-top:16px}.switch{font-size:12px;color:var(--muted);text-align:center;margin-top:12px}.switch button{border:0;background:none;color:var(--gold)}#authMessage{font-size:12px;color:#8bd5a7;margin-top:9px;min-height:18px}#authMessage.error{color:#ef8b83}@media(max-width:760px){.layout{grid-template-columns:1fr}.board-panel{max-width:580px;width:100%;margin:auto}.side{width:100%}}@media(max-width:440px){.wrap{width:calc(100% - 18px)}header{padding:12px 0}.brand{font-size:13px}.actions{gap:5px}.actions .btn{font-size:11px;padding:8px}.board-panel,.side{padding:9px}.selected{box-shadow:inset 0 0 0 3px var(--gold)}}
-
-/* Kingsfall cherry-burgundy redesign */
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -25%,#1b2b45,transparent 55%),var(--bg);color:var(--text);font:15px/1.5 system-ui,Arial,sans-serif}
+.wrap{width:min(1100px,calc(100% - 28px));margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 0;border-bottom:1px solid var(--line)}
+.brand{font-weight:900;letter-spacing:1px}
+.brand b{display:inline-grid;place-items:center;background:var(--gold);color:#111827;width:36px;height:36px;border-radius:10px;margin-right:8px;font-size:23px}
+.tag{display:block;color:var(--muted);font-size:10px;letter-spacing:2px}
+.actions{display:flex;gap:8px;align-items:center}
+button{font:inherit;cursor:pointer}
+.btn{padding:9px 13px;border:1px solid var(--line);border-radius:10px;background:#172337;color:var(--text);font-weight:700}
+.gold{background:var(--gold);border-color:var(--gold);color:#111827}
+#avatarThumb{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);display:none}
+#userBadge{font-size:12px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis}
+.avatar-preview{width:92px;height:92px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:#0b1422;display:block;margin:12px auto 6px}
+.avatar-help{font-size:12px;color:var(--muted);margin:6px 0 10px}
+.profile-modal{padding:20px}
+.profile-modal label{display:block;color:var(--muted);font-size:12px;margin:12px 0 5px}
+.profile-modal input{width:100%;padding:12px;border:1px solid #34445e;background:#0b1422;color:white;border-radius:9px}
+.profile-modal .submit{width:100%;margin-top:16px}
+#profileMessage{font-size:12px;color:#8bd5a7;margin-top:9px;min-height:18px}
+#profileMessage.error{color:#ef8b83}
+.quickbar{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:14px 0 22px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#101a2b;min-height:44px}
+.quickbar .quickplay{flex:1;border:0;border-radius:0;background:var(--gold);color:#111827;font-weight:900;letter-spacing:1.4px;padding:12px 16px}
+.quickbar .quickplay:disabled{opacity:.55;cursor:not-allowed}
+.quickstate{padding:0 12px;color:var(--muted);font-size:12px}
+.player-card{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:9px 11px;background:#0d1625;min-width:0}
+.player-card img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:#172337;flex:none}
+.player-card .pname{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player-card .pwins{font-size:12px;color:var(--muted)}
+.player-card .side-label{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:1px}
+.player-card.empty img{opacity:.25}
+.players-stack{display:grid;gap:8px;margin:0 0 10px}
+main{padding:26px 0 40px}
+.kicker{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:2px}
+h1{font-size:clamp(27px,4vw,40px);line-height:1.15;margin:8px 0}
+p{color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:20px}
+.board-panel,.side{padding:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#131e30,#0e1726)}
+#board{width:100%;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));aspect-ratio:1/1;direction:ltr;gap:0;overflow:hidden}
+.square{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-width:0;min-height:0;padding:0;margin:0;border:0;border-radius:0;appearance:none;overflow:hidden}
+.light{background:var(--light)}
+.dark{background:var(--dark)}
+.selected{box-shadow:inset 0 0 0 4px var(--gold)}
+.piece{width:83%;height:83%;filter:drop-shadow(0 1px 1px #0004);pointer-events:none}
+.dot{position:absolute;width:23%;height:23%;border-radius:50%;background:#11182766}
+.ring{position:absolute;inset:5%;border:3px solid #11182766;border-radius:50%}
+.coords{position:absolute;left:3px;bottom:0;font-size:10px;font-weight:bold;opacity:.75;pointer-events:none}
+.board-label{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;padding:10px 2px}
+.side h2{font-size:17px;margin:0 0 12px}
+.status{background:#0d1625;border:1px solid var(--line);border-radius:10px;padding:12px;font-weight:800}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.controls button{font-size:12px;padding:9px 5px}
+h3{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin:18px 0 8px}
+#history{height:200px;overflow:auto;background:#0d1625;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:13px}
+.move{display:grid;grid-template-columns:30px 1fr 1fr;padding:5px}
+.move:nth-child(even){background:#ffffff08}
+#message{font-size:12px;color:#8bd5a7;min-height:20px;margin-top:8px}
+.hint{font-size:12px;color:var(--muted)}
+.computer-panel{display:block;position:relative;z-index:2;margin:-8px 0 22px;padding:14px 16px;border:1px solid #713040;border-radius:8px;background:linear-gradient(120deg,#2b0710,#1b0309);box-shadow:0 8px 24px #11000630}
+.computer-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.computer-title{font-weight:900;letter-spacing:1.4px;color:#f7d58b}
+.computer-sub{font-size:12px;color:#d4b7be}
+.computer-strength{margin-top:13px}
+.computer-strength label{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.computer-strength label strong{color:#f0c96d;font-size:16px}
+.computer-strength input{width:100%;accent-color:#edc56b;margin:12px 0 2px}
+.rating-scale{display:flex;justify-content:space-between;color:#c2a7ad;font-size:10px;gap:8px}
+footer{border-top:1px solid var(--line);padding:18px 0;color:var(--muted);font-size:12px}
+dialog{width:min(420px,calc(100% - 24px));background:#101a2b;color:var(--text);border:1px solid #34445e;border-radius:16px;padding:0}
+dialog::backdrop{background:#020611c9;backdrop-filter:blur(4px)}
+.modal{padding:20px}
+.modal-head{display:flex;justify-content:space-between;align-items:center}
+.modal-head h2{margin:0}
+.close{background:none;border:0;color:var(--muted);font-size:24px}
+.modal label{display:block;color:var(--muted);font-size:12px;margin:12px 0 5px}
+.modal input{width:100%;padding:12px;border:1px solid #34445e;background:#0b1422;color:white;border-radius:9px}
+.modal .submit{width:100%;margin-top:16px}
+.switch{font-size:12px;color:var(--muted);text-align:center;margin-top:12px}
+.switch button{border:0;background:none;color:var(--gold)}
+#authMessage{font-size:12px;color:#8bd5a7;margin-top:9px;min-height:18px}
+#authMessage.error{color:#ef8b83}
 :root{--bg:#26030c;--panel:#20040b;--line:#5d1d2b;--text:#f8edf0;--muted:#c2a7ad;--gold:#edc56b;--light:#f0dfc6;--dark:#7a5745}
-html,body{background:#26030c}body{min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#571124 0%,#300610 43%,#1b0208 100%);color:var(--text)}.wrap{width:min(1440px,calc(100% - 36px))}header{border-color:#6a2533}.brand{font-size:clamp(17px,2vw,27px)}.brand b{background:linear-gradient(135deg,#ffe6a0,#c48b2f);color:#2a0710;width:42px;height:42px}.tag{display:none}.btn{background:#310812;border-color:var(--line);color:var(--text)}.gold{background:linear-gradient(135deg,#ffe5a0,#d7a33e);border-color:#e8c46d;color:#2a0710}#avatarThumb{border:2px solid var(--gold)}.quickbar{border:1px solid #713040;border-radius:5px;background:#1b0309;margin:12px 0 18px;min-height:42px}.quickbar .quickplay{background:transparent;color:#f7d58b;text-align:center}.quickbar .quickplay:hover{background:#5a1022}.quickstate{color:#d4b7be}.player-card{display:flex;align-items:center;gap:11px;border:1px solid #622333;border-radius:12px;padding:12px;background:linear-gradient(145deg,#2a0610,#190309);min-width:0;box-shadow:0 8px 24px #11000640}.player-card img{width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid #d9ad55;background:#350b16;flex:none}.player-info{flex:1;min-width:0}.player-card .pname{font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.player-card .pwins{font-size:12px;color:#f0c96d}.player-card .side-label{font-size:10px;color:#d9b66d;text-transform:uppercase;letter-spacing:1.5px}.player-card.empty img{opacity:.4}.clock{font-variant-numeric:tabular-nums;font-weight:850;font-size:clamp(24px,2.4vw,34px);letter-spacing:1px;text-align:center;background:#1b0309;border:1px solid #5d1d2b;border-radius:9px;padding:7px 9px;min-width:100px}.clock.active{border-color:#d6ad5a;box-shadow:inset 0 0 0 1px #d6ad5a44}.players-stack{display:grid;gap:12px;margin:0}.online-only{display:none}body.online .online-only{display:block}body.computer-mode .clock{display:none!important}body.computer-mode .board-label span:first-child+span{display:none}body.computer-mode .board-label span:first-child{color:#d8b9c0}body.computer-mode .players-stack .player-card{min-height:92px}main{padding:0 0 24px}.intro{display:none}.layout{display:grid;grid-template-columns:minmax(160px,.78fr) minmax(320px,2fr) minmax(210px,.85fr);gap:16px;align-items:stretch}.board-panel,.side{padding:12px;border:1px solid #622333;border-radius:12px;background:linear-gradient(145deg,#2b0710,#1b0309);box-shadow:0 14px 34px #10000655;min-width:0}.board-panel{display:flex;flex-direction:column;justify-content:center}.players-stack .player-card{flex-wrap:wrap}.players-stack .clock{width:100%;font-size:clamp(25px,2.8vw,36px);margin-top:3px}.board-label{display:flex;justify-content:space-between;color:#cdb2b8;font-size:11px;padding:9px 2px;gap:8px}#board{max-width:760px;margin:0 auto;border:2px solid #8a6044;box-shadow:0 6px 20px #10000666}.light{background:linear-gradient(135deg,#fff0da,#ead7bb)}.dark{background:linear-gradient(135deg,#89664f,#6b4938)}.piece{width:88%;height:88%;filter:drop-shadow(0 3px 2px #0009) drop-shadow(0 0 1px #fff8)}.coords{color:#3c1d12;font-weight:900}.side h2{font-size:17px;margin:0 0 12px;padding:0 0 11px;border-bottom:1px solid #5b1e2b}.status,#history{background:#1c0309;border-color:#5d1d2b}.controls{gap:8px}h3{color:#d8b9c0}footer{border-color:#5d1d2b;color:#b79ba2}dialog{background:#26060f;border-color:#783042}.profile-modal input,.modal input{background:#1b0309;border-color:#6a2533}
-
-/* Mobile player stack */
-.mobile-players{display:none!important}
+html,body{background:#26030c}
+body{min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#571124 0%,#300610 43%,#1b0208 100%);color:var(--text)}
+.wrap{width:min(1440px,calc(100% - 36px))}
+header{border-color:#6a2533}
+.brand{font-size:clamp(17px,2vw,27px)}
+.brand b{background:linear-gradient(135deg,#ffe6a0,#c48b2f);color:#2a0710;width:42px;height:42px}
+.tag{display:none}
+.btn{background:#310812;border-color:var(--line);color:var(--text)}
+.gold{background:linear-gradient(135deg,#ffe5a0,#d7a33e);border-color:#e8c46d;color:#2a0710}
+.quickbar{border:1px solid #713040;border-radius:5px;background:#1b0309;margin:12px 0 18px;min-height:42px}
+.quickbar .quickplay{background:transparent;color:#f7d58b;text-align:center}
+.quickbar .quickplay:hover{background:#5a1022}
+.quickstate{color:#d4b7be}
+.player-card{border:1px solid #622333;border-radius:12px;padding:12px;background:linear-gradient(145deg,#2a0610,#190309);box-shadow:0 8px 24px #11000640}
+.player-card img{border:2px solid #d9ad55;background:#350b16}
+.player-info{flex:1;min-width:0}
+.player-card .pwins{color:#f0c96d}
+.player-card .side-label{color:#d9b66d;letter-spacing:1.5px}
+.clock{font-variant-numeric:tabular-nums;font-weight:850;font-size:clamp(24px,2.4vw,34px);letter-spacing:1px;text-align:center;background:#1b0309;border:1px solid #5d1d2b;border-radius:9px;padding:7px 9px;min-width:100px}
+.clock.active{border-color:#d6ad5a;box-shadow:inset 0 0 0 1px #d6ad5a44}
+body.computer-mode .clock{display:none!important}
+body.computer-mode .board-label span:first-child+span{display:none}
+body.computer-mode .board-label span:first-child{color:#d8b9c0}
+.layout{display:grid;grid-template-columns:minmax(160px,.78fr) minmax(320px,2fr) minmax(210px,.85fr);gap:16px;align-items:stretch}
+.board-panel,.side{padding:12px;border:1px solid #622333;border-radius:12px;background:linear-gradient(145deg,#2b0710,#1b0309);box-shadow:0 14px 34px #10000655;min-width:0}
+.board-panel{display:flex;flex-direction:column;justify-content:center}
+.players-stack .player-card{flex-wrap:wrap}
+.players-stack .clock{width:100%;font-size:clamp(25px,2.8vw,36px);margin-top:3px}
+.board-label{display:flex;justify-content:space-between;color:#cdb2b8;font-size:11px;padding:9px 2px;gap:8px}
+#board{max-width:760px;margin:0 auto;border:2px solid #8a6044;box-shadow:0 6px 20px #10000666}
+.light{background:linear-gradient(135deg,#fff0da,#ead7bb)}
+.dark{background:linear-gradient(135deg,#89664f,#6b4938)}
+.piece{width:88%;height:88%;filter:drop-shadow(0 3px 2px #0009) drop-shadow(0 0 1px #fff8)}
+.coords{color:#3c1d12;font-weight:900}
+.side h2{font-size:17px;margin:0 0 12px;padding:0 0 11px;border-bottom:1px solid #5b1e2b}
+.status,#history{background:#1c0309;border-color:#5d1d2b}
+h3{color:#d8b9c0}
+footer{border-color:#5d1d2b;color:#b79ba2}
+dialog{background:#26060f;border-color:#783042}
+.profile-modal input,.modal input{background:#1b0309;border-color:#6a2533}
+.mobile-players{display:none}
 @media(max-width:600px){
   .desktop-players{display:none!important}
   .mobile-players{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
@@ -24,24 +137,1128 @@ html,body{background:#26030c}body{min-height:100vh;background:radial-gradient(el
   .mobile-players .pwins{font-size:10px}
   .mobile-players .clock{font-size:22px;min-width:0;padding:5px}
 }
-
-/* Promotion dialog */
 .promo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
 .promo-btn{padding:8px 4px;border:1px solid #6a2533;border-radius:10px;background:#1b0309;cursor:pointer;display:flex;align-items:center;justify-content:center;aspect-ratio:1}
 .promo-btn:hover{background:#4a0c1a;border-color:#d9ad55}
 .promo-btn .piece{width:80%;height:80%;max-width:70px}
+@media(max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(0,2fr)}
+  .side{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .side h2,.side .status,.side #message,.side .hint{grid-column:1/-1}
+  #history{height:130px}
+  .player-card img{width:44px;height:44px}
+}
+@media(max-width:600px){
+  .wrap{width:calc(100% - 16px)}
+  header{padding:10px 0}
+  .brand{font-size:15px}
+  .brand b{width:32px;height:32px;font-size:21px;margin-right:5px}
+  .actions{gap:4px;flex-wrap:wrap;justify-content:flex-end}
+  .actions .btn{font-size:10px;padding:7px}
+  .actions #userBadge{max-width:78px;font-size:10px}
+  .quickbar{margin:9px 0 12px;min-height:40px}
+  .quickbar .quickplay{letter-spacing:1.8px;padding:10px 6px;font-size:13px}
+  .quickstate{font-size:10px;padding:0 6px;max-width:48%}
+  .layout{grid-template-columns:1fr;gap:10px}
+  .board-panel{order:1;padding:8px}
+  .side{order:2;grid-column:auto;display:block;padding:11px}
+  .board-label{font-size:10px;padding:7px 1px}
+  .coords{font-size:8px}
+  .piece{width:91%;height:91%}
+  .side #history{height:115px}
+  .computer-panel{padding:12px;margin-top:-4px}
+  .computer-head{align-items:flex-start}
+  .computer-head .btn{font-size:11px;padding:8px}
+  .rating-scale{font-size:9px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><b>♛</b>KINGSFALL<span class="tag">EVERY KING CAN FALL.</span></div>
+    <div class="actions">
+      <img id="avatarThumb" alt="Profile photo">
+      <span id="userBadge"></span>
+      <button class="btn" id="signIn">Sign In</button>
+      <button class="btn gold" id="signUp">Sign Up</button>
+      <button class="btn" id="profile" hidden>Username / Profile</button>
+      <button class="btn" id="signOut" hidden>Sign Out</button>
+    </div>
+  </header>
 
-@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr) minmax(0,2fr)}.side{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}.side h2,.side .status,.side #message,.side .hint{grid-column:1/-1}#history{height:130px}.player-card img{width:44px;height:44px}}
-@media(max-width:600px){.wrap{width:calc(100% - 16px)}header{padding:10px 0}.brand{font-size:15px}.brand b{width:32px;height:32px;font-size:21px;margin-right:5px}.actions{gap:4px;flex-wrap:wrap;justify-content:flex-end}.actions .btn{font-size:10px;padding:7px}.actions #userBadge{max-width:78px;font-size:10px}.quickbar{margin:9px 0 12px;min-height:40px}.quickbar .quickplay{letter-spacing:1.8px;padding:10px 6px;font-size:13px}.quickstate{font-size:10px;padding:0 6px;max-width:48%}.layout{grid-template-columns:1fr;gap:10px}.board-panel{order:1;padding:8px}.side{order:2;grid-column:auto;display:block;padding:11px}.board-label{font-size:10px;padding:7px 1px}.coords{font-size:8px}.piece{width:91%;height:91%}.side #history{height:115px}}
-</style></head>
-<body><div class="wrap">
-<header><div class="brand"><b>♛</b>KINGSFALL<span class="tag">EVERY KING CAN FALL.</span></div><div class="actions"><img id="avatarThumb" alt="Profile photo"><span id="userBadge"></span><button class="btn" id="signIn">Sign In</button><button class="btn gold" id="signUp">Sign Up</button><button class="btn" id="profile" hidden>Username / Profile</button><button class="btn" id="signOut" hidden>Sign Out</button></div></header>
-<div class="quickbar"><button class="quickplay" id="quickPlay">QUICK PLAY</button><span class="quickstate" id="quickState">5-minute game · Match by wins</span><button class="btn" id="cancelQueue" hidden style="margin-right:8px">Cancel</button></div>
-<section class="computer-panel" aria-label="Play against computer"><div class="computer-head"><div><div class="computer-title">PLAY VS COMPUTER</div><div class="computer-sub">Practice anytime · No time limit</div></div><button class="btn gold" id="computerPlay">Play computer</button></div><div class="computer-strength"><label for="computerRating">Computer strength <strong id="computerRatingLabel">1400</strong></label><input id="computerRating" type="range" min="800" max="2000" step="100" value="1400"><div class="rating-scale"><span>800 · Beginner</span><span>1400 · Club</span><span>2000 · Expert</span></div></div></section>
-<main><section class="intro"><div class="kicker">THE BOARD IS YOURS</div><h1>Every move has a price.<br><span>Every King Can Fall.</span></h1><p>A local two-player chess game. Create an account or sign in to Kingsfall.</p></section>
-<section class="layout"><div class="players-stack desktop-players"><div class="player-card empty" id="blackCard"><img id="blackAvatar" alt="Black player avatar"><div class="player-info"><div class="side-label">Black</div><div class="pname" id="blackName">Waiting for opponent</div><div class="pwins" id="blackWins">— wins</div></div><div class="clock" id="blackClock">05:00</div></div><div class="player-card empty" id="whiteCard"><img id="whiteAvatar" alt="White player avatar"><div class="player-info"><div class="side-label">White</div><div class="pname" id="whiteName">Waiting for opponent</div><div class="pwins" id="whiteWins">— wins</div></div><div class="clock" id="whiteClock">05:00</div></div></div><div class="board-panel"><div class="players-stack mobile-players"><div class="player-card empty" id="blackCardMobile"><img id="blackAvatarMobile" alt="Black player avatar"><div class="player-info"><div class="side-label">Black</div><div class="pname" id="blackNameMobile">Waiting for opponent</div><div class="pwins" id="blackWinsMobile">— wins</div></div><div class="clock" id="blackClockMobile">05:00</div></div><div class="player-card empty" id="whiteCardMobile"><img id="whiteAvatarMobile" alt="White player avatar"><div class="player-info"><div class="side-label">White</div><div class="pname" id="whiteNameMobile">Waiting for opponent</div><div class="pwins" id="whiteWinsMobile">— wins</div></div><div class="clock" id="whiteClockMobile">05:00</div></div></div><div class="board-label"><span id="top">Black pieces</span><span id="gameClockLabel">KINGSFALL · 5 MIN</span></div><div id="board" aria-label="Chess board"></div><div class="board-label"><span id="bottom">White pieces</span><span>Tap a piece, then a square</span></div></div><aside class="side"><h2>Game console</h2><div class="status" id="status">White to move</div><div class="controls"><button class="btn gold" id="new">New Game</button><button class="btn" id="flip">Flip Board</button><button class="btn" id="undo">Undo Move</button><button class="btn" id="fen">Copy Position</button></div><h3>Move history</h3><div id="history">No moves yet.</div><div id="message"></div><p class="hint">Quick Play pairs you with the available player closest to your number of wins. During online games, only your assigned side can move.</p></aside></section></main>
-<footer>© Kingsfall · Every King Can Fall. &nbsp; Accounts powered by Supabase.</footer></div>
-<dialog id="authDialog"><form class="modal" id="authForm"><div class="modal-head"><div><div class="kicker">WELCOME TO KINGSFALL</div><h2 id="authTitle">Sign in</h2></div><button class="close" type="button" id="close">×</button></div><div id="signupNameWrap" hidden><label for="signupName">Choose a username</label><input id="signupName" type="text" minlength="3" maxlength="20" pattern="[A-Za-z0-9_ -]+" autocomplete="nickname" placeholder="e.g. PersianKnight"></div><label for="email">Email address</label><input id="email" type="email" autocomplete="email" required placeholder="you@example.com"><label for="password">Password</label><input id="password" type="password" minlength="6" required autocomplete="current-password" placeholder="At least 6 characters"><button class="btn gold submit" id="submit" type="submit">Sign In</button><div id="authMessage"></div><div class="switch"><span id="switchText">New to Kingsfall?</span> <button type="button" id="switch">Create an account</button></div></form></dialog>
-<dialog id="profileDialog"><form class="profile-modal" id="profileForm"><div class="modal-head"><div><div class="kicker">YOUR KINGSFALL ID</div><h2>Username / Profile</h2></div><button class="close" type="button" id="profileClose">×</button></div><img id="avatarPreview" class="avatar-preview" alt="Profile photo preview" hidden><label for="avatarFile">Profile photo</label><input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp"><p class="avatar-help">Choose a JPG, PNG or WebP image up to 5 MB.</p><button class="btn submit" type="button" id="uploadAvatar">Upload photo</button><label for="profileName">Username</label><input id="profileName" type="text" minlength="3" maxlength="20" pattern="[A-Za-z0-9_ -]+" required autocomplete="nickname" placeholder="Choose a username"><p class="hint">Use 3–20 letters, numbers, spaces, underscores or hyphens. Your username is saved to your account.</p><button class="btn gold submit" type="submit" id="profileSave">Save username</button><div id="profileMessage"></div></form></dialog>
-<dialog id="promotionDialog"><div class="modal"><div class="modal-head"><div><div class="kicker">PAWN PROMOTION</div><h2>Choose a piece</h2></div></div><div class="promo-grid" id="promoGrid"></div></div></dialog>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script><script src="https://cdn.jsdelivr.net
+  <div class="quickbar">
+    <button class="quickplay" id="quickPlay">QUICK PLAY</button>
+    <span class="quickstate" id="quickState">5-minute game · Match by wins</span>
+    <button class="btn" id="cancelQueue" hidden style="margin-right:8px">Cancel</button>
+  </div>
+
+  <section class="computer-panel" aria-label="Play against computer">
+    <div class="computer-head">
+      <div>
+        <div class="computer-title">PLAY VS COMPUTER</div>
+        <div class="computer-sub">Practice anytime · No time limit</div>
+      </div>
+      <button class="btn gold" id="computerPlay">Play computer</button>
+    </div>
+    <div class="computer-strength">
+      <label for="computerRating">Computer strength <strong id="computerRatingLabel">1400</strong></label>
+      <input id="computerRating" type="range" min="800" max="2000" step="100" value="1400">
+      <div class="rating-scale"><span>800 · Beginner</span><span>1400 · Club</span><span>2000 · Expert</span></div>
+    </div>
+  </section>
+
+  <main>
+    <section class="layout">
+      <div class="players-stack desktop-players">
+        <div class="player-card empty" id="blackCard">
+          <img id="blackAvatar" alt="Black player avatar">
+          <div class="player-info">
+            <div class="side-label">Black</div>
+            <div class="pname" id="blackName">Waiting for opponent</div>
+            <div class="pwins" id="blackWins">— wins</div>
+          </div>
+          <div class="clock" id="blackClock">05:00</div>
+        </div>
+        <div class="player-card empty" id="whiteCard">
+          <img id="whiteAvatar" alt="White player avatar">
+          <div class="player-info">
+            <div class="side-label">White</div>
+            <div class="pname" id="whiteName">Waiting for opponent</div>
+            <div class="pwins" id="whiteWins">— wins</div>
+          </div>
+          <div class="clock" id="whiteClock">05:00</div>
+        </div>
+      </div>
+
+      <div class="board-panel">
+        <div class="players-stack mobile-players">
+          <div class="player-card empty" id="blackCardMobile">
+            <img id="blackAvatarMobile" alt="Black player avatar">
+            <div class="player-info">
+              <div class="side-label">Black</div>
+              <div class="pname" id="blackNameMobile">Waiting for opponent</div>
+              <div class="pwins" id="blackWinsMobile">— wins</div>
+            </div>
+            <div class="clock" id="blackClockMobile">05:00</div>
+          </div>
+          <div class="player-card empty" id="whiteCardMobile">
+            <img id="whiteAvatarMobile" alt="White player avatar">
+            <div class="player-info">
+              <div class="side-label">White</div>
+              <div class="pname" id="whiteNameMobile">Waiting for opponent</div>
+              <div class="pwins" id="whiteWinsMobile">— wins</div>
+            </div>
+            <div class="clock" id="whiteClockMobile">05:00</div>
+          </div>
+        </div>
+        <div class="board-label">
+          <span id="top">Black pieces</span>
+          <span id="gameClockLabel">KINGSFALL · 5 MIN</span>
+        </div>
+        <div id="board" aria-label="Chess board"></div>
+        <div class="board-label">
+          <span id="bottom">White pieces</span>
+          <span>Tap a piece, then a square</span>
+        </div>
+      </div>
+
+      <aside class="side">
+        <h2>Game console</h2>
+        <div class="status" id="status">White to move</div>
+        <div class="controls">
+          <button class="btn gold" id="new">New Game</button>
+          <button class="btn" id="flip">Flip Board</button>
+          <button class="btn" id="undo">Undo Move</button>
+          <button class="btn" id="fen">Copy Position</button>
+        </div>
+        <h3>Move history</h3>
+        <div id="history">No moves yet.</div>
+        <div id="message"></div>
+        <p class="hint">Quick Play pairs you with the available player closest to your number of wins.</p>
+      </aside>
+    </section>
+  </main>
+
+  <footer>© Kingsfall · Every King Can Fall. &nbsp; Accounts powered by Supabase.</footer>
+</div>
+
+<dialog id="authDialog">
+  <form class="modal" id="authForm">
+    <div class="modal-head">
+      <div>
+        <div class="kicker">WELCOME TO KINGSFALL</div>
+        <h2 id="authTitle">Sign in</h2>
+      </div>
+      <button class="close" type="button" id="close">×</button>
+    </div>
+    <div id="signupNameWrap" hidden>
+      <label for="signupName">Choose a username</label>
+      <input id="signupName" type="text" minlength="3" maxlength="20" autocomplete="nickname" placeholder="e.g. PersianKnight">
+    </div>
+    <label for="email">Email address</label>
+    <input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
+    <label for="password">Password</label>
+    <input id="password" type="password" minlength="6" required autocomplete="current-password" placeholder="At least 6 characters">
+    <button class="btn gold submit" id="submit" type="submit">Sign In</button>
+    <div id="authMessage"></div>
+    <div class="switch">
+      <span id="switchText">New to Kingsfall?</span>
+      <button type="button" id="switch">Create an account</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="profileDialog">
+  <form class="profile-modal" id="profileForm">
+    <div class="modal-head">
+      <div>
+        <div class="kicker">YOUR KINGSFALL ID</div>
+        <h2>Username / Profile</h2>
+      </div>
+      <button class="close" type="button" id="profileClose">×</button>
+    </div>
+    <img id="avatarPreview" class="avatar-preview" alt="Profile photo preview" hidden>
+    <label for="avatarFile">Profile photo</label>
+    <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp">
+    <p class="avatar-help">Choose a JPG, PNG or WebP image up to 5 MB.</p>
+    <button class="btn submit" type="button" id="uploadAvatar">Upload photo</button>
+    <label for="profileName">Username</label>
+    <input id="profileName" type="text" minlength="3" maxlength="20" required autocomplete="nickname" placeholder="Choose a username">
+    <p class="hint">Use 3–20 letters, numbers, spaces, underscores or hyphens.</p>
+    <button class="btn gold submit" type="submit" id="profileSave">Save username</button>
+    <div id="profileMessage"></div>
+  </form>
+</dialog>
+
+<dialog id="promotionDialog">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="kicker">PAWN PROMOTION</div>
+        <h2>Choose a piece</h2>
+      </div>
+    </div>
+    <div class="promo-grid" id="promoGrid"></div>
+  </div>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+"use strict";
+
+var SUPABASE_URL="https://cyqactlxetfjyjvklpox.supabase.co";
+var SUPABASE_KEY="sb_publishable_5kPdWhNs53AY_PB29pRGBw_pvXiB0_k";
+var REDIRECT="https://navidyousefi166-maker.github.io/crownchess/";
+var sb=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+
+function $(id){return document.getElementById(id)}
+var boardEl=$("board");
+var historyEl=$("history");
+
+var game=null;
+var selected=null;
+var targets=[];
+var flipped=false;
+var last=null;
+var mode="signin";
+var currentUser=null;
+var onlineGameId=null;
+var onlineGame=null;
+var queuePoll=null;
+var queueTimeout=null;
+var gameChannel=null;
+var submittingMove=false;
+var clockWhite=300;
+var clockBlack=300;
+var lastClockAt=null;
+var clockExpired=false;
+var computerMode=false;
+var computerBusy=false;
+var computerRating=1400;
+var computerTimer=null;
+
+var names={k:"King",q:"Queen",r:"Rook",b:"Bishop",n:"Knight",p:"Pawn"};
+var files="abcdefgh";
+
+function defaultAvatar(){
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#172337"/><circle cx="50" cy="36" r="19" fill="#9AA9BE"/><path d="M16 92c3-23 16-34 34-34s31 11 34 34" fill="#9AA9BE"/></svg>';
+  return "data:image/svg+xml,"+encodeURIComponent(svg);
+}
+
+function setPlayer(color,player){
+  var prefix=color.toLowerCase();
+  var card=$(prefix+"Card");
+  var name=player&&player.username?player.username:"Waiting for opponent";
+  var winsRaw=player&&player.wins!==undefined?Number(player.wins):NaN;
+  var wins=(isFinite(winsRaw)?winsRaw:"—")+" wins";
+  var avatar=(player&&player.avatar_url)?player.avatar_url:defaultAvatar();
+  $(prefix+"Name").textContent=name;
+  $(prefix+"Wins").textContent=wins;
+  $(prefix+"Avatar").src=avatar;
+  if(card)card.classList.toggle("empty",!player);
+  var mc=$(prefix+"CardMobile");
+  if(mc){
+    $(prefix+"NameMobile").textContent=name;
+    $(prefix+"WinsMobile").textContent=wins;
+    $(prefix+"AvatarMobile").src=avatar;
+    mc.classList.toggle("empty",!player);
+  }
+}
+
+function fmtClock(sec){
+  sec=Math.max(0,Math.floor(sec));
+  return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
+}
+
+function paintClocks(){
+  var colors=["white","black"];
+  for(var i=0;i<colors.length;i++){
+    var color=colors[i];
+    var val=color==="white"?clockWhite:clockBlack;
+    var ids=[color+"Clock",color+"ClockMobile"];
+    for(var j=0;j<ids.length;j++){
+      var el=$(ids[j]);
+      if(!el)continue;
+      el.textContent=fmtClock(val);
+      var active=false;
+      if(game&&!game.game_over()&&!clockExpired&&!computerMode){
+        var turnIsWhite=game.turn()==="w";
+        var thisIsWhite=color==="white";
+        if(turnIsWhite===thisIsWhite)active=true;
+      }
+      el.classList.toggle("active",active);
+    }
+  }
+}
+
+function resetClocks(){
+  clockWhite=300;
+  clockBlack=300;
+  lastClockAt=Date.now();
+  clockExpired=false;
+  paintClocks();
+}
+
+function tickClock(){
+  if(computerMode||!game||game.game_over()||clockExpired){
+    lastClockAt=Date.now();
+    paintClocks();
+    return;
+  }
+  if(!onlineGameId&&game.history().length===0){
+    lastClockAt=Date.now();
+    paintClocks();
+    return;
+  }
+  var now=Date.now();
+  if(lastClockAt===null)lastClockAt=now;
+  var elapsed=(now-lastClockAt)/1000;
+  if(elapsed>2)elapsed=2;
+  lastClockAt=now;
+  if(game.turn()==="w")clockWhite-=elapsed;
+  else clockBlack-=elapsed;
+  if(clockWhite<=0||clockBlack<=0){
+    clockWhite=Math.max(0,clockWhite);
+    clockBlack=Math.max(0,clockBlack);
+    clockExpired=true;
+    var loser=clockWhite<=0?"White":"Black";
+    var winner=loser==="White"?"Black":"White";
+    say(loser+" ran out of time. "+winner+" wins on time.");
+  }
+  paintClocks();
+}
+setInterval(tickClock,250);
+
+function renderPlayers(row){
+  if(!row){
+    setPlayer("Black",null);
+    setPlayer("White",null);
+    return;
+  }
+  setPlayer("White",{username:row.white_username,wins:row.white_wins,avatar_url:row.white_avatar});
+  setPlayer("Black",{username:row.black_username,wins:row.black_wins,avatar_url:row.black_avatar});
+}
+
+function setQuickState(text,opts){
+  opts=opts||{};
+  $("quickState").textContent=text;
+  $("cancelQueue").hidden=!opts.cancel;
+  $("quickPlay").disabled=!!(opts.lock||onlineGameId);
+}
+
+async function getCurrentProfile(){
+  if(!sb)return null;
+  var res=await sb.auth.getUser();
+  var user=res.data&&res.data.user?res.data.user:null;
+  currentUser=user;
+  if(!user)return null;
+  var statsRes=await sb.from("kf_player_stats").select("wins").eq("user_id",user.id).maybeSingle();
+  var stats=statsRes.data;
+  var uname=(user.user_metadata&&user.user_metadata.username)||(user.email?user.email.split("@")[0]:"Player");
+  var avatar=(user.user_metadata&&user.user_metadata.avatar_url)||null;
+  return {id:user.id,username:uname,avatar_url:avatar,wins:stats&&stats.wins!==undefined?stats.wins:0};
+}
+
+async function stopQueuePoll(){
+  if(queuePoll){clearInterval(queuePoll);queuePoll=null}
+  if(queueTimeout){clearTimeout(queueTimeout);queueTimeout=null}
+}
+
+async function leaveOnlineState(){
+  computerMode=false;
+  computerBusy=false;
+  if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+  await stopQueuePoll();
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+  onlineGameId=null;
+  onlineGame=null;
+  submittingMove=false;
+  document.body.classList.remove("online","computer-mode");
+  $("gameClockLabel").textContent="KINGSFALL · 5 MIN";
+  $("new").disabled=false;
+  $("undo").disabled=!(game&&game.history().length);
+  setQuickState("5-minute game · Match by wins");
+  renderPlayers(null);
+}
+
+async function pollQueue(){
+  if(!sb||!currentUser)return;
+  var res=await sb.from("kf_match_queue")
+    .select("status,game_id")
+    .eq("user_id",currentUser.id)
+    .order("created_at",{ascending:false})
+    .limit(1)
+    .maybeSingle();
+  if(res.error)return;
+  var data=res.data;
+  if(data&&data.status==="matched"&&data.game_id){
+    await stopQueuePoll();
+    await loadOnlineGame(data.game_id);
+  }
+}
+
+async function loadOnlineGame(id){
+  if(!sb)return;
+  var res=await sb.from("kf_games").select("*").eq("id",id).maybeSingle();
+  if(res.error||!res.data){say(res.error?res.error.message:"Could not load the matched game.");return}
+  var data=res.data;
+  await stopQueuePoll();
+  if(gameChannel)sb.removeChannel(gameChannel);
+  onlineGameId=id;
+  onlineGame=data;
+  resetClocks();
+  lastClockAt=Date.now();
+  document.body.classList.remove("computer-mode");
+  document.body.classList.add("online");
+  $("gameClockLabel").textContent="KINGSFALL · 5 MIN";
+  $("new").disabled=true;
+  $("undo").disabled=true;
+  setQuickState("Match found · game in progress",{lock:true});
+  renderPlayers(data);
+  if(game&&game.fen()!==data.fen)game.load(data.fen);
+  selected=null;
+  targets=[];
+  last=data.last_move||null;
+  draw();
+  var side=(data.white_id===currentUser.id)?"White":"Black";
+  say("Matched! You are "+side+".");
+  gameChannel=sb.channel("kf-game-"+id)
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+id},function(payload){applyOnlineGame(payload.new)})
+    .subscribe();
+}
+
+function applyOnlineGame(row){
+  if(!row||row.id!==onlineGameId)return;
+  onlineGame=row;
+  lastClockAt=Date.now();
+  paintClocks();
+  renderPlayers(row);
+  if(game&&row.fen&&game.fen()!==row.fen){
+    try{
+      game.load(row.fen);
+      last=row.last_move||null;
+      selected=null;
+      targets=[];
+      draw();
+    }catch(e){
+      say("Received an invalid game position.");
+    }
+  }
+  if(row.status==="completed"){
+    setQuickState("Game finished · "+(row.result||"result recorded"));
+    var msg;
+    if(row.result==="1/2-1/2")msg="Game drawn.";
+    else if(currentUser&&row.winner_id===currentUser.id)msg="You won!";
+    else msg="Game finished.";
+    say(msg);
+    onlineGameId=null;
+    onlineGame=null;
+    if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+    document.body.classList.remove("online");
+    $("gameClockLabel").textContent="KINGSFALL · 5 MIN";
+    $("new").disabled=false;
+  }
+}
+
+async function startQuickPlay(){
+  if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+  computerMode=false;
+  document.body.classList.remove("computer-mode");
+  if(!sb){say("Supabase is unavailable.");return}
+  var sess=await sb.auth.getSession();
+  var session=sess.data&&sess.data.session?sess.data.session:null;
+  if(!session){openAuth("signin");say("Sign in before using Quick Play.");return}
+  currentUser=session.user;
+  setQuickState("Finding an opponent · 5-minute game…",{lock:true,cancel:true});
+  say("");
+  try{
+    var res=await sb.rpc("kf_join_quick_play");
+    if(res.error)throw res.error;
+    var data=res.data;
+    if(data&&data.status==="matched"&&data.game_id){
+      await loadOnlineGame(data.game_id);
+    }else{
+      setQuickState("Searching by closest win total · 5 min…",{lock:true,cancel:true});
+      queuePoll=setInterval(pollQueue,1800);
+      queueTimeout=setTimeout(async function(){
+        if(onlineGameId)return;
+        await cancelQuickPlay();
+        say("No opponents found — search timed out.");
+      },120000);
+      await pollQueue();
+    }
+  }catch(err){
+    setQuickState("5-minute game · Match by wins");
+    say("Quick Play error: "+(err.message||"Unknown error"));
+  }
+}
+
+async function cancelQuickPlay(){
+  await stopQueuePoll();
+  try{if(sb)await sb.rpc("kf_cancel_quick_play")}catch(e){}
+  setQuickState("5-minute game · Match by wins");
+  say("Search cancelled.");
+}
+
+async function submitOnlineMove(m){
+  if(!sb||!onlineGameId||!onlineGame)return;
+  var result=null;
+  var winnerId=null;
+  var status="active";
+  if(game.game_over()){
+    status="completed";
+    if(game.in_checkmate()){
+      result=game.turn()==="w"?"0-1":"1-0";
+      winnerId=game.turn()==="w"?onlineGame.black_id:onlineGame.white_id;
+    }else{
+      result="1/2-1/2";
+    }
+  }
+  var res=await sb.rpc("kf_submit_move",{
+    p_game_id:onlineGameId,
+    p_fen:game.fen(),
+    p_pgn:game.pgn(),
+    p_turn:game.turn(),
+    p_last_move:{from:m.from,to:m.to,san:m.san},
+    p_status:status,
+    p_result:result,
+    p_winner_id:winnerId
+  });
+  if(res.error){
+    game.undo();
+    selected=null;
+    targets=[];
+    draw();
+    say("Move could not be saved: "+res.error.message);
+    return;
+  }
+  if(status==="completed"){
+    var msg;
+    if(result==="1/2-1/2")msg="Draw.";
+    else if(currentUser&&winnerId===currentUser.id)msg="Checkmate — you won!";
+    else msg="Checkmate — you lost.";
+    say(msg);
+  }
+}
+  function svg(p){
+  var w=p.color==="w";
+  var glyphMap={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
+  var glyph=glyphMap[p.type];
+  var fill=w?"#fffdf7":"#20100d";
+  var stroke=w?"#2a1810":"#f0d8a8";
+  var strokeW=w?"2.6":"1.4";
+  var label=(w?"White ":"Black ")+names[p.type];
+  return '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg">'
+    +'<text x="50" y="79" text-anchor="middle" '
+    +'font-family="DejaVu Sans,Arial Unicode MS,Segoe UI Symbol,serif" '
+    +'font-size="84" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+strokeW+'" '
+    +'paint-order="stroke fill" filter="drop-shadow(0 2px 2px #0008)">'+glyph+'</text></svg>';
+}
+
+function sq(r,c){return files[c]+(8-r)}
+function say(t){$("message").textContent=t||""}
+
+function start(){
+  resetClocks();
+  if(!window.Chess){
+    $("status").textContent="Chess library unavailable";
+    say("Could not load chess.js. Check your connection and refresh.");
+    return;
+  }
+  game=new Chess();
+  selected=null;
+  targets=[];
+  last=null;
+  say("");
+  draw();
+}
+
+function draw(){
+  if(!game)return;
+  paintClocks();
+  boardEl.innerHTML="";
+  var targetsSet={};
+  for(var k=0;k<targets.length;k++)targetsSet[targets[k].to]=true;
+
+  for(var vr=0;vr<8;vr++){
+    for(var vc=0;vc<8;vc++){
+      var r=flipped?7-vr:vr;
+      var c=flipped?7-vc:vc;
+      var s=sq(r,c);
+      var p=game.get(s);
+      var b=document.createElement("button");
+      b.type="button";
+      b.className="square "+((r+c)%2===0?"light":"dark");
+      if(selected===s)b.classList.add("selected");
+      if(last&&(last.from===s||last.to===s)){
+        b.style.backgroundImage="linear-gradient(#e5bd6545,#e5bd6545)";
+      }
+      var aria=s+(p?", "+(p.color==="w"?"white":"black")+" "+names[p.type]:"");
+      b.setAttribute("aria-label",aria);
+      if(p)b.innerHTML=svg(p);
+      if(targetsSet[s]){
+        var mark=document.createElement("span");
+        mark.className=p?"ring":"dot";
+        b.appendChild(mark);
+      }
+      if((flipped?r===7:r===0)||c===(flipped?7:0)){
+        var co=document.createElement("span");
+        co.className="coords";
+        co.textContent=(c===(flipped?7:0)?8-r:files[c]);
+        b.appendChild(co);
+      }
+      b.onclick=(function(square){return function(){clickSquare(square)}})(s);
+      boardEl.appendChild(b);
+    }
+  }
+
+  var turn=game.turn()==="w"?"White":"Black";
+  var statusText;
+  if(game.in_checkmate())statusText="Checkmate — "+(turn==="White"?"Black":"White")+" wins";
+  else if(game.in_draw())statusText="Draw";
+  else statusText=turn+" to move"+(game.in_check()?" · Check":"");
+  $("status").textContent=statusText;
+  $("top").textContent=flipped?"White pieces":"Black pieces";
+  $("bottom").textContent=flipped?"Black pieces":"White pieces";
+  if(!onlineGameId&&!computerMode){
+    $("undo").disabled=!game.history().length;
+  }
+  updateHistory();
+}
+
+function updateHistory(){
+  var h=game.history();
+  if(!h.length){historyEl.textContent="No moves yet.";return}
+  historyEl.innerHTML="";
+  for(var i=0;i<h.length;i+=2){
+    var row=document.createElement("div");
+    row.className="move";
+    var cells=[""+(i/2+1)+".",h[i]||"",h[i+1]||""];
+    for(var j=0;j<cells.length;j++){
+      var span=document.createElement("span");
+      span.textContent=cells[j];
+      row.appendChild(span);
+    }
+    historyEl.appendChild(row);
+  }
+  historyEl.scrollTop=historyEl.scrollHeight;
+}
+
+function askPromotion(color){
+  return new Promise(function(resolve){
+    var dlg=$("promotionDialog");
+    var grid=$("promoGrid");
+    grid.innerHTML="";
+    var pieces=["q","r","b","n"];
+    for(var i=0;i<pieces.length;i++){
+      (function(type){
+        var btn=document.createElement("button");
+        btn.type="button";
+        btn.className="promo-btn";
+        btn.title=names[type];
+        btn.innerHTML=svg({color:color,type:type});
+        btn.onclick=function(){dlg.close();resolve(type)};
+        grid.appendChild(btn);
+      })(pieces[i]);
+    }
+    dlg.oncancel=function(e){e.preventDefault();dlg.close();resolve("q")};
+    dlg.showModal();
+  });
+}
+
+async function clickSquare(s){
+  if(!game)return;
+  if(game.game_over()||clockExpired)return;
+  if(computerMode&&(game.turn()==="b"||computerBusy)){say("The computer is thinking…");return}
+  if(onlineGameId){
+    if(submittingMove)return;
+    var myColor=null;
+    if(onlineGame&&currentUser){
+      if(onlineGame.white_id===currentUser.id)myColor="w";
+      else if(onlineGame.black_id===currentUser.id)myColor="b";
+    }
+    if(!myColor||game.turn()!==myColor){say("It's your opponent's turn.");return}
+  }
+  var p=game.get(s);
+  if(selected&&targets.some(function(m){return m.to===s})){
+    var piece=game.get(selected);
+    var promotion="q";
+    if(piece&&piece.type==="p"&&(s.charAt(1)==="8"||s.charAt(1)==="1")){
+      promotion=await askPromotion(piece.color);
+    }
+    var m=game.move({from:selected,to:s,promotion:promotion});
+    if(m){
+      last={from:m.from,to:m.to};
+      selected=null;
+      targets=[];
+      if(onlineGameId)lastClockAt=Date.now();
+      say(m.san);
+      draw();
+      if(onlineGameId){
+        submittingMove=true;
+        await submitOnlineMove(m);
+        submittingMove=false;
+      }else if(computerMode&&!game.game_over()){
+        lastClockAt=Date.now();
+        computerTimer=setTimeout(makeComputerMove,180);
+      }
+      return;
+    }
+  }
+  if(p&&p.color===game.turn()){
+    selected=s;
+    targets=game.moves({square:s,verbose:true});
+    say("");
+    draw();
+  }else{
+    selected=null;
+    targets=[];
+    draw();
+  }
+}
+
+$("new").onclick=function(){
+  if(computerMode){
+    if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+    clockExpired=false;
+    lastClockAt=Date.now();
+    game=new Chess();
+    selected=null;
+    targets=[];
+    last=null;
+    computerBusy=false;
+    draw();
+    say("New computer game started. You play White.");
+    return;
+  }
+  if(onlineGameId){say("You cannot reset an online game.");return}
+  if(confirm("Start a new local game?"))start();
+};
+
+$("flip").onclick=function(){flipped=!flipped;draw()};
+
+$("undo").onclick=function(){
+  if(computerMode){
+    if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+    computerBusy=false;
+    if(!game.history().length){say("Nothing to undo.");return}
+    var count=game.turn()==="w"?2:1;
+    for(var i=0;i<count&&game.history().length;i++)game.undo();
+    selected=null;
+    targets=[];
+    last=null;
+    draw();
+    say("Move undone.");
+    return;
+  }
+  if(onlineGameId){say("Undo is unavailable during online games.");return}
+  if(game.undo()){
+    selected=null;
+    targets=[];
+    last=null;
+    say("Last move undone.");
+    draw();
+  }
+};
+
+$("fen").onclick=async function(){
+  try{
+    await navigator.clipboard.writeText(game.fen());
+    say("Position copied as FEN.");
+  }catch(e){
+    prompt("Copy this FEN position:",game.fen());
+  }
+};
+
+$("quickPlay").onclick=startQuickPlay;
+$("cancelQueue").onclick=cancelQuickPlay;
+
+$("computerRating").addEventListener("input",function(){
+  computerRating=Number($("computerRating").value);
+  $("computerRatingLabel").textContent=String(computerRating);
+});
+
+$("computerPlay").onclick=function(){
+  if(onlineGameId){say("Finish the online game first.");return}
+  if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+  stopQueuePoll();
+  computerMode=true;
+  computerBusy=false;
+  ensureStockfish();
+  onlineGameId=null;
+  onlineGame=null;
+  document.body.classList.remove("online");
+  document.body.classList.add("computer-mode");
+  $("gameClockLabel").textContent="KINGSFALL · NO TIME LIMIT";
+  clockExpired=false;
+  lastClockAt=Date.now();
+  paintClocks();
+  flipped=false;
+  game=new Chess();
+  selected=null;
+  targets=[];
+  last=null;
+  renderPlayers(null);
+  var uname=(currentUser&&currentUser.user_metadata&&currentUser.user_metadata.username)||"You";
+  var avatar=(currentUser&&currentUser.user_metadata&&currentUser.user_metadata.avatar_url)||null;
+  setPlayer("White",{username:uname,wins:"—",avatar_url:avatar});
+  setPlayer("Black",{username:"Kingsfall Computer",wins:computerRating+" strength",avatar_url:null});
+  $("new").disabled=false;
+  $("undo").disabled=false;
+  setQuickState("Computer practice · No time limit");
+  $("computerPlay").textContent="Restart game";
+  say("Computer game started. You play White.");
+  draw();
+};
+
+var stockfishWorker=null;
+var stockfishReady=false;
+var stockfishUciReady=false;
+var stockfishThinking=false;
+var stockfishFallbackTimer=null;
+var STOCKFISH_BASE="https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/";
+
+function ensureStockfish(){
+  if(stockfishWorker)return;
+  try{
+    var workerCode='self.Module={locateFile:function(path){return "'+STOCKFISH_BASE+'"+path}};importScripts("'+STOCKFISH_BASE+'stockfish-19-lite-single.js");';
+    var blob=new Blob([workerCode],{type:"text/javascript"});
+    stockfishWorker=new Worker(URL.createObjectURL(blob));
+    stockfishWorker.onmessage=function(e){
+      var line=String(e.data||"");
+      if(line.indexOf("uciok")!==-1){
+        stockfishUciReady=true;
+        stockfishWorker.postMessage("isready");
+        return;
+      }
+      if(line.indexOf("readyok")!==-1){
+        stockfishReady=true;
+        if(computerMode&&game&&game.turn()==="b"&&!stockfishThinking){
+          setTimeout(triggerStockfishGo,50);
+        }
+        return;
+      }
+      if(line.indexOf("bestmove ")===0){
+        clearTimeout(stockfishFallbackTimer);
+        stockfishThinking=false;
+        var parts=line.split(/\s+/);
+        var uci=parts[1];
+        if(!uci||uci==="(none)"){computerBusy=false;draw();return}
+        var from=uci.slice(0,2);
+        var to=uci.slice(2,4);
+        var promotion=uci.slice(4,5)||"q";
+        var m=game.move({from:from,to:to,promotion:promotion});
+        if(m)last={from:m.from,to:m.to};
+        computerBusy=false;
+        selected=null;
+        targets=[];
+        lastClockAt=Date.now();
+        draw();
+        if(game.game_over()){
+          if(game.in_checkmate())say("Checkmate — "+(game.turn()==="w"?"Computer":"you")+" wins.");
+          else say("Draw.");
+        }else{
+          say("Stockfish played "+(m?m.san:uci)+".");
+        }
+      }
+    };
+    stockfishWorker.onerror=function(){
+      try{if(stockfishWorker)stockfishWorker.terminate()}catch(e){}
+      stockfishWorker=null;
+      stockfishReady=false;
+      stockfishUciReady=false;
+      stockfishThinking=false;
+      computerBusy=false;
+      say("Stockfish could not load. Check your internet connection.");
+    };
+    stockfishWorker.postMessage("uci");
+  }catch(e){
+    stockfishWorker=null;
+    say("Stockfish could not start in this browser.");
+  }
+}
+
+function triggerStockfishGo(){
+  if(!computerMode||!game||game.game_over()||game.turn()!=="b")return;
+  if(!stockfishWorker||!stockfishReady||stockfishThinking)return;
+  computerBusy=true;
+  stockfishThinking=true;
+  var skill=Math.max(0,Math.min(20,Math.round((computerRating-800)/60)));
+  stockfishWorker.postMessage("setoption name Skill Level value "+skill);
+  stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
+  stockfishWorker.postMessage("position fen "+game.fen());
+  var depth=computerRating<1100?5:computerRating<1400?8:computerRating<1700?11:14;
+  stockfishWorker.postMessage("go depth "+depth);
+  stockfishFallbackTimer=setTimeout(function(){
+    if(stockfishThinking){
+      stockfishThinking=false;
+      computerBusy=false;
+      say("Stockfish is taking too long. Try again or restart the game.");
+    }
+  },25000);
+}
+
+function makeComputerMove(){
+  computerTimer=null;
+  if(!computerMode||!game||game.game_over()||game.turn()!=="b")return;
+  computerBusy=true;
+  if(!stockfishWorker||!stockfishReady){
+    say("Stockfish is warming up…");
+    ensureStockfish();
+    return;
+  }
+  triggerStockfishGo();
+}
+
+function openAuth(m){
+  mode=m;
+  $("authForm").reset();
+  $("authMessage").textContent="";
+  $("authMessage").classList.remove("error");
+  var up=m==="signup";
+  $("authTitle").textContent=up?"Create your account":"Sign in";
+  $("submit").textContent=up?"Create account":"Sign In";
+  $("switchText").textContent=up?"Already have an account?":"New to Kingsfall?";
+  $("switch").textContent=up?"Sign in":"Create an account";
+  $("password").autocomplete=up?"new-password":"current-password";
+  $("signupNameWrap").hidden=!up;
+  $("signupName").required=up;
+  $("authDialog").showModal();
+}
+
+$("signIn").onclick=function(){openAuth("signin")};
+$("signUp").onclick=function(){openAuth("signup")};
+$("close").onclick=function(){$("authDialog").close()};
+$("switch").onclick=function(){openAuth(mode==="signup"?"signin":"signup")};
+
+$("authForm").addEventListener("submit",async function(e){
+  e.preventDefault();
+  if(!sb){$("authMessage").textContent="Supabase did not load.";return}
+  var email=$("email").value.trim();
+  var password=$("password").value;
+  var submit=$("submit");
+  submit.disabled=true;
+  submit.textContent="Please wait…";
+  $("authMessage").textContent="";
+  try{
+    var result;
+    if(mode==="signup"){
+      var uname=($("signupName").value||"").trim();
+      result=await sb.auth.signUp({email:email,password:password,options:{emailRedirectTo:REDIRECT,data:{username:uname}}});
+    }else{
+      result=await sb.auth.signInWithPassword({email:email,password:password});
+    }
+    if(result.error)throw result.error;
+    if(mode==="signup"){
+      $("authMessage").textContent=result.data.session?"Account created and signed in.":"Account created. Check your email to confirm.";
+    }else{
+      $("authMessage").textContent="Signed in successfully.";
+    }
+    await updateAuth();
+    if(mode==="signin")setTimeout(function(){$("authDialog").close()},500);
+  }catch(err){
+    $("authMessage").textContent=err.message||"Authentication failed.";
+    $("authMessage").classList.add("error");
+  }finally{
+    submit.disabled=false;
+    submit.textContent=mode==="signup"?"Create account":"Sign In";
+  }
+});
+
+async function updateAuth(){
+  if(!sb)return;
+  var res=await sb.auth.getSession();
+  var session=res.data&&res.data.session?res.data.session:null;
+  var user=session?session.user:null;
+  var username=user&&user.user_metadata?user.user_metadata.username:null;
+  var avatarUrl=user&&user.user_metadata?user.user_metadata.avatar_url:null;
+  $("userBadge").textContent=username||(user?user.email:"");
+  $("userBadge").title=username?("Signed in as "+username):(user?user.email:"");
+  $("avatarThumb").src=avatarUrl||"";
+  $("avatarThumb").style.display=avatarUrl?"block":"none";
+  $("signIn").hidden=!!user;
+  $("signUp").hidden=!!user;
+  $("profile").hidden=!user;
+  $("signOut").hidden=!user;
+}
+
+$("profile").onclick=async function(){
+  if(!sb)return;
+  var res=await sb.auth.getUser();
+  var user=res.data?res.data.user:null;
+  $("profileMessage").textContent="";
+  $("profileMessage").classList.remove("error");
+  $("profileName").value=(user&&user.user_metadata&&user.user_metadata.username)||"";
+  var avatarUrl=user&&user.user_metadata?user.user_metadata.avatar_url:null;
+  $("avatarPreview").src=avatarUrl||"";
+  $("avatarPreview").hidden=!avatarUrl;
+  $("avatarFile").value="";
+  $("profileDialog").showModal();
+};
+
+$("profileClose").onclick=function(){$("profileDialog").close()};
+
+$("avatarFile").addEventListener("change",function(){
+  var f=$("avatarFile").files?$("avatarFile").files[0]:null;
+  if(!f)return;
+  var allowed=["image/jpeg","image/png","image/webp"];
+  if(allowed.indexOf(f.type)===-1||f.size>5*1024*1024){
+    $("profileMessage").textContent="Choose a JPG, PNG or WebP image up to 5 MB.";
+    $("profileMessage").classList.add("error");
+    $("avatarFile").value="";
+    return;
+  }
+  $("profileMessage").textContent="";
+  $("profileMessage").classList.remove("error");
+  var reader=new FileReader();
+  reader.onload=function(){
+    $("avatarPreview").src=reader.result;
+    $("avatarPreview").hidden=false;
+  };
+  reader.readAsDataURL(f);
+});
+
+$("uploadAvatar").onclick=async function(){
+  if(!sb)return;
+  var file=$("avatarFile").files?$("avatarFile").files[0]:null;
+  if(!file){
+    $("profileMessage").textContent="Choose a photo first.";
+    $("profileMessage").classList.add("error");
+    return;
+  }
+  var userRes=await sb.auth.getUser();
+  var user=userRes.data?userRes.data.user:null;
+  if(userRes.error||!user){
+    $("profileMessage").textContent="Please sign in again.";
+    $("profileMessage").classList.add("error");
+    return;
+  }
+  var btn=$("uploadAvatar");
+  btn.disabled=true;
+  btn.textContent="Uploading…";
+  $("profileMessage").textContent="Uploading photo…";
+  $("profileMessage").classList.remove("error");
+  try{
+    var ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
+    var path=user.id+"/avatar."+ext;
+    var upRes=await sb.storage.from("avatars").upload(path,file,{upsert:true,contentType:file.type,cacheControl:"3600"});
+    if(upRes.error)throw upRes.error;
+    var pub=sb.storage.from("avatars").getPublicUrl(path);
+    var avatarUrl=pub.data.publicUrl+"?v="+Date.now();
+    var metaRes=await sb.auth.updateUser({data:{avatar_url:avatarUrl}});
+    if(metaRes.error)throw metaRes.error;
+    $("avatarPreview").src=avatarUrl;
+    $("avatarPreview").hidden=false;
+    await updateAuth();
+    $("profileMessage").textContent="Profile photo saved successfully.";
+    $("avatarFile").value="";
+  }catch(err){
+    $("profileMessage").textContent=(err.message||"Photo upload failed.");
+    $("profileMessage").classList.add("error");
+  }finally{
+    btn.disabled=false;
+    btn.textContent="Upload photo";
+  }
+};
+
+$("profileForm").addEventListener("submit",async function(e){
+  e.preventDefault();
+  if(!sb)return;
+  var username=($("profileName").value||"").trim();
+  if(username.length<3||username.length>20){
+    $("profileMessage").textContent="Username must be 3–20 characters.";
+    $("profileMessage").classList.add("error");
+    return;
+  }
+  if(!/^[A-Za-z0-9_ -]+$/.test(username)){
+    $("profileMessage").textContent="Username can only contain letters, numbers, spaces, underscores and hyphens.";
+    $("profileMessage").classList.add("error");
+    return;
+  }
+  var btn=$("profileSave");
+  btn.disabled=true;
+  btn.textContent="Saving…";
+  $("profileMessage").textContent="";
+  try{
+    var res=await sb.auth.updateUser({data:{username:username}});
+    if(res.error)throw res.error;
+    await updateAuth();
+    $("profileMessage").textContent="Username saved successfully.";
+    setTimeout(function(){$("profileDialog").close()},700);
+  }catch(err){
+    $("profileMessage").textContent=err.message||"Could not save username.";
+    $("profileMessage").classList.add("error");
+  }finally{
+    btn.disabled=false;
+    btn.textContent="Save username";
+  }
+});
+
+$("signOut").onclick=async function(){
+  if(!sb)return;
+  var res=await sb.auth.signOut();
+  if(res.error)say(res.error.message);
+  else{
+    await leaveOnlineState();
+    await updateAuth();
+    say("Signed out.");
+  }
+};
+
+if(sb){
+  sb.auth.onAuthStateChange(function(){updateAuth()});
+  updateAuth().then(function(){getCurrentProfile().catch(function(){})});
+}else{
+  say("Supabase client failed to load.");
+}
+
+renderPlayers(null);
+start();
+
+})();
+</script>
+</body>
+</html>
