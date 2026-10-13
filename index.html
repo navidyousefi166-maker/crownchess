@@ -959,14 +959,12 @@ var stockfishReady=false;
 var stockfishUciReady=false;
 var stockfishThinking=false;
 var stockfishFallbackTimer=null;
-var STOCKFISH_BASE="https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/";
+var STOCKFISH_BASE="https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/";
 
 function ensureStockfish(){
   if(stockfishWorker)return;
   try{
-    var workerCode='self.Module={locateFile:function(path){return "'+STOCKFISH_BASE+'"+path}};importScripts("'+STOCKFISH_BASE+'stockfish-19-lite-single.js");';
-    var blob=new Blob([workerCode],{type:"text/javascript"});
-    stockfishWorker=new Worker(URL.createObjectURL(blob));
+    stockfishWorker=new Worker(STOCKFISH_BASE+"stockfish.js");
     stockfishWorker.onmessage=function(e){
       var line=String(e.data||"");
       if(line.indexOf("uciok")!==-1){
