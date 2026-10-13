@@ -172,8 +172,8 @@ dialog{background:#26060f;border-color:#783042}
   .rating-scale{font-size:9px}
 }
 </style>
-</head> 
-  <body>
+</head>
+<body>
 <div class="wrap">
   <header>
     <div class="brand"><b>♛</b>KINGSFALL<span class="tag">EVERY KING CAN FALL.</span></div>
@@ -195,7 +195,7 @@ dialog{background:#26060f;border-color:#783042}
     <div class="computer-head">
       <div>
         <div class="computer-title">PLAY VS COMPUTER</div>
-        <div class="computer-sub">Powered by Stockfish 16 · Practice anytime</div>
+        <div class="computer-sub">Powered by Stockfish · Practice anytime</div>
       </div>
       <button class="btn gold" id="computerPlay">Play computer</button>
     </div>
@@ -266,6 +266,7 @@ dialog{background:#26060f;border-color:#783042}
           <button class="btn" id="flip">Flip Board</button>
           <button class="btn" id="undo">Undo Move</button>
           <button class="btn" id="fen">Copy Position</button>
+          <button class="btn" id="analyze" style="grid-column:1/-1;">Analyze Game</button>
         </div>
         <h3>Move history</h3>
         <div id="history">No moves yet.</div>
@@ -451,7 +452,7 @@ function tickClock(){
   paintClocks();
 }
 setInterval(tickClock,250);
-  function renderPlayers(row){
+ function renderPlayers(row){
   if(!row){
     setPlayer("Black",null);
     setPlayer("White",null);
@@ -659,7 +660,7 @@ function svg(p){
   var fill=w?"#fffdf7":"#20100d";
   var stroke=w?"#2a1810":"#f0d8a8";
   var strokeW=w?"2.6":"1.4";
-  var fontSizes={k:100,q:100,r:100,b:106,n:124,p:106};
+  var fontSizes={k:112,q:100,r:100,b:106,n:108,p:106};
   var fontSize=fontSizes[p.type]||100;
   var yPos=88;
   var label=(w?"White ":"Black ")+names[p.type];
@@ -772,8 +773,8 @@ function askPromotion(color){
     dlg.oncancel=function(e){e.preventDefault();dlg.close();resolve("q")};
     dlg.showModal();
   });
-      }
-async function clickSquare(s){
+}
+ async function clickSquare(s){
   if(!game)return;
   if(game.game_over()||clockExpired)return;
   if(computerMode&&(game.turn()==="b"||computerBusy)){say("The computer is thinking…");return}
@@ -889,7 +890,7 @@ $("computerPlay").onclick=function(){
   onlineGame=null;
   document.body.classList.remove("online");
   document.body.classList.add("computer-mode");
-  $("gameClockLabel").textContent="KINGSFALL · STOCKFISH 16";
+  $("gameClockLabel").textContent="KINGSFALL · STOCKFISH";
   clockExpired=false;
   lastClockAt=Date.now();
   paintClocks();
@@ -902,47 +903,49 @@ $("computerPlay").onclick=function(){
   var uname=(currentUser&&currentUser.user_metadata&&currentUser.user_metadata.username)||"You";
   var avatar=(currentUser&&currentUser.user_metadata&&currentUser.user_metadata.avatar_url)||null;
   setPlayer("White",{username:uname,wins:"—",avatar_url:avatar});
-  setPlayer("Black",{username:"Stockfish 16",wins:computerRating+" rating",avatar_url:null});
+  setPlayer("Black",{username:"Stockfish",wins:computerRating+" rating",avatar_url:null});
   $("new").disabled=false;
   $("undo").disabled=false;
-  setQuickState("Computer practice · Stockfish 16");
+  setQuickState("Computer practice · Stockfish");
   $("computerPlay").textContent="Restart game";
-  say("Computer game started. You play White against Stockfish 16.");
+  say("Computer game started. You play White against Stockfish.");
   draw();
 };
 
-/* ---------- Stockfish 16 Engine ---------- */
+/* ---------- Stockfish Engine (Web Worker + Blob) ---------- */
 var stockfishWorker = null;
 var stockfishReady = false;
 var stockfishThinking = false;
 var stockfishFallbackTimer = null;
 var stockfishAnalysisMode = false;
 var stockfishCallback = null;
-var STOCKFISH_BASE = "https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/";
-var STOCKFISH_FILE = "stockfish-nnue-16-single.js";
+var STOCKFISH_URL = "https://cdn.jsdelivr.net/npm/stockfish@10.0.2/src/stockfish.js";
 
 function initStockfish() {
   if (stockfishWorker) return;
   try {
-    var workerCode =
-      'var Module = {\n' +
-      '  locateFile: function(path) { return "' + STOCKFISH_BASE + '" + path; }\n' +
-      '};\n' +
-      'importScripts("' + STOCKFISH_BASE + STOCKFISH_FILE + '");';
-    var blob = new Blob([workerCode], { type: "application/javascript" });
-    stockfishWorker = new Worker(URL.createObjectURL(blob));
-    stockfishWorker.onmessage = function (e) {
-      handleStockfishMessage(String(e.data || ""));
-    };
-    stockfishWorker.onerror = function () {
-      try { if (stockfishWorker) stockfishWorker.terminate(); } catch (err) {}
-      stockfishWorker = null;
-      stockfishReady = false;
-      stockfishThinking = false;
-      computerBusy = false;
-      say("Stockfish could not load. Check your internet connection.");
-    };
-    stockfishWorker.postMessage("uci");
+    fetch(STOCKFISH_URL)
+      .then(function (res) { return res.text(); })
+      .then(function (code) {
+        var blob = new Blob([code], { type: "application/javascript" });
+        stockfishWorker = new Worker(URL.createObjectURL(blob));
+        stockfishWorker.onmessage = function (e) {
+          handleStockfishMessage(String(e.data || ""));
+        };
+        stockfishWorker.onerror = function () {
+          try { if (stockfishWorker) stockfishWorker.terminate(); } catch (err) {}
+          stockfishWorker = null;
+          stockfishReady = false;
+          stockfishThinking = false;
+          computerBusy = false;
+          say("Stockfish could not load. Check your internet connection.");
+        };
+        stockfishWorker.postMessage("uci");
+      })
+      .catch(function () {
+        stockfishWorker = null;
+        say("Stockfish could not be downloaded.");
+      });
   } catch (err) {
     stockfishWorker = null;
     say("Stockfish could not start in this browser.");
@@ -1008,8 +1011,13 @@ function triggerStockfishGo() {
   stockfishThinking = true;
   stockfishAnalysisMode = false;
   var skill = Math.max(0, Math.min(20, Math.round((computerRating - 800) / 60)));
-  stockfishWorker.postMessage("setoption name Skill Level value " + skill);
-  stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
+  if (computerRating < 1000) {
+    stockfishWorker.postMessage("setoption name UCI_LimitStrength value true");
+    stockfishWorker.postMessage("setoption name UCI_Elo value " + computerRating);
+  } else {
+    stockfishWorker.postMessage("setoption name Skill Level value " + skill);
+    stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
+  }
   stockfishWorker.postMessage("position fen " + game.fen());
   var depth = computerRating < 1100 ? 3 : computerRating < 1400 ? 6 : computerRating < 1700 ? 10 : 14;
   stockfishWorker.postMessage("go depth " + depth);
@@ -1034,7 +1042,7 @@ function makeComputerMove() {
   triggerStockfishGo();
 }
 
-/* ---------- Analysis API for future features ---------- */
+/* ---------- Analysis API ---------- */
 function analyzePosition(fen, depth, callback) {
   if (!stockfishWorker) initStockfish();
   var tryAnalyze = function () {
@@ -1060,8 +1068,30 @@ function analyzePosition(fen, depth, callback) {
     }, 20000);
   };
   tryAnalyze();
-      }
-  function openAuth(m){
+}
+
+$("analyze").onclick = function () {
+  if (!game || game.history().length < 2) { say("Not enough moves to analyze."); return; }
+  say("Analyzing game... Check console (F12) for results.");
+  var history = game.history({ verbose: true });
+  var chess = new Chess();
+  var idx = 0;
+  function step() {
+    if (idx >= history.length) { say("Analysis complete!"); return; }
+    var fen = chess.fen();
+    analyzePosition(fen, 12, function (result) {
+      var played = history[idx].from + history[idx].to + (history[idx].promotion || "");
+      var best = result ? result.uci : "—";
+      var tag = (played === best) ? "✅ Best" : "⚠️ Inaccuracy";
+      console.log("Move " + (idx + 1) + " (" + history[idx].color + "): " + played + " | Best: " + best + " | " + tag);
+      chess.move(history[idx]);
+      idx++;
+      step();
+    });
+  }
+  step();
+};
+ function openAuth(m){
   mode=m;
   $("authForm").reset();
   $("authMessage").textContent="";
