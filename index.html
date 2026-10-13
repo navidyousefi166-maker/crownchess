@@ -39,7 +39,6 @@ button{font:inherit;cursor:pointer}
 .players-stack{display:grid;gap:8px;margin:0 0 10px}
 main{padding:26px 0 40px}
 .kicker{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:2px}
-h1{font-size:clamp(27px,4vw,40px);line-height:1.15;margin:8px 0}
 p{color:var(--muted)}
 .layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:20px}
 .board-panel,.side{padding:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#131e30,#0e1726)}
@@ -64,7 +63,7 @@ h3{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:upperca
 #message{font-size:12px;color:#8bd5a7;min-height:20px;margin-top:8px}
 .hint{font-size:12px;color:var(--muted)}
 .computer-panel{display:block;position:relative;z-index:2;margin:-8px 0 22px;padding:14px 16px;border:1px solid #713040;border-radius:8px;background:linear-gradient(120deg,#2b0710,#1b0309);box-shadow:0 8px 24px #11000630}
-.computer-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.computer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .computer-title{font-weight:900;letter-spacing:1.4px;color:#f7d58b}
 .computer-sub{font-size:12px;color:#d4b7be}
 .computer-strength{margin-top:13px}
@@ -171,7 +170,7 @@ dialog{background:#26060f;border-color:#783042}
   .computer-head .btn{font-size:11px;padding:8px}
   .rating-scale{font-size:9px}
 }
- /* ===== Tournament ===== */
+ /* ===== Champion Banner ===== */
 .champion-banner{display:none;align-items:center;gap:14px;padding:12px 18px;margin:14px 0;border:1px solid #e8c46d;border-radius:12px;background:linear-gradient(120deg,#4a2a06,#2a1403);box-shadow:0 8px 24px #edc56b40;position:relative;overflow:hidden}
 .champion-banner.show{display:flex}
 .champion-banner::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 50%,#edc56b22,transparent 60%);pointer-events:none}
@@ -183,6 +182,7 @@ dialog{background:#26060f;border-color:#783042}
 .champion-name{font-size:20px;font-weight:900;color:#ffe9b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .champion-sub{font-size:11px;color:#c2a7ad}
 
+/* ===== Tournament Button ===== */
 .tournament-bar{display:flex;align-items:stretch;gap:10px;margin:0 0 18px;width:100%}
 .tourn-btn{flex:1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;min-height:54px;border:1px solid #713040;border-radius:5px;background:linear-gradient(120deg,#1b0309,#26060f);cursor:pointer;color:#f8edf0;font-family:inherit;text-align:left;transition:border-color .2s}
 .tourn-btn:hover{border-color:#d9ad55}
@@ -205,6 +205,7 @@ dialog{background:#26060f;border-color:#783042}
   .tourn-btn .tb-icon{font-size:18px}
 }
 
+/* ===== Tournament Dialog ===== */
 #tournDialog{width:min(1200px,calc(100% - 16px));max-height:96vh;overflow:hidden;padding:0;display:none;border-radius:14px}
 #tournDialog[open]{display:flex;flex-direction:column}
 .tourn-panel{padding:16px 20px 18px;display:flex;flex-direction:column;gap:14px;height:100%;min-height:0}
@@ -260,27 +261,28 @@ dialog{background:#26060f;border-color:#783042}
 .confetti{position:absolute;width:8px;height:14px;top:-20px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
  /* ===== Analysis fullscreen ===== */
-#analysisDialog{width:98vw;max-width:1600px;height:96vh;max-height:96vh;padding:0;margin:auto;overflow:hidden;display:none;border-radius:14px}
+#analysisDialog{width:98vw;max-width:1700px;height:97vh;max-height:97vh;padding:0;margin:auto;overflow:hidden;display:none;border-radius:12px}
 #analysisDialog[open]{display:flex;flex-direction:column}
-.an-panel{padding:14px 18px 18px;display:flex;flex-direction:column;height:100%;min-height:0;gap:12px}
+.an-panel{padding:8px 10px 10px;display:flex;flex-direction:column;height:100%;min-height:0;gap:6px}
 .an-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex:none}
-.an-head h2{margin:0;font-size:22px}
-.an-progress{background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:10px;font-size:13px;color:#d4b7be;text-align:center;flex:none}
-.an-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,380px);gap:18px;flex:1;min-height:0;align-items:stretch}
-.an-board-col{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0;align-items:stretch}
-.an-eval-wrap{display:flex;gap:10px;align-items:stretch;flex:1;min-height:0;justify-content:center}
+.an-head h2{margin:0;font-size:18px}
+.an-head .kicker{font-size:9px}
+.an-progress{background:#1b0309;border:1px solid #5d1d2b;border-radius:6px;padding:6px;font-size:12px;color:#d4b7be;text-align:center;flex:none}
+.an-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:10px;flex:1;min-height:0;align-items:stretch}
+.an-board-col{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0;align-items:stretch}
+.an-eval-wrap{display:flex;gap:8px;align-items:stretch;flex:1;min-height:0;justify-content:center;overflow:hidden}
 .an-eval-bar{width:30px;background:#20100d;border-radius:6px;overflow:hidden;position:relative;border:1px solid #5d1d2b;flex:none}
 .an-eval-black{position:absolute;top:0;left:0;width:100%;background:#1a0f0d;transition:height .25s}
 .an-eval-white{position:absolute;bottom:0;left:0;width:100%;background:#f5e6cc;transition:height .25s}
 .an-eval-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:900;color:#edc56b;text-shadow:0 0 4px #000,0 0 4px #000,0 0 4px #000;z-index:2;white-space:nowrap}
-#anBoard{flex:1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));aspect-ratio:1;border:2px solid #8a6044;border-radius:5px;overflow:hidden;min-width:0;max-height:100%;height:auto;width:auto;align-self:center}
+#anBoard{flex:1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));aspect-ratio:1;border:2px solid #8a6044;border-radius:5px;overflow:hidden;min-width:0;height:100%;width:auto;max-width:100%;align-self:center}
 #anBoard .square{position:relative;display:flex;align-items:center;justify-content:center;padding:0;border:0;background:none}
 #anBoard .light{background:linear-gradient(135deg,#fff0da,#ead7bb)}
 #anBoard .dark{background:linear-gradient(135deg,#89664f,#6b4938)}
 #anBoard .piece{width:100%;height:100%}
 .an-badge{position:absolute;top:2px;right:2px;font-size:13px;font-weight:900;padding:3px 8px;border-radius:5px;line-height:1.2;box-shadow:0 2px 5px #000a;z-index:3;pointer-events:none}
-.an-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:none}
-.an-nav button{padding:12px 4px;font-size:16px;font-weight:800;background:#310812;border:1px solid #5d1d2b;color:#f8edf0;border-radius:6px;cursor:pointer}
+.an-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;flex:none}
+.an-nav button{padding:8px 4px;font-size:14px;font-weight:800;background:#310812;border:1px solid #5d1d2b;color:#f8edf0;border-radius:6px;cursor:pointer}
 .an-nav button:hover{background:#4a0c1a}
 .an-moves-col{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0}
 .an-moves{flex:1;overflow-y:auto;background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:10px;font-size:14px;min-height:0}
@@ -337,8 +339,99 @@ dialog{background:#26060f;border-color:#783042}
   .hist-result-badge{font-size:10px;padding:2px 7px}
   .hist-analyze{font-size:10px;padding:4px 8px}
 }
+ /* ===== Fullscreen Online Game ===== */
+body.game-focus{overflow:hidden}
+body.game-focus .wrap > header,
+body.game-focus .champion-banner,
+body.game-focus .quickbar,
+body.game-focus .tournament-bar,
+body.game-focus .computer-panel,
+body.game-focus .layout .desktop-players,
+body.game-focus .layout .side,
+body.game-focus .layout .board-label,
+body.game-focus .layout .mobile-players,
+body.game-focus .history-section,
+body.game-focus footer{display:none!important}
 
-@media(max-width:900px){
+body.game-focus .layout{display:block}
+body.game-focus .board-panel{padding:0;border:0;background:none;box-shadow:none;border-radius:0}
+body.game-focus #board{max-width:none;border:0;box-shadow:none;border-radius:0}
+
+.game-fullscreen{position:fixed;inset:0;background:#0a0207;display:none;z-index:200;flex-direction:column}
+body.game-focus .game-fullscreen{display:flex}
+
+.gfs-topbar,.gfs-bottombar{flex:none;display:flex;align-items:center;gap:10px;padding:8px 12px;background:linear-gradient(145deg,#2b0710,#1b0309);border-bottom:1px solid #622333;min-height:56px}
+.gfs-bottombar{border-bottom:0;border-top:1px solid #622333}
+.gfs-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #d9ad55;background:#350b16;flex:none}
+.gfs-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.gfs-bottombar .gfs-info{text-align:right}
+.gfs-name{font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.gfs-bottombar .gfs-name{justify-content:flex-end}
+.gfs-stats{font-size:11px;color:#c2a7ad;display:flex;gap:8px;flex-wrap:wrap}
+.gfs-bottombar .gfs-stats{justify-content:flex-end}
+.gfs-stat{padding:1px 6px;border-radius:8px;background:#1b0309;border:1px solid #5d1d2b;font-size:10px;font-weight:700;color:#edc56b}
+.gfs-clock{font-variant-numeric:tabular-nums;font-weight:900;font-size:26px;letter-spacing:1px;padding:4px 12px;border-radius:8px;background:#0d0409;border:1px solid #5d1d2b;color:#f8edf0;flex:none;transition:border-color .3s,box-shadow .3s}
+.gfs-clock.active{border-color:#edc56b;box-shadow:0 0 12px #edc56b66,inset 0 0 0 1px #edc56b44;color:#ffe9b5}
+.gfs-resign{flex:none;background:#4a0c1a;border:1px solid #a01a3a;color:#ffb8c4;font-weight:800;font-size:12px;padding:8px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;letter-spacing:.5px}
+.gfs-resign:hover{background:#5a0e1f}
+.gfs-resign:disabled{opacity:.4;cursor:not-allowed}
+
+.gfs-board-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;min-height:0;background:#0a0207}
+.gfs-board-wrap #board{width:min(100%,calc(100vh - 140px));height:auto;aspect-ratio:1;max-width:100%}
+
+.humil-badge{font-size:9px;padding:2px 7px;border-radius:10px;background:#edc56b;color:#2a0710;font-weight:900;letter-spacing:.5px}
+
+/* Humiliation Banner (بالای برد) */
+.humil-banner{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#4a2a06,#2a1403);border:1px solid #edc56b;border-radius:12px;padding:10px 16px;box-shadow:0 8px 24px #0008;z-index:50;display:flex;align-items:center;gap:12px;font-size:13px;cursor:pointer;animation:humilPop .4s ease-out}
+@keyframes humilPop{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.humil-banner:hover{border-color:#ffe9b5}
+.humil-banner .hb-icon{font-size:22px;flex:none;filter:drop-shadow(0 2px 4px #0008)}
+.humil-banner .hb-text{display:flex;flex-direction:column;gap:1px}
+.humil-banner .hb-title{font-weight:800;color:#ffe9b5;letter-spacing:.5px}
+.humil-banner .hb-sub{font-size:11px;color:#c2a7ad}
+
+/* Humiliation Picker Dialog */
+#humilDialog{width:min(500px,calc(100% - 20px));padding:0;border-radius:14px}
+.humil-panel{padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.humil-head h2{margin:0;font-size:20px;color:#ffe9b5}
+.humil-head .kicker{font-size:10px}
+.humil-desc{font-size:13px;color:#c2a7ad;line-height:1.5}
+.humil-pieces{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.humil-piece{background:#1b0309;border:1px solid #5d1d2b;border-radius:10px;padding:10px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:border-color .15s,background .15s;position:relative}
+.humil-piece:hover{border-color:#edc56b;background:#4a0c1a}
+.humil-piece.selected{border-color:#edc56b;background:#4a0c1a;box-shadow:0 0 0 1px #edc56b}
+.humil-piece .hp-piece{width:44px;height:44px}
+.humil-piece .hp-label{font-size:10px;font-weight:800;color:#c2a7ad;letter-spacing:.5px}
+.humil-piece .hp-reward{font-size:11px;font-weight:900;color:#edc56b}
+.humil-actions{display:flex;gap:8px}
+.humil-actions button{flex:1;padding:12px 14px;font-weight:800;border-radius:10px;cursor:pointer;border:1px solid #5d1d2b;background:#310812;color:#f8edf0;font-family:inherit;font-size:14px}
+.humil-actions button.primary{background:linear-gradient(135deg,#ffe5a0,#d7a33e);border-color:#e8c46d;color:#2a0710}
+.humil-actions button:disabled{opacity:.45;cursor:not-allowed}
+
+/* ===== Celebration Screen ===== */
+.celebration{position:fixed;inset:0;background:radial-gradient(circle at 50% 50%,#2b0710,#0a0207 70%);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+.celebration.show{display:flex;animation:celebFade .5s ease-out}
+@keyframes celebFade{from{opacity:0}to{opacity:1}}
+.celebration.win{background:radial-gradient(circle at 50% 50%,#3a2408,#0a0207 70%)}
+.celebration.loss{background:radial-gradient(circle at 50% 50%,#2a0608,#050001 70%)}
+.celebration.draw{background:radial-gradient(circle at 50% 50%,#2a2408,#0a0600 70%)}
+.celeb-text{font-size:clamp(20px,4vw,32px);font-weight:900;color:#ffe9b5;letter-spacing:1.5px;margin-bottom:24px;text-shadow:0 0 20px #edc56b66,0 2px 4px #000a;animation:celebText .6s ease-out .2s both}
+@keyframes celebText{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.celeb-avatar{width:min(150px,30vw);height:min(150px,30vw);border-radius:50%;border:4px solid #edc56b;object-fit:cover;background:#1b0309;box-shadow:0 0 40px #edc56b66,0 8px 24px #000a;animation:celebAvatar .7s ease-out .4s both}
+@keyframes celebAvatar{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:scale(1)}}
+.celeb-name{font-size:20px;font-weight:900;color:#f8edf0;margin-top:18px;animation:celebText .5s ease-out .7s both}
+.celeb-wins-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:20px;font-size:36px;font-weight:900;color:#edc56b;font-variant-numeric:tabular-nums;letter-spacing:2px}
+.celeb-win-label{font-size:14px;color:#c2a7ad;letter-spacing:3px;text-transform:uppercase;font-weight:800;animation:celebText .4s ease-out .9s both}
+.celeb-wins-num{animation:celebText .4s ease-out 1s both}
+.celeb-plus{color:#81b64c;font-size:24px;margin-left:4px;animation:celebText .3s ease-out 1.5s both;display:inline-block}
+.celeb-new-wins{color:#ffe9b5;text-shadow:0 0 20px #edc56b,0 0 8px #edc56b;animation:winsFlash .5s ease-out 1.5s both}
+@keyframes winsFlash{0%{transform:scale(1)}50%{transform:scale(1.3);color:#fff}100%{transform:scale(1)}}
+.celeb-humil-tag{margin-top:14px;font-size:12px;padding:4px 12px;border-radius:20px;background:#4a2a06;border:1px solid #edc56b;color:#ffe9b5;font-weight:800;letter-spacing:1px;display:inline-block;animation:celebText .4s ease-out 1.8s both}
+.celeb-actions{display:flex;gap:10px;margin-top:32px;animation:celebText .4s ease-out 2s both}
+.celeb-actions button{padding:12px 22px;font-weight:800;border-radius:10px;cursor:pointer;border:1px solid #5d1d2b;background:#310812;color:#f8edf0;font-family:inherit;font-size:14px}
+.celeb-actions button.primary{background:linear-gradient(135deg,#ffe5a0,#d7a33e);border-color:#e8c46d;color:#2a0710}
+.celeb-auto{font-size:11px;color:#9a7a82;margin-top:14px;animation:celebText .4s ease-out 2.2s both}
+ @media(max-width:900px){
   #tournDialog{width:99vw;height:98vh;max-height:98vh;border-radius:8px}
   .tourn-panel{padding:10px;gap:10px}
   .tourn-head h2{font-size:18px}
@@ -347,15 +440,20 @@ dialog{background:#26060f;border-color:#783042}
   .tourn-countdown-big .big{font-size:28px}
   .tourn-players{max-height:180px;flex:none}
   #analysisDialog{width:99vw;height:98vh;max-height:98vh;border-radius:8px}
-  .an-panel{padding:10px;gap:8px}
-  .an-head h2{font-size:18px}
-  .an-progress{padding:7px;font-size:12px}
-  .an-layout{grid-template-columns:1fr;grid-template-rows:auto auto;gap:10px;overflow-y:auto}
-  .an-eval-wrap{max-height:60vh}
-  #anBoard{max-height:60vh}
+  .an-panel{padding:8px;gap:6px}
+  .an-head h2{font-size:16px}
+  .an-progress{padding:5px;font-size:11px}
+  .an-layout{grid-template-columns:1fr;grid-template-rows:auto auto;gap:8px;overflow-y:auto}
+  .an-eval-wrap{max-height:70vh;min-height:50vh}
+  #anBoard{max-height:70vh;height:auto;width:100%}
   .an-moves{max-height:200px;flex:none}
-  .an-nav button{padding:10px 3px;font-size:14px}
+  .an-nav button{padding:8px 3px;font-size:13px}
   .an-badge{font-size:11px;padding:2px 6px}
+  .gfs-board-wrap #board{width:min(100%,calc(100vh - 130px))}
+  .gfs-clock{font-size:22px;padding:3px 9px}
+  .celeb-avatar{width:min(120px,30vw);height:min(120px,30vw)}
+  .celeb-text{font-size:clamp(16px,5vw,24px)}
+  .celeb-wins-row{font-size:28px}
 }
 </style>
 </head>
@@ -372,51 +470,52 @@ dialog{background:#26060f;border-color:#783042}
       <button class="btn" id="signOut" hidden>Sign Out</button>
     </div>
   </header>
-
   <div class="champion-banner" id="championBanner">
-    <span class="champion-trophy">🏆</span>
-    <img id="championAvatar" alt="Champion avatar">
-    <div class="champion-info">
-      <div class="champion-label">CHAMPION OF THE DAY</div>
-      <div class="champion-name" id="championName">—</div>
-      <div class="champion-sub" id="championSub">—</div>
-    </div>
+  <span class="champion-trophy">🏆</span>
+  <img id="championAvatar" alt="Champion avatar">
+  <div class="champion-info">
+    <div class="champion-label">CHAMPION OF THE DAY</div>
+    <div class="champion-name" id="championName">—</div>
+    <div class="champion-sub" id="championSub">—</div>
   </div>
+</div>
 
-  <div class="quickbar">
-    <button class="quickplay" id="quickPlay">QUICK PLAY</button>
-    <span class="quickstate" id="quickState">5-minute game · Match by wins</span>
-    <button class="btn" id="cancelQueue" hidden style="margin-right:8px">Cancel</button>
-  </div>
+<div class="quickbar">
+  <button class="quickplay" id="quickPlay">QUICK PLAY</button>
+  <span class="quickstate" id="quickState">5-minute game · Match by wins</span>
+  <button class="btn" id="cancelQueue" hidden style="margin-right:8px">Cancel</button>
+</div>
 
-  <div class="tournament-bar">
-    <button class="tourn-btn" id="tournamentBtn" type="button">
-      <div class="tb-left">
-        <span class="tb-icon">🏆</span>
-        <div class="tb-text">
-          <span class="tb-title">KNOCKOUT TOURNAMENT</span>
-          <span class="tb-sub" id="tournBtnSub">Tap to join the next knockout cup</span>
-        </div>
+<div class="tournament-bar">
+  <button class="tourn-btn" id="tournamentBtn" type="button">
+    <div class="tb-left">
+      <span class="tb-icon">🏆</span>
+      <div class="tb-text">
+        <span class="tb-title">KNOCKOUT TOURNAMENT</span>
+        <span class="tb-sub" id="tournBtnSub">Tap to join the next knockout cup</span>
       </div>
-      <span class="tb-timer" id="tournBtnTimer">--:--:--</span>
-    </button>
+    </div>
+    <span class="tb-timer" id="tournBtnTimer">--:--:--</span>
+  </button>
+</div>
+
+<section class="computer-panel" aria-label="Play against computer">
+  <div class="computer-head">
+    <div>
+      <div class="computer-title">PLAY VS COMPUTER</div>
+      <div class="computer-sub">Powered by Stockfish · Practice anytime</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn gold" id="computerPlayWhite">♔ Play as White</button>
+      <button class="btn" id="computerPlayBlack" style="background:#2a0710;border-color:#5d1d2b;color:#f8edf0;font-weight:700">♚ Play as Black</button>
+    </div>
   </div>
-
-  <section class="computer-panel" aria-label="Play against computer">
-    <div class="computer-head">
-      <div>
-        <div class="computer-title">PLAY VS COMPUTER</div>
-        <div class="computer-sub">Powered by Stockfish · Practice anytime</div>
-      </div>
-      <button class="btn gold" id="computerPlay">Play computer</button>
-    </div>
-    <div class="computer-strength">
-      <label for="computerRating">Computer strength <strong id="computerRatingLabel">1400</strong></label>
-      <input id="computerRating" type="range" min="800" max="2000" step="100" value="1400">
-      <div class="rating-scale"><span>800 · Beginner</span><span>1400 · Club</span><span>2000 · Expert</span></div>
-    </div>
-  </section>
-
+  <div class="computer-strength">
+    <label for="computerRating">Computer strength <strong id="computerRatingLabel">1400</strong></label>
+    <input id="computerRating" type="range" min="800" max="2000" step="100" value="1400">
+    <div class="rating-scale"><span>800 · Beginner</span><span>1400 · Club</span><span>2000 · Expert</span></div>
+  </div>
+</section>
   <main>
     <section class="layout">
       <div class="players-stack desktop-players">
@@ -557,6 +656,7 @@ dialog{background:#26060f;border-color:#783042}
     <div class="promo-grid" id="promoGrid"></div>
   </div>
 </dialog>
+
 <dialog id="tournDialog">
   <div class="tourn-panel">
     <div class="tourn-head">
@@ -570,7 +670,6 @@ dialog{background:#26060f;border-color:#783042}
       </div>
       <button class="close" type="button" id="tournClose">×</button>
     </div>
-
     <div class="tourn-body">
       <div class="tourn-main">
         <div class="tourn-countdown-big" id="tournCountdownBig">
@@ -578,18 +677,15 @@ dialog{background:#26060f;border-color:#783042}
           <div class="big" id="tournBigTimer">--:--:--</div>
           <div class="sub" id="tournBigSub">Registration open</div>
         </div>
-
         <div class="tourn-actions">
           <button class="primary" id="tournRegisterBtn" type="button">Register</button>
           <button class="danger" id="tournCancelBtn" type="button" hidden>Cancel Registration</button>
         </div>
         <div class="tourn-msg" id="tournMsg"></div>
-
         <div class="bracket-wrap" id="tournBracketWrap" hidden>
           <div class="bracket" id="tournBracket"></div>
         </div>
       </div>
-
       <div class="tourn-side">
         <div class="tourn-players">
           <div class="tourn-players-title">
@@ -602,7 +698,6 @@ dialog{background:#26060f;border-color:#783042}
     </div>
   </div>
 </dialog>
-
 <dialog id="analysisDialog">
   <div class="an-panel">
     <div class="an-head">
@@ -638,6 +733,85 @@ dialog{background:#26060f;border-color:#783042}
   </div>
 </dialog>
 
+<dialog id="humilDialog">
+  <div class="humil-panel">
+    <div class="humil-head">
+      <div class="kicker">HUMILIATION</div>
+      <h2>Sacrifice a Piece</h2>
+    </div>
+    <p class="humil-desc">
+      Give up one of your own pieces before the first move.<br>
+      If you win, you earn bonus wins. If you lose, nothing changes.
+    </p>
+    <div class="humil-pieces" id="humilPieces">
+      <div class="humil-piece" data-type="n" data-reward="2">
+        <div class="hp-piece" id="hpPieceN"></div>
+        <div class="hp-label">Knight</div>
+        <div class="hp-reward">+2 wins</div>
+      </div>
+      <div class="humil-piece" data-type="b" data-reward="2">
+        <div class="hp-piece" id="hpPieceB"></div>
+        <div class="hp-label">Bishop</div>
+        <div class="hp-reward">+2 wins</div>
+      </div>
+      <div class="humil-piece" data-type="r" data-reward="3">
+        <div class="hp-piece" id="hpPieceR"></div>
+        <div class="hp-label">Rook</div>
+        <div class="hp-reward">+3 wins</div>
+      </div>
+      <div class="humil-piece" data-type="q" data-reward="5">
+        <div class="hp-piece" id="hpPieceQ"></div>
+        <div class="hp-label">Queen</div>
+        <div class="hp-reward">+5 wins</div>
+      </div>
+    </div>
+    <div class="humil-actions">
+      <button type="button" id="humilCancel">Cancel</button>
+      <button type="button" class="primary" id="humilConfirm" disabled>Sacrifice</button>
+    </div>
+    <div id="humilMsg" style="text-align:center;font-size:12px;color:#c2a7ad;min-height:16px"></div>
+  </div>
+</dialog>
+
+<div class="game-fullscreen" id="gameFullscreen">
+  <div class="gfs-topbar">
+    <img class="gfs-avatar" id="gfsTopAvatar" alt="">
+    <div class="gfs-info">
+      <div class="gfs-name" id="gfsTopName">Opponent</div>
+      <div class="gfs-stats" id="gfsTopStats"></div>
+    </div>
+    <div class="gfs-clock" id="gfsTopClock">05:00</div>
+  </div>
+  <div class="gfs-board-wrap" id="gfsBoardWrap"></div>
+  <div class="gfs-bottombar">
+    <button class="gfs-resign" id="gfsResignBtn" type="button">🏳️ Resign</button>
+    <div class="gfs-clock" id="gfsBotClock">05:00</div>
+    <div class="gfs-info">
+      <div class="gfs-name" id="gfsBotName">You</div>
+      <div class="gfs-stats" id="gfsBotStats"></div>
+    </div>
+    <img class="gfs-avatar" id="gfsBotAvatar" alt="">
+  </div>
+</div>
+
+<div class="celebration" id="celebrationScreen">
+  <div class="celeb-text" id="celebText"></div>
+  <img class="celeb-avatar" id="celebAvatar" alt="">
+  <div class="celeb-name" id="celebName"></div>
+  <div class="celeb-wins-row">
+    <span class="celeb-win-label">WINS</span>
+    <span class="celeb-wins-num" id="celebWinsOld"></span>
+    <span class="celeb-plus" id="celebPlus"></span>
+    <span class="celeb-new-wins" id="celebWinsNew"></span>
+  </div>
+  <div class="celeb-humil-tag" id="celebHumilTag" hidden>🏳️ HUMILIATION VICTORY</div>
+  <div class="celeb-actions">
+    <button type="button" class="primary" id="celebAnalyze">Analyze</button>
+    <button type="button" id="celebExit">Exit</button>
+  </div>
+  <div class="celeb-auto" id="celebAuto"></div>
+</div>
+
 <div class="bracket-celebrate" id="celebrateLayer"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -672,6 +846,7 @@ var clockExpired=false;
 var computerMode=false;
 var computerBusy=false;
 var computerRating=1400;
+var computerUserColor="w";
 var computerTimer=null;
 var names={k:"King",q:"Queen",r:"Rook",b:"Bishop",n:"Knight",p:"Pawn"};
 var files="abcdefgh";
@@ -688,6 +863,17 @@ var tournBracketRendered=null;
 /* History state */
 var historyData=[];
 var pendingAnalysisGame=null;
+
+/* Fullscreen game state */
+var fsPlayerColor="w";
+
+/* Humiliation state */
+var humilChosenType=null;
+var humilApplied=false;
+var humilConfirmCallback=null;
+
+/* Celebration state */
+var celebTimer=null;
 
 function defaultAvatar(){
   var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#172337"/><circle cx="50" cy="36" r="19" fill="#9AA9BE"/><path d="M16 92c3-23 16-34 34-34s31 11 34 34" fill="#9AA9BE"/></svg>';
@@ -735,6 +921,23 @@ function paintClocks(){
       el.classList.toggle("active",active);
     }
   }
+  // Fullscreen clocks
+  if(fsPlayerColor){
+    var topColor = fsPlayerColor === "w" ? "black" : "white";
+    var topVal = topColor === "white" ? clockWhite : clockBlack;
+    var botVal = fsPlayerColor === "white" ? clockWhite : clockBlack;
+    var topEl=$("gfsTopClock"),botEl=$("gfsBotClock");
+    if(topEl){
+      topEl.textContent=fmtClock(topVal);
+      var topActive = game && ((game.turn()==="w")===(topColor==="white")) && !game.game_over() && !clockExpired;
+      topEl.classList.toggle("active",topActive);
+    }
+    if(botEl){
+      botEl.textContent=fmtClock(botVal);
+      var botActive = game && ((game.turn()==="w")===(fsPlayerColor==="white")) && !game.game_over() && !clockExpired;
+      botEl.classList.toggle("active",botActive);
+    }
+  }
 }
 function resetClocks(){
   clockWhite=300;
@@ -770,12 +973,15 @@ function tickClock(){
     say(loser+" ran out of time. "+winner+" wins on time.");
     if(onlineGameId&&tournActiveMatch){
       handleTournamentTimeout(loser);
+    } else if (onlineGameId) {
+      handleOnlineTimeout(loser);
     }
   }
   paintClocks();
 }
 setInterval(tickClock,250);
- function renderPlayers(row){
+
+function renderPlayers(row){
   if(!row){
     setPlayer("Black",null);
     setPlayer("White",null);
@@ -790,7 +996,6 @@ function setQuickState(text,opts){
   $("cancelQueue").hidden=!opts.cancel;
   $("quickPlay").disabled=!!(opts.lock||onlineGameId);
 }
-
 function fmtCountdown(ms){
   if(ms<0)ms=0;
   var s=Math.floor(ms/1000);
@@ -806,9 +1011,8 @@ function fmtTimeLocal(iso){
     var d=new Date(iso);
     return d.toLocaleString(undefined,{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"short"});
   }catch(e){return iso}
-}
-
-async function loadTournamentState(){
+ }
+ async function loadTournamentState(){
   if(!sb)return;
   try{
     var res=await sb.rpc("kf_get_next_tournament");
@@ -939,8 +1143,7 @@ function updateTournBigTimer(){
     $("tournBigTimer").textContent="🏆";
     $("tournBigSub").textContent="Champion: "+(tournCurrent.winner_username||"—");
   }
-}
-
+ }
  function openTournDialog(){
   if(!tournCurrent){say("Tournament data loading…");return}
   renderTournDialog();
@@ -1022,7 +1225,8 @@ $("tournamentBtn").onclick=function(){
   if(!currentUser){say("Sign in to join the tournament.");openAuth("signin");return}
   openTournDialog();
 };
- function roundName(round, totalRounds){
+
+function roundName(round, totalRounds){
   var fromEnd = totalRounds - round;
   if(fromEnd === 0) return "Final";
   if(fromEnd === 1) return "Semi-Finals";
@@ -1099,7 +1303,7 @@ function launchConfetti(){
     layer.appendChild(c);
   }
   setTimeout(function(){layer.innerHTML="";},4500);
-}
+                                                }
  function startTournMatchWatcher(){
   if(tournMatchCheckTimer)clearInterval(tournMatchCheckTimer);
   tournMatchCheckTimer=setInterval(checkTournMatchStatus, 2000);
@@ -1169,15 +1373,11 @@ async function joinTournamentGame(gameId){
   resetClocks();lastClockAt=Date.now();
   document.body.classList.remove("computer-mode");
   document.body.classList.add("online");
-  $("gameClockLabel").textContent="🏆 TOURNAMENT · 5 MIN";
-  $("new").disabled=true;$("undo").disabled=true;
-  setQuickState("Tournament match in progress",{lock:true});
+  enterFullscreenGame(data);
   renderPlayers(data);
   if(game&&game.fen()!==data.fen)game.load(data.fen);
   selected=null;targets=[];last=data.last_move||null;
   draw();
-  var side=(data.white_id===currentUser.id)?"White":"Black";
-  say("🏆 Tournament match! You are "+side+". White must move within 30s.");
   startFirstMoveTimer(data);
   gameChannel=sb.channel("kf-game-"+gameId)
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+gameId},function(payload){applyOnlineGame(payload.new)})
@@ -1192,9 +1392,9 @@ function startFirstMoveTimer(gameRow){
     if(!onlineGameId||!tournActiveMatch)return;
     var gameRes=await sb.from("kf_games").select("turn").eq("id",onlineGameId).maybeSingle();
     if(gameRes.data&&gameRes.data.turn==="w"){
-     var blackId=onlineGame.black_id;
-say("⏱️ "+onlineGame.white_username+" didn't move in time. "+onlineGame.black_username+" advances.");
-await finishTournamentMatch(blackId, true);
+      var blackId=onlineGame.black_id;
+      say("⏱️ "+onlineGame.white_username+" didn't move in time. "+onlineGame.black_username+" advances.");
+      await finishTournamentMatch(blackId, true);
     }
   },30000);
 }
@@ -1209,19 +1409,38 @@ async function finishTournamentMatch(winnerId, opponentEliminated){
   if(!sb||!onlineGameId||!tournActiveMatch)return;
   try{
     await sb.rpc("kf_report_match_result",{p_match_id:tournActiveMatch.id,p_winner_id:winnerId});
+    if (winnerId === currentUser.id) {
+      var bonus = 1;
+      var hcp = (onlineGame.white_id === currentUser.id) ? onlineGame.white_handicap : onlineGame.black_handicap;
+      if (hcp === "n" || hcp === "b") bonus = 2;
+      else if (hcp === "r") bonus = 3;
+      else if (hcp === "q") bonus = 5;
+      await sb.rpc("kf_add_wins", {p_user_id: currentUser.id, p_amount: bonus});
+      if (hcp === "q" || hcp === "r" || hcp === "n" || hcp === "b") {
+        var oppId = onlineGame.white_id === currentUser.id ? onlineGame.black_id : onlineGame.white_id;
+        await sb.rpc("kf_increment_humiliation_loss", {p_user_id: oppId});
+      }
+    }
   }catch(e){console.warn(e)}
-}
+         }
  async function getCurrentProfile(){
   if(!sb)return null;
   var res=await sb.auth.getUser();
   var user=res.data&&res.data.user?res.data.user:null;
   currentUser=user;
   if(!user)return null;
-  var statsRes=await sb.from("kf_player_stats").select("wins").eq("user_id",user.id).maybeSingle();
+  var statsRes=await sb.from("kf_player_stats").select("*").eq("user_id",user.id).maybeSingle();
   var stats=statsRes.data;
   var uname=(user.user_metadata&&user.user_metadata.username)||(user.email?user.email.split("@")[0]:"Player");
   var avatar=(user.user_metadata&&user.user_metadata.avatar_url)||null;
-  return {id:user.id,username:uname,avatar_url:avatar,wins:stats&&stats.wins!==undefined?stats.wins:0};
+  return {
+    id:user.id,
+    username:uname,
+    avatar_url:avatar,
+    wins:stats&&stats.wins!==undefined?stats.wins:0,
+    tournament_wins:stats&&stats.tournament_wins!==undefined?stats.tournament_wins:0,
+    humiliation_losses:stats&&stats.humiliation_losses!==undefined?stats.humiliation_losses:0
+  };
 }
 async function stopQueuePoll(){
   if(queuePoll){clearInterval(queuePoll);queuePoll=null}
@@ -1234,7 +1453,8 @@ async function leaveOnlineState(){
   await stopQueuePoll();
   if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
   onlineGameId=null;onlineGame=null;submittingMove=false;tournActiveMatch=null;
-  document.body.classList.remove("online","computer-mode");
+  document.body.classList.remove("online","computer-mode","game-focus");
+  hideCelebration();
   $("gameClockLabel").textContent="KINGSFALL · 5 MIN";
   $("new").disabled=false;
   $("undo").disabled=!(game&&game.history().length);
@@ -1263,55 +1483,44 @@ async function loadOnlineGame(id){
   resetClocks();lastClockAt=Date.now();
   document.body.classList.remove("computer-mode");
   document.body.classList.add("online");
-  $("gameClockLabel").textContent=data.is_tournament?"🏆 TOURNAMENT · 5 MIN":"KINGSFALL · 5 MIN";
-  $("new").disabled=true;$("undo").disabled=true;
-  setQuickState("Match found · game in progress",{lock:true});
+  enterFullscreenGame(data);
   renderPlayers(data);
   if(game&&game.fen()!==data.fen)game.load(data.fen);
   selected=null;targets=[];last=data.last_move||null;
   draw();
-  var side=(data.white_id===currentUser.id)?"White":"Black";
-  say((data.is_tournament?"🏆 Tournament match! ":"Matched! ")+"You are "+side+".");
   gameChannel=sb.channel("kf-game-"+id)
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+id},function(payload){applyOnlineGame(payload.new)})
     .subscribe();
 }
 function applyOnlineGame(row){
   if(!row||row.id!==onlineGameId)return;
-  onlineGame=row;lastClockAt=Date.now();paintClocks();renderPlayers(row);
+  var prevHumil = onlineGame ? onlineGame.white_handicap : null;
+  var prevHumilB = onlineGame ? onlineGame.black_handicap : null;
+  onlineGame=row;
+  lastClockAt=Date.now();
+  paintClocks();
+  renderPlayers(row);
+  if(prevHumil !== row.white_handicap || prevHumilB !== row.black_handicap){
+    // handicap changed — re-render board if opponent already applied
+    if (!humilApplied && (row.white_handicap || row.black_handicap)) {
+      var oppH = (row.white_id === currentUser.id) ? row.black_handicap : row.white_handicap;
+      if (oppH) {
+        applyHandicapToGame(row.white_id === currentUser.id ? "b" : "w", oppH);
+      }
+    }
+  }
   if(game&&row.fen&&game.fen()!==row.fen){
     try{
       game.load(row.fen);last=row.last_move||null;selected=null;targets=[];draw();
       if(firstMoveTimer&&game.history().length>0){clearTimeout(firstMoveTimer);firstMoveTimer=null;}
     }catch(e){say("Received an invalid game position.")}
   }
-  if(row.status==="completed"){
+  if(row.status==="completed" && !celebTimer){
     if(row.is_tournament && tournActiveMatch){
-      var iWon=row.winner_id===currentUser?.id;
-      setQuickState("Tournament match finished");
-      say(iWon?"🏆 You won! Advancing to next round.":"Tournament match lost. Better luck next time.");
-      if(iWon)launchConfetti();
-      tournActiveMatch=null;onlineGameId=null;onlineGame=null;
-      if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
-      document.body.classList.remove("online","computer-mode");
-      $("gameClockLabel").textContent="KINGSFALL · 5 MIN";
-      $("new").disabled=false;
-      setTimeout(refreshTournLive,1500);
-      setTimeout(loadHistory,1500);
-      return;
+      handleTournamentEnd(row);
+    } else {
+      handleQuickPlayEnd(row);
     }
-    setQuickState("Game finished · "+(row.result||"result recorded"));
-    var msg;
-    if(row.result==="1/2-1/2")msg="Game drawn.";
-    else if(currentUser&&row.winner_id===currentUser.id)msg="You won! Your win total has been updated.";
-    else msg="Game finished.";
-    say(msg);
-    onlineGameId=null;onlineGame=null;
-    if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
-    document.body.classList.remove("online","computer-mode");
-    $("gameClockLabel").textContent="KINGSFALL · 5 MIN";
-    $("new").disabled=false;
-    setTimeout(loadHistory,1500);
   }
 }
 async function startQuickPlay(){
@@ -1323,6 +1532,8 @@ async function startQuickPlay(){
   var session=sess.data&&sess.data.session?sess.data.session:null;
   if(!session){openAuth("signin");say("Sign in before using Quick Play.");return}
   currentUser=session.user;
+  humilApplied=false;
+  humilChosenType=null;
   setQuickState("Finding an opponent · 5-minute game…",{lock:true,cancel:true});
   say("");
   try{
@@ -1362,17 +1573,13 @@ async function submitOnlineMove(m){
       winnerId=game.turn()==="w"?onlineGame.black_id:onlineGame.white_id;
     }else result="1/2-1/2";
   }
-  var res=await sb.rpc("kf_submit_move",{
-    p_game_id:onlineGameId,p_fen:game.fen(),p_pgn:game.pgn(),p_turn:game.turn(),
-    p_last_move:{from:m.from,to:m.to,san:m.san},p_status:status,p_result:result,p_winner_id:winnerId
-  });
+  var upd={fen:game.fen(),pgn:game.pgn(),turn:game.turn(),
+    last_move:{from:m.from,to:m.to,san:m.san},status:status,result:result,winner_id:winnerId};
+  if(status==="completed")upd.completed_at=new Date().toISOString();
+  var res=await sb.from("kf_games").update(upd).eq("id",onlineGameId);
   if(res.error){game.undo();selected=null;targets=[];draw();say("Move could not be saved: "+res.error.message);return}
   if(status==="completed"){
-    var msg;
-    if(result==="1/2-1/2")msg="Draw.";
-    else if(currentUser&&winnerId===currentUser.id)msg="Checkmate — you won!";
-    else msg="Checkmate — you lost.";
-    say(msg);
+    await finalizeOnlineGame(winnerId);
   }
 }
 async function submitTournamentMove(m){
@@ -1387,19 +1594,388 @@ async function submitTournamentMove(m){
       winnerId=onlineGame.white_id;
     }
   }
-  var upd=await sb.from("kf_games").update({
-    fen:game.fen(),pgn:game.pgn(),turn:game.turn(),
-    last_move:{from:m.from,to:m.to,san:m.san},
-    status:status,result:result,winner_id:winnerId
-  }).eq("id",onlineGameId);
-  if(upd.error){game.undo();selected=null;targets=[];draw();say("Move could not be saved: "+upd.error.message);return}
+  var upd={fen:game.fen(),pgn:game.pgn(),turn:game.turn(),
+    last_move:{from:m.from,to:m.to,san:m.san},status:status,result:result,winner_id:winnerId};
+  if(status==="completed")upd.completed_at=new Date().toISOString();
+  var res=await sb.from("kf_games").update(upd).eq("id",onlineGameId);
+  if(res.error){game.undo();selected=null;targets=[];draw();say("Move could not be saved: "+res.error.message);return}
   if(status==="completed"){
     await finishTournamentMatch(winnerId, true);
-    var iWon=winnerId===currentUser.id;
-    say(iWon?"🏆 Checkmate — you won!":"Checkmate — you lost.");
-    if(iWon)launchConfetti();
   }
 }
+async function finalizeOnlineGame(winnerId){
+  if(!currentUser)return;
+  if(winnerId === currentUser.id){
+    var hcp = (onlineGame.white_id === currentUser.id) ? onlineGame.white_handicap : onlineGame.black_handicap;
+    var bonus = 1;
+    if (hcp === "n" || hcp === "b") bonus = 2;
+    else if (hcp === "r") bonus = 3;
+    else if (hcp === "q") bonus = 5;
+    await sb.rpc("kf_add_wins", {p_user_id: currentUser.id, p_amount: bonus});
+    if (hcp === "n" || hcp === "b" || hcp === "r" || hcp === "q") {
+      var oppId = onlineGame.white_id === currentUser.id ? onlineGame.black_id : onlineGame.white_id;
+      await sb.rpc("kf_increment_humiliation_loss", {p_user_id: oppId});
+    }
+  }
+}
+async function handleOnlineTimeout(loserColor){
+  if(!onlineGameId||!onlineGame)return;
+  var loserId = loserColor === "White" ? onlineGame.white_id : onlineGame.black_id;
+  var winnerId = loserColor === "White" ? onlineGame.black_id : onlineGame.white_id;
+  var upd = {status:"completed", winner_id: winnerId, result: winnerId===onlineGame.white_id?"1-0":"0-1", completed_at:new Date().toISOString()};
+  await sb.from("kf_games").update(upd).eq("id",onlineGameId);
+  await finalizeOnlineGame(winnerId);
+  onlineGame = Object.assign({}, onlineGame, upd);
+}
+ /* ===== Fullscreen Game ===== */
+function enterFullscreenGame(row){
+  document.body.classList.add("game-focus");
+  fsPlayerColor = (row.white_id === currentUser.id) ? "w" : "b";
+  // Move board into fullscreen wrapper
+  var wrapEl = $("gfsBoardWrap");
+  if (boardEl.parentNode !== wrapEl) wrapEl.appendChild(boardEl);
+  // Top = opponent, Bottom = self
+  var topIsBlack = fsPlayerColor === "w";
+  var topName = topIsBlack ? row.black_username : row.white_username;
+  var topAvatar = topIsBlack ? row.black_avatar : row.white_avatar;
+  var topWins = topIsBlack ? row.black_wins : row.white_wins;
+  var botName = topIsBlack ? row.white_username : row.black_username;
+  var botAvatar = topIsBlack ? row.white_avatar : row.black_avatar;
+  var botWins = topIsBlack ? row.white_wins : row.black_wins;
+  $("gfsTopName").textContent = topName || "Opponent";
+  $("gfsTopAvatar").src = topAvatar || defaultAvatar();
+  $("gfsBotName").textContent = botName || "You";
+  $("gfsBotAvatar").src = botAvatar || defaultAvatar();
+  renderFullscreenStats();
+  $("gfsResignBtn").disabled = false;
+  // Show Humiliation banner if eligible (quick play, before first move)
+  if (!row.is_tournament && game.history().length === 0 && !humilApplied) {
+    showHumilBanner();
+  }
+}
+function renderFullscreenStats(){
+  if(!currentUser||!onlineGame)return;
+  var myStats = currentUser.user_metadata ? null : null;
+  // We use currentUser for self; opponent stats from onlineGame row (if any)
+  var myStatsEl = $("gfsBotStats");
+  var oppStatsEl = $("gfsTopStats");
+  // Fallback: just show "wins" from player card data
+  var botWins = $("whiteWins").textContent;
+  // We'll rely on renderPlayers to have set names already; for stats, use cards
+  myStatsEl.innerHTML = "";
+  oppStatsEl.innerHTML = "";
+}
+function exitFullscreenGame(){
+  document.body.classList.remove("game-focus");
+  hideHumilBanner();
+  // Move board back
+  var panel = document.querySelector(".board-panel");
+  if (panel && boardEl.parentNode !== panel) {
+    var label = panel.querySelector(".board-label:last-of-type");
+    if (label) panel.insertBefore(boardEl, label);
+    else panel.appendChild(boardEl);
+  }
+}
+$("gfsResignBtn").onclick = async function(){
+  if(!onlineGameId||!onlineGame)return;
+  if(!confirm("Are you sure you want to resign? Your opponent will win."))return;
+  var winnerId = onlineGame.white_id === currentUser.id ? onlineGame.black_id : onlineGame.white_id;
+  var upd = {status:"completed", winner_id: winnerId, result: winnerId===onlineGame.white_id?"1-0":"0-1", completed_at:new Date().toISOString()};
+  var res = await sb.from("kf_games").update(upd).eq("id",onlineGameId);
+  if(res.error){say("Could not resign: "+res.error.message);return}
+  onlineGame = Object.assign({}, onlineGame, upd);
+  if(onlineGame.is_tournament && tournActiveMatch){
+    await finishTournamentMatch(winnerId, true);
+  } else {
+    await finalizeOnlineGame(winnerId);
+  }
+  applyOnlineGame(onlineGame);
+};
+
+/* ===== Humiliation ===== */
+function showHumilBanner(){
+  if($("humilBanner"))return;
+  var banner = document.createElement("div");
+  banner.id = "humilBanner";
+  banner.className = "humil-banner";
+  banner.innerHTML = '<span class="hb-icon">🏳️</span>'+
+    '<div class="hb-text">'+
+    '<div class="hb-title">Sacrifice a piece?</div>'+
+    '<div class="hb-sub">Give up Knight, Bishop, Rook or Queen for bonus wins</div>'+
+    '</div>';
+  banner.onclick = function(){
+    if(!onlineGame || game.history().length > 0) return;
+    openHumilDialog();
+  };
+  document.body.appendChild(banner);
+}
+function hideHumilBanner(){
+  var b = $("humilBanner");
+  if(b) b.remove();
+}
+function openHumilDialog(){
+  humilChosenType=null;
+  document.querySelectorAll(".humil-piece").forEach(function(el){el.classList.remove("selected")});
+  $("humilConfirm").disabled=true;
+  $("humilMsg").textContent="";
+  // Render mini pieces
+  var w = fsPlayerColor;
+  $("hpPieceN").innerHTML = svg({color:w,type:"n"});
+  $("hpPieceB").innerHTML = svg({color:w,type:"b"});
+  $("hpPieceR").innerHTML = svg({color:w,type:"r"});
+  $("hpPieceQ").innerHTML = svg({color:w,type:"q"});
+  $("humilDialog").showModal();
+}
+$("humilCancel").onclick = function(){ $("humilDialog").close(); };
+document.querySelectorAll(".humil-piece").forEach(function(el){
+  el.onclick = function(){
+    document.querySelectorAll(".humil-piece").forEach(function(x){x.classList.remove("selected")});
+    el.classList.add("selected");
+    humilChosenType = el.dataset.type;
+    $("humilConfirm").disabled=false;
+    $("humilMsg").textContent = "Selected: "+names[humilChosenType]+" (+"+el.dataset.reward+" wins)";
+  };
+});
+$("humilConfirm").onclick = async function(){
+  if(!humilChosenType || !onlineGameId || !onlineGame) return;
+  var myHandicapField = (onlineGame.white_id === currentUser.id) ? "white_handicap" : "black_handicap";
+  var upd = {};
+  upd[myHandicapField] = humilChosenType;
+  var res = await sb.from("kf_games").update(upd).eq("id",onlineGameId);
+  if(res.error){$("humilMsg").textContent="Error: "+res.error.message;return}
+  onlineGame = Object.assign({}, onlineGame, upd);
+  humilApplied = true;
+  applyHandicapToGame(fsPlayerColor, humilChosenType);
+  playWindSound();
+  $("humilDialog").close();
+  hideHumilBanner();
+};
+function applyHandicapToGame(color, type){
+  if(!game)return;
+  // Find a piece of the given type/color and remove it
+  var board = game.board();
+  for (var r=0;r<8;r++) for (var c=0;c<8;c++){
+    var p = board[r][c];
+    if (p && p.color === color && p.type === type) {
+      var sqName = files[c] + (8-r);
+      game.remove(sqName);
+      last = null;
+      selected = null;
+      targets = [];
+      draw();
+      return;
+    }
+  }
+}
+function playWindSound(){
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var bufferSize = ctx.sampleRate * 0.8;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+    var src = ctx.createBufferSource(); src.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = "bandpass"; filter.frequency.value = 2000; filter.Q.value = 1.2;
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+    src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    src.start();
+  } catch(e) {}
+}
+function playVictorySound(){
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+    var t = ctx.currentTime;
+    notes.forEach(function(freq, i){
+      var osc = ctx.createOscillator();
+      osc.type = "triangle"; osc.frequency.value = freq;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0, t + i*0.15);
+      g.gain.linearRampToValueAtTime(0.35, t + i*0.15 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i*0.15 + 0.4);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t + i*0.15); osc.stop(t + i*0.15 + 0.5);
+    });
+  } catch(e) {}
+}
+function playDefeatSound(){
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var t = ctx.currentTime;
+    // swoosh
+    var bufferSize = ctx.sampleRate * 1.2;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1) * Math.max(0,1 - i/bufferSize*1.5);
+    var src = ctx.createBufferSource(); src.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = "lowpass"; filter.frequency.setValueAtTime(4000, t); filter.frequency.exponentialRampToValueAtTime(200, t+0.9);
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t+1.0);
+    src.connect(filter); filter.connect(g); g.connect(ctx.destination); src.start(t);
+    // low thud
+    var osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.setValueAtTime(120, t+0.7); osc.frequency.exponentialRampToValueAtTime(40, t+1.4);
+    var g2 = ctx.createGain(); g2.gain.setValueAtTime(0, t+0.7); g2.gain.linearRampToValueAtTime(0.5, t+0.75); g2.gain.exponentialRampToValueAtTime(0.001, t+1.5);
+    osc.connect(g2); g2.connect(ctx.destination); osc.start(t+0.7); osc.stop(t+1.5);
+  } catch(e) {}
+}
+
+/* ===== Celebration ===== */
+function showCelebration(opts){
+  // opts: { outcome: 'win'|'loss'|'draw', user: currentUser, oldWins, newWins, hasHumiliation, isTournament }
+  var screen = $("celebrationScreen");
+  screen.className = "celebration show " + opts.outcome;
+  var text = "";
+  if (opts.outcome === "win" && opts.hasHumiliation) text = "The Crown Is Yours, Brave King";
+  else if (opts.outcome === "win") text = "The Crown Is Yours, My King";
+  else if (opts.outcome === "loss") text = "The King Has Fallen";
+  else text = "A Draw in the Battle";
+  $("celebText").textContent = text;
+  $("celebAvatar").src = opts.user && opts.user.user_metadata && opts.user.user_metadata.avatar_url ? opts.user.user_metadata.avatar_url : defaultAvatar();
+  var uname = opts.user && opts.user.user_metadata && opts.user.user_metadata.username ? opts.user.user_metadata.username : "Player";
+  $("celebName").textContent = uname;
+  $("celebWinsOld").textContent = "";
+  $("celebPlus").textContent = "";
+  $("celebWinsNew").textContent = "";
+  $("celebHumilTag").hidden = !(opts.hasHumiliation && opts.outcome === "win");
+  // Play sound
+  if (opts.outcome === "win") setTimeout(playVictorySound, 300);
+  else if (opts.outcome === "loss") setTimeout(playDefeatSound, 300);
+  if (opts.outcome === "win") launchConfetti();
+  // Animate wins counter
+  var oldW = opts.oldWins || 0;
+  var newW = opts.newWins || oldW;
+  setTimeout(function(){
+    $("celebWinsOld").textContent = oldW;
+  }, 900);
+  setTimeout(function(){
+    $("celebPlus").textContent = (newW - oldW > 0) ? "+" + (newW - oldW) : "";
+  }, 1400);
+  setTimeout(function(){
+    $("celebWinsNew").textContent = "→ " + newW;
+  }, 1500);
+  // Auto-exit timer
+  var dur = opts.isTournament ? 3000 : 5000;
+  $("celebAuto").textContent = "Closing in " + Math.ceil(dur/1000) + "s…";
+  if (celebTimer) clearTimeout(celebTimer);
+  var startTime = Date.now();
+  var interval = setInterval(function(){
+    var remain = Math.max(0, dur - (Date.now() - startTime));
+    $("celebAuto").textContent = "Closing in " + Math.ceil(remain/1000) + "s…";
+    if (remain <= 0) clearInterval(interval);
+  }, 250);
+  celebTimer = setTimeout(function(){
+    clearInterval(interval);
+    hideCelebration();
+    if (opts.onDone) opts.onDone();
+  }, dur);
+}
+function hideCelebration(){
+  if (celebTimer) { clearTimeout(celebTimer); celebTimer = null; }
+  $("celebrationScreen").classList.remove("show","win","loss","draw");
+}
+$("celebExit").onclick = function(){
+  if(celebTimer){clearTimeout(celebTimer);celebTimer=null;}
+  hideCelebration();
+  if(onlineGameId){ // tournament or user wants back
+    if(tournActiveMatch){ /* tournament stays on main page */ }
+  }
+  onlineGameId=null;onlineGame=null;
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+  exitFullscreenGame();
+  document.body.classList.remove("online","computer-mode","game-focus");
+  $("new").disabled=false;
+  setTimeout(loadHistory,300);
+  setTimeout(refreshTournLive,500);
+};
+$("celebAnalyze").onclick = function(){
+  if(celebTimer){clearTimeout(celebTimer);celebTimer=null;}
+  hideCelebration();
+  exitFullscreenGame();
+  // keep game object as-is for analysis
+  setTimeout(openAnalysis,200);
+};
+async function handleQuickPlayEnd(row){
+  var iWon = row.winner_id === currentUser.id;
+  var isDraw = row.result === "1/2-1/2" || (!row.winner_id && !row.result);
+  var outcome = isDraw ? "draw" : (iWon ? "win" : "loss");
+  // Refresh user stats
+  var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id",currentUser.id).maybeSingle();
+  var oldWins = statsRes.data ? (statsRes.data.wins||0) : 0;
+  var newWins = oldWins;
+  if (iWon) {
+    var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+    var bonus = 1;
+    if (hcp === "n" || hcp === "b") bonus = 2;
+    else if (hcp === "r") bonus = 3;
+    else if (hcp === "q") bonus = 5;
+    newWins = oldWins + bonus;
+  }
+  showCelebration({
+    outcome: outcome,
+    user: currentUser,
+    oldWins: oldWins,
+    newWins: newWins,
+    hasHumiliation: !!(row.white_handicap || row.black_handicap),
+    isTournament: false,
+    onDone: function(){
+      onlineGameId=null;onlineGame=null;
+      if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+      exitFullscreenGame();
+      document.body.classList.remove("online","computer-mode","game-focus");
+      $("new").disabled=false;
+      setTimeout(loadHistory,300);
+    }
+  });
+  // Clean up game channel after celebration
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+}
+async function handleTournamentEnd(row){
+  var iWon = row.winner_id === currentUser.id;
+  var isDraw = row.result === "1/2-1/2";
+  var outcome = isDraw ? "draw" : (iWon ? "win" : "loss");
+  // Only show celebration for winner
+  if (!iWon) {
+    // Loser: just exit fast
+    onlineGameId=null;onlineGame=null;tournActiveMatch=null;
+    if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+    exitFullscreenGame();
+    document.body.classList.remove("online","computer-mode","game-focus");
+    $("new").disabled=false;
+    say("Tournament match lost. Better luck next time.");
+    setTimeout(refreshTournLive,500);
+    setTimeout(loadHistory,500);
+    return;
+  }
+  var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id",currentUser.id).maybeSingle();
+  var oldWins = statsRes.data ? (statsRes.data.wins||0) : 0;
+  var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+  var bonus = 1;
+  if (hcp === "n" || hcp === "b") bonus = 2;
+  else if (hcp === "r") bonus = 3;
+  else if (hcp === "q") bonus = 5;
+  var newWins = oldWins + bonus;
+  showCelebration({
+    outcome: "win",
+    user: currentUser,
+    oldWins: oldWins,
+    newWins: newWins,
+    hasHumiliation: !!hcp,
+    isTournament: true,
+    onDone: function(){
+      onlineGameId=null;onlineGame=null;tournActiveMatch=null;
+      if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+      exitFullscreenGame();
+      document.body.classList.remove("online","computer-mode","game-focus");
+      $("new").disabled=false;
+      setTimeout(refreshTournLive,300);
+      setTimeout(loadHistory,300);
+    }
+  });
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+ }
  /* ============ HISTORY ============ */
 async function loadHistory(){
   var section=$("historySection");
@@ -1445,29 +2021,23 @@ function renderHistory(){
   }
 }
 function startAnalysisFromHistory(g){
-  if(!g.pgn){
-    say("This game has no replay data.");
-    return;
-  }
+  if(!g.pgn){say("This game has no replay data.");return}
   try{
     var tempGame=new Chess();
     tempGame.load_pgn(g.pgn);
-    if(!tempGame.history().length){
-      say("Could not load this game.");
-      return;
-    }
-    // ذخیره‌ی بازی جاری و بارگذاری بازی جدید
+    if(!tempGame.history().length){say("Could not load this game.");return}
     pendingAnalysisGame=game;
     game=tempGame;
     draw();
     openAnalysis();
-  }catch(e){
-    say("Could not load this game: "+e.message);
-  }
+  }catch(e){say("Could not load this game: "+e.message)}
 }
 
-/* ============ BOARD & PIECES ============ */
+/* ============ SVG with cache ============ */
+var _svgCache = {};
 function svg(p){
+  var key = p.color + p.type;
+  if (_svgCache[key]) return _svgCache[key];
   var w=p.color==="w";
   var glyphMap={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
   var glyph=glyphMap[p.type];
@@ -1478,11 +2048,13 @@ function svg(p){
   var fontSize=fontSizes[p.type]||100;
   var yPos=88;
   var label=(w?"White ":"Black ")+names[p.type];
-  return '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg">'
+  var result = '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg">'
     +'<text x="50" y="'+yPos+'" text-anchor="middle" '
     +'font-family="DejaVu Sans,Arial Unicode MS,Segoe UI Symbol,serif" '
     +'font-size="'+fontSize+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+strokeW+'" '
     +'paint-order="stroke fill" filter="drop-shadow(0 2px 2px #0008)">'+glyph+'</text></svg>';
+  _svgCache[key] = result;
+  return result;
 }
 function sq(r,c){return files[c]+(8-r)}
 function say(t){$("message").textContent=t||""}
@@ -1564,11 +2136,14 @@ function askPromotion(color){
     dlg.oncancel=function(e){e.preventDefault();dlg.close();resolve("q")};
     dlg.showModal();
   });
-}
-async function clickSquare(s){
+    }
+ async function clickSquare(s){
   if(!game)return;
   if(game.game_over()||clockExpired)return;
-  if(computerMode&&(game.turn()==="b"||computerBusy)){say("The computer is thinking…");return}
+  if(computerMode){
+    var compColor = (computerUserColor === "w") ? "b" : "w";
+    if(game.turn() === compColor || computerBusy){say("The computer is thinking…");return}
+  }
   if(onlineGameId){
     if(submittingMove)return;
     var myColor=null;
@@ -1591,10 +2166,14 @@ async function clickSquare(s){
       if(onlineGameId)lastClockAt=Date.now();
       say(m.san);draw();
       if(firstMoveTimer&&game.history().length>0){clearTimeout(firstMoveTimer);firstMoveTimer=null;}
+      if(humilApplied||game.history().length>0){hideHumilBanner();}
       if(onlineGameId){submittingMove=true;await submitOnlineMove(m);submittingMove=false;}
       else if(computerMode&&!game.game_over()){
         lastClockAt=Date.now();
-        computerTimer=setTimeout(makeComputerMove,180);
+        var compColor = (computerUserColor === "w") ? "b" : "w";
+        if(game.turn() === compColor){
+          computerTimer=setTimeout(makeComputerMove,180);
+        }
       }
       return;
     }
@@ -1609,7 +2188,7 @@ $("new").onclick=function(){
     if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
     clockExpired=false;lastClockAt=Date.now();
     game=new Chess();selected=null;targets=[];last=null;computerBusy=false;
-    draw();say("New computer game started. You play White.");return;
+    draw();say("New computer game started.");return;
   }
   if(confirm("Start a new local game?"))start();
 };
@@ -1636,31 +2215,44 @@ $("computerRating").addEventListener("input",function(){
   computerRating=Number($("computerRating").value);
   $("computerRatingLabel").textContent=String(computerRating);
 });
-$("computerPlay").onclick=function(){
+
+function startComputerGame(userColor){
   if(onlineGameId){say("Finish the current game first.");return}
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
   stopQueuePoll();
   computerMode=true;computerBusy=false;
+  computerUserColor=userColor;
   initStockfish();
   onlineGameId=null;onlineGame=null;
   document.body.classList.remove("online");
   document.body.classList.add("computer-mode");
   $("gameClockLabel").textContent="KINGSFALL · STOCKFISH";
   clockExpired=false;lastClockAt=Date.now();paintClocks();
-  flipped=false;
+  flipped = (userColor === "b");
   game=new Chess();selected=null;targets=[];last=null;
   renderPlayers(null);
   var uname=(currentUser&&currentUser.user_metadata&&currentUser.user_metadata.username)||"You";
   var avatar=(currentUser&&currentUser.user_metadata&&currentUser.user_metadata.avatar_url)||null;
-  setPlayer("White",{username:uname,wins:"—",avatar_url:avatar});
-  setPlayer("Black",{username:"Stockfish",wins:computerRating+" rating",avatar_url:null});
+  if(userColor === "w"){
+    setPlayer("White",{username:uname,wins:"—",avatar_url:avatar});
+    setPlayer("Black",{username:"Stockfish",wins:computerRating+" rating",avatar_url:null});
+  } else {
+    setPlayer("Black",{username:uname,wins:"—",avatar_url:avatar});
+    setPlayer("White",{username:"Stockfish",wins:computerRating+" rating",avatar_url:null});
+  }
   $("new").disabled=false;$("undo").disabled=false;
   setQuickState("Computer practice · Stockfish");
-  $("computerPlay").textContent="Restart game";
-  say("Computer game started. You play White against Stockfish.");
+  say("Computer game started. You play " + (userColor === "w" ? "White" : "Black") + ".");
   draw();
-};
- /* ============ STOCKFISH ============ */
+  if(userColor === "b"){
+    lastClockAt=Date.now();
+    computerTimer=setTimeout(makeComputerMove,400);
+  }
+}
+$("computerPlayWhite").onclick=function(){startComputerGame("w")};
+$("computerPlayBlack").onclick=function(){startComputerGame("b")};
+
+/* ============ STOCKFISH ============ */
 var stockfishWorker=null,stockfishReady=false,stockfishThinking=false;
 var stockfishFallbackTimer=null,stockfishAnalysisMode=false,stockfishCallback=null;
 var currentAnalyzeScore=null;
@@ -1699,7 +2291,10 @@ function handleStockfishMessage(line){
   if(line.indexOf("readyok")!==-1){
     stockfishReady=true;
     if(stockfishAnalysisMode&&stockfishCallback)return;
-    if(computerMode&&game&&game.turn()==="b"&&!stockfishThinking)setTimeout(triggerStockfishGo,50);
+    if(computerMode&&game&&!game.game_over()&&!stockfishThinking){
+      var compColor=(computerUserColor==="w")?"b":"w";
+      if(game.turn()===compColor)setTimeout(triggerStockfishGo,50);
+    }
     return;
   }
   if(line.indexOf("bestmove ")===0){
@@ -1727,7 +2322,8 @@ function handleStockfishMessage(line){
   }
 }
 function triggerStockfishGo(){
-  if(!computerMode||!game||game.game_over()||game.turn()!=="b")return;
+  var compColor = (computerUserColor === "w") ? "b" : "w";
+  if(!computerMode||!game||game.game_over()||game.turn()!==compColor)return;
   if(!stockfishWorker||!stockfishReady||stockfishThinking)return;
   computerBusy=true;stockfishThinking=true;stockfishAnalysisMode=false;
   var skill=Math.max(0,Math.min(20,Math.round((computerRating-800)/60)));
@@ -1747,14 +2343,15 @@ function triggerStockfishGo(){
 }
 function makeComputerMove(){
   computerTimer=null;
-  if(!computerMode||!game||game.game_over()||game.turn()!=="b")return;
+  if(!computerMode||!game||game.game_over())return;
+  var compColor=(computerUserColor==="w")?"b":"w";
+  if(game.turn()!==compColor)return;
   computerBusy=true;
   if(!stockfishWorker)initStockfish();
   if(!stockfishReady){say("Stockfish is warming up…");return}
   triggerStockfishGo();
 }
-
-/* ============ ANALYSIS ============ */
+ /* ============ ANALYSIS ============ */
 var analysisMoves=[],analysisPositions=[],analysisIndex=0,analysisRunning=false;
 $("analyze").onclick=function(){
   if(!game||game.history().length<1){say("Play some moves first.");return}
@@ -1960,8 +2557,9 @@ function updateEvalBar(idx){
     label=(evalCp>=0?"+":"")+(evalCp/100).toFixed(1);
   }
   $("anEvalLabel").textContent=label;
-    }
- function openAuth(m){
+}
+ /* ============ AUTH ============ */
+function openAuth(m){
   mode=m;
   $("authForm").reset();
   $("authMessage").textContent="";$("authMessage").classList.remove("error");
