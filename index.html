@@ -913,14 +913,29 @@ $("computerPlay").onclick=function(){
 };
 
 /* ---------- Stockfish Engine (Web Worker + Blob) ---------- */
-var stockfishWorker = null;
-var stockfishReady = false;
-var stockfishThinking = false;
-var stockfishFallbackTimer = null;
-var stockfishAnalysisMode = false;
-var stockfishCallback = null;
- var STOCKFISH_URL = "https://cdn.jsdelivr.net/npm/stockfish@19.0.0/src/stockfish-19-lite-single.js";
-
+ function initStockfish() {
+  if (stockfishWorker) return;
+  try {
+    stockfishWorker = new Worker(STOCKFISH_URL);
+    stockfishWorker.onmessage = function (e) {
+      handleStockfishMessage(String(e.data || ""));
+    };
+    stockfishWorker.onerror = function (evt) {
+      console.error("Stockfish worker error:", evt);
+      try { if (stockfishWorker) stockfishWorker.terminate(); } catch (err) {}
+      stockfishWorker = null;
+      stockfishReady = false;
+      stockfishThinking = false;
+      computerBusy = false;
+      say("Stockfish could not load. Check your internet connection.");
+    };
+    stockfishWorker.postMessage("uci");
+  } catch (err) {
+    console.error("Stockfish init failed:", err);
+    stockfishWorker = null;
+    say("Stockfish could not start: " + (err.message || "unknown"));
+  }
+ }
 function initStockfish() {
   if (stockfishWorker) return;
   try {
