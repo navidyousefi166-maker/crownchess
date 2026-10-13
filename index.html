@@ -171,37 +171,133 @@ dialog{background:#26060f;border-color:#783042}
   .computer-head .btn{font-size:11px;padding:8px}
   .rating-scale{font-size:9px}
 }
- /* Analysis dialog */
-#analysisDialog{width:min(900px,calc(100% - 16px));max-height:95vh;overflow-y:auto;padding:0}
-.an-panel{padding:16px}
-.an-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
-.an-head h2{margin:0;font-size:20px}
-.an-progress{background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:10px;font-size:13px;color:#d4b7be;margin-bottom:14px;text-align:center}
-.an-layout{display:grid;grid-template-columns:minmax(260px,1.1fr) minmax(180px,.9fr);gap:14px}
-.an-board-col{display:flex;flex-direction:column;gap:10px;min-width:0}
-.an-eval-wrap{display:flex;gap:8px;align-items:stretch;min-width:0}
-.an-eval-bar{width:24px;background:#20100d;border-radius:5px;overflow:hidden;position:relative;border:1px solid #5d1d2b;flex:none}
+ /* ===== Tournament ===== */
+.champion-banner{display:none;align-items:center;gap:14px;padding:12px 18px;margin:14px 0;border:1px solid #e8c46d;border-radius:12px;background:linear-gradient(120deg,#4a2a06,#2a1403);box-shadow:0 8px 24px #edc56b40;position:relative;overflow:hidden}
+.champion-banner.show{display:flex}
+.champion-banner::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 50%,#edc56b22,transparent 60%);pointer-events:none}
+.champion-trophy{font-size:36px;filter:drop-shadow(0 2px 4px #edc56b88);flex:none;animation:champGlow 2.5s ease-in-out infinite}
+@keyframes champGlow{0%,100%{filter:drop-shadow(0 2px 4px #edc56b88)}50%{filter:drop-shadow(0 2px 12px #edc56b)}}
+.champion-banner img{width:52px;height:52px;border-radius:50%;border:2px solid #edc56b;background:#1b0309;flex:none;object-fit:cover}
+.champion-info{flex:1;min-width:0}
+.champion-label{font-size:10px;color:#edc56b;text-transform:uppercase;letter-spacing:2px;font-weight:800}
+.champion-name{font-size:20px;font-weight:900;color:#ffe9b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.champion-sub{font-size:11px;color:#c2a7ad}
+
+.tournament-bar{display:flex;align-items:stretch;gap:10px;margin:0 0 18px;width:100%}
+.tourn-btn{flex:1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;min-height:54px;border:1px solid #713040;border-radius:5px;background:linear-gradient(120deg,#1b0309,#26060f);cursor:pointer;color:#f8edf0;font-family:inherit;text-align:left;transition:border-color .2s}
+.tourn-btn:hover{border-color:#d9ad55}
+.tourn-btn .tb-left{display:flex;align-items:center;gap:10px;min-width:0}
+.tourn-btn .tb-icon{font-size:22px;flex:none}
+.tourn-btn .tb-text{display:flex;flex-direction:column;min-width:0}
+.tourn-btn .tb-title{font-weight:900;letter-spacing:1.5px;color:#f7d58b;font-size:13px}
+.tourn-btn .tb-sub{font-size:10px;color:#c2a7ad;margin-top:2px}
+.tourn-btn .tb-timer{font-variant-numeric:tabular-nums;font-weight:900;font-size:18px;color:#edc56b;background:#0d0409;padding:6px 10px;border-radius:6px;border:1px solid #5d1d2b;flex:none;letter-spacing:1px}
+.tourn-btn.registered{border-color:#81b64c;background:linear-gradient(120deg,#0f1f0b,#0a1507)}
+.tourn-btn.registered .tb-timer{color:#96e076;border-color:#81b64c}
+.tourn-btn.live{border-color:#fa412d;animation:tournPulse 2s infinite}
+@keyframes tournPulse{0%,100%{box-shadow:0 0 0 0 #fa412d40}50%{box-shadow:0 0 0 8px #fa412d00}}
+.tourn-btn.live .tb-timer{color:#ff8c7a;border-color:#fa412d}
+@media(max-width:600px){
+  .tourn-btn{min-height:48px;padding:0 10px}
+  .tourn-btn .tb-title{font-size:11px;letter-spacing:1px}
+  .tourn-btn .tb-sub{font-size:9px}
+  .tourn-btn .tb-timer{font-size:15px;padding:5px 8px}
+  .tourn-btn .tb-icon{font-size:18px}
+}
+
+/* Tournament modal */
+#tournDialog{width:min(1200px,calc(100% - 16px));max-height:96vh;overflow:hidden;padding:0;display:none;border-radius:14px}
+#tournDialog[open]{display:flex;flex-direction:column}
+.tourn-panel{padding:16px 20px 18px;display:flex;flex-direction:column;gap:14px;height:100%;min-height:0}
+.tourn-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex:none}
+.tourn-head h2{margin:0;font-size:22px}
+.tourn-status{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:12px;color:#c2a7ad}
+.tourn-status .pill{padding:3px 10px;border-radius:20px;background:#1b0309;border:1px solid #5d1d2b}
+.tourn-status .pill.reg{color:#96e076;border-color:#81b64c}
+.tourn-status .pill.live{color:#ff8c7a;border-color:#fa412d}
+.tourn-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:16px;flex:1;min-height:0}
+.tourn-main{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
+.tourn-side{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
+.tourn-countdown-big{text-align:center;background:linear-gradient(135deg,#1b0309,#0d0409);border:1px solid #5d1d2b;border-radius:12px;padding:14px}
+.tourn-countdown-big .lbl{font-size:10px;color:#c2a7ad;text-transform:uppercase;letter-spacing:2px;font-weight:800}
+.tourn-countdown-big .big{font-size:clamp(28px,5vw,44px);font-weight:900;color:#edc56b;font-variant-numeric:tabular-nums;letter-spacing:2px;line-height:1.1;margin-top:4px}
+.tourn-countdown-big .sub{font-size:11px;color:#d4b7be;margin-top:4px}
+
+.tourn-players{flex:1;overflow-y:auto;background:#1b0309;border:1px solid #5d1d2b;border-radius:10px;padding:10px;min-height:0}
+.tourn-players-title{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#c2a7ad;text-transform:uppercase;letter-spacing:1.5px;font-weight:800;margin-bottom:8px}
+.tourn-players-title .count{color:#edc56b;font-size:13px}
+.tourn-player-row{display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:8px;transition:background .15s}
+.tourn-player-row:hover{background:#ffffff08}
+.tourn-player-row.me{background:#4a0c1a40;box-shadow:inset 0 0 0 1px #edc56b55}
+.tourn-player-row img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid #d9ad55;background:#350b16;flex:none}
+.tourn-player-row .tp-name{flex:1;font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tourn-player-row .tp-badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:800;letter-spacing:.5px;flex:none}
+.tp-badge.you{background:#edc56b;color:#2a0710}
+.tourn-empty{text-align:center;color:#9a7a82;padding:20px 10px;font-size:13px}
+
+.tourn-actions{display:flex;gap:8px;flex-wrap:wrap}
+.tourn-actions button{flex:1;min-width:140px;padding:12px 14px;font-weight:800;border-radius:10px;cursor:pointer;border:1px solid #5d1d2b;background:#310812;color:#f8edf0;font-family:inherit;font-size:14px}
+.tourn-actions button.primary{background:linear-gradient(135deg,#ffe5a0,#d7a33e);border-color:#e8c46d;color:#2a0710}
+.tourn-actions button.danger{background:#4a0c1a;border-color:#a01a3a;color:#ffb8c4}
+.tourn-actions button:disabled{opacity:.45;cursor:not-allowed}
+.tourn-msg{font-size:12px;color:#8bd5a7;text-align:center;min-height:18px}
+.tourn-msg.error{color:#ef8b83}
+
+/* Bracket */
+.bracket-wrap{flex:1;overflow:auto;background:#0d0409;border:1px solid #5d1d2b;border-radius:10px;padding:16px;min-height:0}
+.bracket{display:flex;gap:24px;min-width:max-content;align-items:stretch}
+.bracket-round{display:flex;flex-direction:column;justify-content:space-around;gap:14px;min-width:200px}
+.bracket-round-title{text-align:center;font-size:10px;color:#c2a7ad;text-transform:uppercase;letter-spacing:1.5px;font-weight:800;margin-bottom:6px}
+.bracket-match{display:flex;flex-direction:column;gap:4px;background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:6px;transition:border-color .2s}
+.bracket-match.active{border-color:#edc56b;box-shadow:0 0 0 1px #edc56b44}
+.bracket-match.completed{border-color:#4a2a06}
+.bracket-player{display:flex;align-items:center;gap:7px;padding:5px 7px;border-radius:5px;font-size:12px;font-weight:700;min-width:0}
+.bracket-player img{width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid #d9ad55;background:#350b16;flex:none}
+.bracket-player .bp-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bracket-player.winner{background:#1a3a0e;color:#c8f0a0}
+.bracket-player.winner img{border-color:#81b64c}
+.bracket-player.loser{background:#1a0606;color:#8a6a6a;filter:grayscale(1) brightness(.6)}
+.bracket-player.loser img{border-color:#4a2020;filter:grayscale(1)}
+.bracket-player.empty{color:#7a5a62;font-style:italic;font-weight:500}
+.bracket-player.bye{color:#c2a7ad;font-style:italic}
+.bracket-vs{text-align:center;font-size:9px;color:#9a7a82;letter-spacing:1px}
+
+.bracket-celebrate{position:fixed;inset:0;pointer-events:none;z-index:9999}
+.confetti{position:absolute;width:8px;height:14px;top:-20px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* Analysis dialog — fullscreen */
+#analysisDialog{width:98vw;max-width:1600px;height:96vh;max-height:96vh;padding:0;margin:auto;overflow:hidden;display:none;border-radius:14px}
+#analysisDialog[open]{display:flex;flex-direction:column}
+.an-panel{padding:14px 18px 18px;display:flex;flex-direction:column;height:100%;min-height:0;gap:12px}
+.an-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex:none}
+.an-head h2{margin:0;font-size:22px}
+.an-progress{background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:10px;font-size:13px;color:#d4b7be;text-align:center;flex:none}
+.an-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,380px);gap:18px;flex:1;min-height:0;align-items:stretch}
+.an-board-col{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0;align-items:stretch}
+.an-eval-wrap{display:flex;gap:10px;align-items:stretch;flex:1;min-height:0;justify-content:center}
+.an-eval-bar{width:30px;background:#20100d;border-radius:6px;overflow:hidden;position:relative;border:1px solid #5d1d2b;flex:none}
 .an-eval-black{position:absolute;top:0;left:0;width:100%;background:#1a0f0d;transition:height .25s}
 .an-eval-white{position:absolute;bottom:0;left:0;width:100%;background:#f5e6cc;transition:height .25s}
-.an-eval-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;font-weight:900;color:#edc56b;text-shadow:0 0 3px #000,0 0 3px #000,0 0 3px #000;z-index:2;white-space:nowrap}
-#anBoard{flex:1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));aspect-ratio:1;border:2px solid #8a6044;border-radius:4px;overflow:hidden;min-width:0}
+.an-eval-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:900;color:#edc56b;text-shadow:0 0 4px #000,0 0 4px #000,0 0 4px #000;z-index:2;white-space:nowrap}
+#anBoard{flex:1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));aspect-ratio:1;border:2px solid #8a6044;border-radius:5px;overflow:hidden;min-width:0;max-height:100%;height:auto;width:auto;align-self:center}
 #anBoard .square{position:relative;display:flex;align-items:center;justify-content:center;padding:0;border:0;background:none}
 #anBoard .light{background:linear-gradient(135deg,#fff0da,#ead7bb)}
 #anBoard .dark{background:linear-gradient(135deg,#89664f,#6b4938)}
 #anBoard .piece{width:100%;height:100%}
-.an-badge{position:absolute;top:2px;right:2px;font-size:11px;font-weight:900;padding:2px 6px;border-radius:4px;line-height:1.2;box-shadow:0 2px 4px #000a;z-index:3;pointer-events:none}
-.an-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.an-nav button{padding:10px 4px;font-size:14px;font-weight:800;background:#310812;border:1px solid #5d1d2b;color:#f8edf0;border-radius:6px;cursor:pointer}
+.an-badge{position:absolute;top:2px;right:2px;font-size:13px;font-weight:900;padding:3px 8px;border-radius:5px;line-height:1.2;box-shadow:0 2px 5px #000a;z-index:3;pointer-events:none}
+.an-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:none}
+.an-nav button{padding:12px 4px;font-size:16px;font-weight:800;background:#310812;border:1px solid #5d1d2b;color:#f8edf0;border-radius:6px;cursor:pointer}
 .an-nav button:hover{background:#4a0c1a}
-.an-moves-col{display:flex;flex-direction:column;gap:10px;min-width:0}
-.an-moves{max-height:min(380px,48vh);overflow-y:auto;background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:8px;font-size:13px}
-.an-move-row{display:grid;grid-template-columns:28px 1fr 1fr;gap:4px;padding:2px 3px;border-radius:4px}
+.an-moves-col{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0}
+.an-moves{flex:1;overflow-y:auto;background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:10px;font-size:14px;min-height:0}
+.an-move-row{display:grid;grid-template-columns:34px 1fr 1fr;gap:5px;padding:3px 4px;border-radius:4px}
 .an-move-row:hover{background:#ffffff08}
-.an-move-row .num{color:#9a7a82;padding-top:4px;font-size:12px}
-.an-move{display:flex;justify-content:space-between;align-items:center;padding:4px 7px;border-radius:4px;cursor:pointer;font-weight:700;user-select:none;transition:background .1s}
+.an-move-row .num{color:#9a7a82;padding-top:5px;font-size:12px}
+.an-move{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:4px;cursor:pointer;font-weight:700;user-select:none;transition:background .1s;font-size:14px}
 .an-move:hover{background:#ffffff10}
 .an-move.active{background:#4a0c1a;box-shadow:inset 0 0 0 1px #edc56b}
-.an-move .q{font-size:10px;font-weight:900;margin-left:5px;padding:1px 5px;border-radius:3px;line-height:1.4;flex:none}
+.an-move .q{font-size:11px;font-weight:900;margin-left:6px;padding:1px 6px;border-radius:3px;line-height:1.4;flex:none}
 .q-brilliant{background:#26c2a3;color:#fff}
 .q-great{background:#5c8bb0;color:#fff}
 .q-best{background:#81b64c;color:#fff}
@@ -210,14 +306,27 @@ dialog{background:#26060f;border-color:#783042}
 .q-inaccuracy{background:#f7c631;color:#333}
 .q-mistake{background:#ffa459;color:#333}
 .q-blunder{background:#fa412d;color:#fff}
-.an-summary{background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:10px;font-size:12px;color:#d4b7be}
+.an-summary{background:#1b0309;border:1px solid #5d1d2b;border-radius:8px;padding:10px 12px;font-size:12px;color:#d4b7be;flex:none}
 .an-summary .stat-row{display:flex;justify-content:space-between;padding:3px 0}
-@media(max-width:700px){
-  #analysisDialog{width:calc(100% - 8px)}
-  .an-panel{padding:12px}
-  .an-layout{grid-template-columns:1fr;gap:10px}
-  .an-moves{max-height:180px}
-  .an-nav button{padding:9px 3px;font-size:13px}
+
+@media(max-width:900px){
+  #tournDialog{width:99vw;height:98vh;max-height:98vh;border-radius:8px}
+  .tourn-panel{padding:10px;gap:10px}
+  .tourn-head h2{font-size:18px}
+  .tourn-body{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:10px;overflow-y:auto}
+  .tourn-countdown-big{padding:10px}
+  .tourn-countdown-big .big{font-size:28px}
+  .tourn-players{max-height:180px;flex:none}
+  #analysisDialog{width:99vw;height:98vh;max-height:98vh;border-radius:8px}
+  .an-panel{padding:10px;gap:8px}
+  .an-head h2{font-size:18px}
+  .an-progress{padding:7px;font-size:12px}
+  .an-layout{grid-template-columns:1fr;grid-template-rows:auto auto;gap:10px;overflow-y:auto}
+  .an-eval-wrap{max-height:60vh}
+  #anBoard{max-height:60vh}
+  .an-moves{max-height:200px;flex:none}
+  .an-nav button{padding:10px 3px;font-size:14px}
+  .an-badge{font-size:11px;padding:2px 6px}
 }
 </style>
 </head>
@@ -234,11 +343,36 @@ dialog{background:#26060f;border-color:#783042}
       <button class="btn" id="signOut" hidden>Sign Out</button>
     </div>
   </header>
+
+  <div class="champion-banner" id="championBanner">
+    <span class="champion-trophy">🏆</span>
+    <img id="championAvatar" alt="Champion avatar">
+    <div class="champion-info">
+      <div class="champion-label">CHAMPION OF THE DAY</div>
+      <div class="champion-name" id="championName">—</div>
+      <div class="champion-sub" id="championSub">—</div>
+    </div>
+  </div>
+
   <div class="quickbar">
     <button class="quickplay" id="quickPlay">QUICK PLAY</button>
     <span class="quickstate" id="quickState">5-minute game · Match by wins</span>
     <button class="btn" id="cancelQueue" hidden style="margin-right:8px">Cancel</button>
   </div>
+
+  <div class="tournament-bar">
+    <button class="tourn-btn" id="tournamentBtn" type="button">
+      <div class="tb-left">
+        <span class="tb-icon">🏆</span>
+        <div class="tb-text">
+          <span class="tb-title">KNOCKOUT TOURNAMENT</span>
+          <span class="tb-sub" id="tournBtnSub">Tap to join the next knockout cup</span>
+        </div>
+      </div>
+      <span class="tb-timer" id="tournBtnTimer">--:--:--</span>
+    </button>
+  </div>
+
   <section class="computer-panel" aria-label="Play against computer">
     <div class="computer-head">
       <div>
@@ -253,6 +387,7 @@ dialog{background:#26060f;border-color:#783042}
       <div class="rating-scale"><span>800 · Beginner</span><span>1400 · Club</span><span>2000 · Expert</span></div>
     </div>
   </section>
+
   <main>
     <section class="layout">
       <div class="players-stack desktop-players">
@@ -323,6 +458,7 @@ dialog{background:#26060f;border-color:#783042}
       </aside>
     </section>
   </main>
+
   <footer>© Kingsfall · Every King Can Fall. &nbsp; Accounts powered by Supabase.</footer>
 </div>
 <dialog id="authDialog">
@@ -350,6 +486,7 @@ dialog{background:#26060f;border-color:#783042}
     </div>
   </form>
 </dialog>
+
 <dialog id="profileDialog">
   <form class="profile-modal" id="profileForm">
     <div class="modal-head">
@@ -371,6 +508,7 @@ dialog{background:#26060f;border-color:#783042}
     <div id="profileMessage"></div>
   </form>
 </dialog>
+
 <dialog id="promotionDialog">
   <div class="modal">
     <div class="modal-head">
@@ -382,6 +520,52 @@ dialog{background:#26060f;border-color:#783042}
     <div class="promo-grid" id="promoGrid"></div>
   </div>
 </dialog>
+<dialog id="tournDialog">
+  <div class="tourn-panel">
+    <div class="tourn-head">
+      <div>
+        <div class="kicker">KNOCKOUT CUP</div>
+        <h2 id="tournTitle">Next Tournament</h2>
+        <div class="tourn-status">
+          <span class="pill" id="tournStatusPill">Registration</span>
+          <span id="tournScheduleText">—</span>
+        </div>
+      </div>
+      <button class="close" type="button" id="tournClose">×</button>
+    </div>
+
+    <div class="tourn-body">
+      <div class="tourn-main">
+        <div class="tourn-countdown-big" id="tournCountdownBig">
+          <div class="lbl">Starts in</div>
+          <div class="big" id="tournBigTimer">--:--:--</div>
+          <div class="sub" id="tournBigSub">Registration open</div>
+        </div>
+
+        <div class="tourn-actions">
+          <button class="primary" id="tournRegisterBtn" type="button">Register</button>
+          <button class="danger" id="tournCancelBtn" type="button" hidden>Cancel Registration</button>
+        </div>
+        <div class="tourn-msg" id="tournMsg"></div>
+
+        <div class="bracket-wrap" id="tournBracketWrap" hidden>
+          <div class="bracket" id="tournBracket"></div>
+        </div>
+      </div>
+
+      <div class="tourn-side">
+        <div class="tourn-players">
+          <div class="tourn-players-title">
+            <span>Registered Players</span>
+            <span class="count" id="tournPlayerCount">0 / 64</span>
+          </div>
+          <div id="tournPlayerList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
+
 <dialog id="analysisDialog">
   <div class="an-panel">
     <div class="an-head">
@@ -416,12 +600,15 @@ dialog{background:#26060f;border-color:#783042}
     </div>
   </div>
 </dialog>
+
+<div class="bracket-celebrate" id="celebrateLayer"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
 "use strict";
-var SUPABASE_URL="https://cyqactlxetfjyjvklpox.supabase.co";
+ var SUPABASE_URL="https://cyqactlxetfjyjvklpox.supabase.co";
 var SUPABASE_KEY="sb_publishable_5kPdWhNs53AY_PB29pRGBw_pvXiB0_k";
 var REDIRECT="https://navidyousefi166-maker.github.io/crownchess/";
 var sb=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
@@ -451,6 +638,16 @@ var computerRating=1400;
 var computerTimer=null;
 var names={k:"King",q:"Queen",r:"Rook",b:"Bishop",n:"Knight",p:"Pawn"};
 var files="abcdefgh";
+
+/* Tournament state */
+var tournCurrent=null;
+var tournChannel=null;
+var tournTickTimer=null;
+var tournMyEntry=null;
+var tournMatchCheckTimer=null;
+var tournActiveMatch=null;
+var tournBracketRendered=null;
+
 function defaultAvatar(){
   var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#172337"/><circle cx="50" cy="36" r="19" fill="#9AA9BE"/><path d="M16 92c3-23 16-34 34-34s31 11 34 34" fill="#9AA9BE"/></svg>';
   return "data:image/svg+xml,"+encodeURIComponent(svg);
@@ -530,6 +727,9 @@ function tickClock(){
     var loser=clockWhite<=0?"White":"Black";
     var winner=loser==="White"?"Black":"White";
     say(loser+" ran out of time. "+winner+" wins on time.");
+    if(onlineGameId&&tournActiveMatch){
+      handleTournamentTimeout(loser);
+    }
   }
   paintClocks();
 }
@@ -549,6 +749,588 @@ function setQuickState(text,opts){
   $("cancelQueue").hidden=!opts.cancel;
   $("quickPlay").disabled=!!(opts.lock||onlineGameId);
 }
+
+/* ============ TOURNAMENT CORE ============ */
+function fmtCountdown(ms){
+  if(ms<0)ms=0;
+  var s=Math.floor(ms/1000);
+  var d=Math.floor(s/86400);
+  var h=Math.floor((s%86400)/3600);
+  var m=Math.floor((s%3600)/60);
+  var sec=s%60;
+  if(d>0)return d+"d "+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");
+  return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
+}
+function fmtTimeLocal(iso){
+  try{
+    var d=new Date(iso);
+    return d.toLocaleString(undefined,{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"short"});
+  }catch(e){return iso}
+}
+
+async function loadTournamentState(){
+  if(!sb)return;
+  try{
+    var res=await sb.rpc("kf_get_next_tournament");
+    if(res.error)throw res.error;
+    tournCurrent=res.data;
+    if(tournCurrent&&tournCurrent.id){
+      var chRes=await sb.rpc("kf_get_tournament_full",{p_tournament_id:tournCurrent.id});
+      if(!chRes.error&&chRes.data){
+        tournBracketRendered=chRes.data;
+      }
+    }
+    if(currentUser){
+      await checkMyTournamentEntry();
+    }
+    updateTournButton();
+    startTournChannel();
+  }catch(err){
+    console.warn("Tournament state error:",err);
+  }
+}
+
+async function checkMyTournamentEntry(){
+  tournMyEntry=null;
+  if(!sb||!currentUser||!tournCurrent||!tournCurrent.id)return;
+  var res=await sb.from("kf_tournament_entries")
+    .select("*").eq("tournament_id",tournCurrent.id).eq("user_id",currentUser.id).maybeSingle();
+  if(!res.error&&res.data)tournMyEntry=res.data;
+}
+
+function startTournChannel(){
+  if(tournChannel&&sb){sb.removeChannel(tournChannel);tournChannel=null}
+  if(!sb)return;
+  tournChannel=sb.channel("kf-tourn-ch")
+    .on("postgres_changes",{event:"*",schema:"public",table:"kf_tournament_entries"},function(){refreshTournLive()})
+    .on("postgres_changes",{event:"*",schema:"public",table:"kf_tournament_matches"},function(){refreshTournLive()})
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_tournaments"},function(p){handleTournUpdate(p.new)})
+    .subscribe();
+}
+
+async function refreshTournLive(){
+  if(!tournCurrent||!tournCurrent.id)return;
+  var chRes=await sb.rpc("kf_get_tournament_full",{p_tournament_id:tournCurrent.id});
+  if(!chRes.error&&chRes.data)tournBracketRendered=chRes.data;
+  await checkMyTournamentEntry();
+  if($("tournDialog").open)renderTournDialog();
+  updateTournButton();
+}
+
+function handleTournUpdate(row){
+  if(!row)return;
+  if(!tournCurrent||row.id===tournCurrent.id){
+    tournCurrent=row;
+    if(row.status==="completed"){
+      loadChampion();
+      if(tournActiveMatch){
+        // end of my game
+      }
+    }
+    updateTournButton();
+    if($("tournDialog").open)refreshTournLive();
+  }
+}
+
+async function loadChampion(){
+  if(!sb)return;
+  var res=await sb.rpc("kf_get_current_champion");
+  if(res.error||!res.data)return;
+  var d=res.data;
+  var banner=$("championBanner");
+  if(d.status==="champion"){
+    $("championAvatar").src=d.winner_avatar||defaultAvatar();
+    $("championName").textContent=d.winner_username||"Unknown";
+    $("championSub").textContent="Crowned "+fmtTimeLocal(d.completed_at);
+    banner.classList.add("show");
+  }else{
+    banner.classList.remove("show");
+  }
+}
+
+function updateTournButton(){
+  var btn=$("tournamentBtn");
+  var tmr=$("tournBtnTimer");
+  var sub=$("tournBtnSub");
+  if(!tournCurrent){
+    tmr.textContent="--:--:--";
+    sub.textContent="Tap to join the next knockout cup";
+    btn.classList.remove("registered","live");
+    return;
+  }
+  var now=Date.now();
+  var start=new Date(tournCurrent.scheduled_at).getTime();
+  if(tournCurrent.status==="registration"){
+    tmr.textContent=fmtCountdown(start-now);
+    if(tournMyEntry){
+      btn.classList.add("registered");
+      btn.classList.remove("live");
+      sub.textContent="Registered · Tap to view";
+    }else{
+      btn.classList.remove("registered","live");
+      sub.textContent="Tap to register · 64 players max";
+    }
+  }else if(tournCurrent.status==="active"){
+    btn.classList.add("live");
+    btn.classList.remove("registered");
+    tmr.textContent="LIVE";
+    sub.textContent=tournMyEntry?(tournMyEntry.eliminated_round?"Eliminated":"Playing now"):"In progress";
+  }else if(tournCurrent.status==="completed"){
+    tmr.textContent="DONE";
+    btn.classList.remove("live");
+    btn.classList.add("registered");
+    sub.textContent="View bracket · champion crowned";
+  }
+}
+
+function startTournTick(){
+  if(tournTickTimer)clearInterval(tournTickTimer);
+  tournTickTimer=setInterval(function(){
+    updateTournButton();
+    if($("tournDialog").open&&tournCurrent){
+      updateTournBigTimer();
+      if(tournCurrent.status==="registration"){
+        var now=Date.now();
+        var start=new Date(tournCurrent.scheduled_at).getTime();
+        if(now>=start){
+          // عصر شرکت‌کننده‌ها رو refresh کن
+          refreshTournLive();
+        }
+      }
+    }
+  },1000);
+}
+
+function updateTournBigTimer(){
+  if(!tournCurrent)return;
+  var now=Date.now();
+  if(tournCurrent.status==="registration"){
+    var start=new Date(tournCurrent.scheduled_at).getTime();
+    $("tournBigTimer").textContent=fmtCountdown(start-now);
+    $("tournBigSub").textContent="Registration open · " + (tournMyEntry?"You are registered":"Tap Register to join");
+  }else if(tournCurrent.status==="active"){
+    $("tournBigTimer").textContent="LIVE";
+    $("tournBigSub").textContent="Tournament in progress";
+  }else if(tournCurrent.status==="completed"){
+    $("tournBigTimer").textContent="🏆";
+    $("tournBigSub").textContent="Champion: "+(tournCurrent.winner_username||"—");
+  }
+  }
+ function openTournDialog(){
+  if(!tournCurrent){
+    say("Tournament data loading… try again in a moment.");
+    return;
+  }
+  renderTournDialog();
+  $("tournDialog").showModal();
+  refreshTournLive();
+}
+$("tournClose").onclick=function(){ $("tournDialog").close(); };
+
+function renderTournDialog(){
+  if(!tournCurrent)return;
+  $("tournTitle").textContent = tournCurrent.status==="registration"?"Next Tournament":
+                                tournCurrent.status==="active"?"Live Tournament":"Tournament Complete";
+  var pill=$("tournStatusPill");
+  if(tournCurrent.status==="registration"){
+    pill.textContent="Registration"; pill.className="pill reg";
+  }else if(tournCurrent.status==="active"){
+    pill.textContent="● LIVE"; pill.className="pill live";
+  }else{
+    pill.textContent="Completed"; pill.className="pill";
+  }
+  $("tournScheduleText").textContent = "Starts " + fmtTimeLocal(tournCurrent.scheduled_at);
+  updateTournBigTimer();
+
+  var regBtn=$("tournRegisterBtn"), canBtn=$("tournCancelBtn");
+  if(tournCurrent.status==="registration"){
+    regBtn.hidden = !!tournMyEntry;
+    canBtn.hidden = !tournMyEntry;
+    regBtn.disabled = false;
+  }else{
+    regBtn.hidden = true;
+    canBtn.hidden = true;
+  }
+
+  // Bracket vs Players
+  var hasBracket = tournBracketRendered && tournBracketRendered.matches && tournBracketRendered.matches.length>0;
+  if(hasBracket){
+    $("tournBracketWrap").hidden=false;
+    $("tournCountdownBig").hidden=true;
+    renderBracket(tournBracketRendered);
+    $("tournPlayerList").innerHTML="";
+    $("tournPlayerCount").textContent = (tournBracketRendered.entries?tournBracketRendered.entries.length:0) + " players";
+  }else{
+    $("tournBracketWrap").hidden=true;
+    $("tournCountdownBig").hidden=false;
+    renderPlayerList();
+  }
+}
+
+function renderPlayerList(){
+  var list=$("tournPlayerList");
+  list.innerHTML="";
+  var entries = tournBracketRendered && tournBracketRendered.entries ? tournBracketRendered.entries : [];
+  $("tournPlayerCount").textContent = entries.length + " / 64";
+  if(!entries.length){
+    list.innerHTML='<div class="tourn-empty">No players registered yet.<br>Be the first!</div>';
+    return;
+  }
+  for(var i=0;i<entries.length;i++){
+    var e=entries[i];
+    var row=document.createElement("div");
+    row.className="tourn-player-row";
+    if(currentUser && e.user_id===currentUser.id)row.classList.add("me");
+    var img=document.createElement("img");
+    img.src=e.avatar_url||defaultAvatar();
+    img.alt="";
+    var nm=document.createElement("span");
+    nm.className="tp-name";
+    nm.textContent=e.username||"Player";
+    row.appendChild(img);
+    row.appendChild(nm);
+    if(currentUser && e.user_id===currentUser.id){
+      var b=document.createElement("span");
+      b.className="tp-badge you";
+      b.textContent="YOU";
+      row.appendChild(b);
+    }
+    list.appendChild(row);
+  }
+}
+
+$("tournRegisterBtn").onclick=async function(){
+  if(!sb||!currentUser){
+    say("Sign in first.");
+    openAuth("signin");
+    return;
+  }
+  $("tournMsg").textContent="Registering…";
+  $("tournMsg").classList.remove("error");
+  var res=await sb.rpc("kf_register_tournament");
+  if(res.error){
+    $("tournMsg").textContent=res.error.message;
+    $("tournMsg").classList.add("error");
+    return;
+  }
+  $("tournMsg").textContent="✅ Registered! You'll be paired when the tournament starts.";
+  await refreshTournLive();
+};
+
+$("tournCancelBtn").onclick=async function(){
+  if(!sb||!currentUser)return;
+  $("tournMsg").textContent="Cancelling…";
+  $("tournMsg").classList.remove("error");
+  var res=await sb.rpc("kf_cancel_tournament_registration");
+  if(res.error){
+    $("tournMsg").textContent=res.error.message;
+    $("tournMsg").classList.add("error");
+    return;
+  }
+  $("tournMsg").textContent="Registration cancelled.";
+  await refreshTournLive();
+};
+
+$("tournamentBtn").onclick=function(){
+  if(!currentUser){
+    say("Sign in to join the tournament.");
+    openAuth("signin");
+    return;
+  }
+  openTournDialog();
+};
+ /* ============ BRACKET RENDERING ============ */
+function roundName(round, totalRounds){
+  var fromEnd = totalRounds - round;
+  if(fromEnd === 0) return "Final";
+  if(fromEnd === 1) return "Semi-Finals";
+  if(fromEnd === 2) return "Quarter-Finals";
+  if(fromEnd === 3) return "Round of 16";
+  if(fromEnd === 4) return "Round of 32";
+  if(fromEnd === 5) return "Round of 64";
+  return "Round " + round;
+}
+
+function renderBracket(data){
+  var wrap=$("tournBracket");
+  wrap.innerHTML="";
+  if(!data || !data.matches) return;
+  var bracketSize = data.bracket_size || 2;
+  var totalRounds = 1;
+  while((1<<totalRounds) < bracketSize) totalRounds++;
+
+  // گروه‌بندی بر اساس round
+  var byRound = {};
+  for(var i=0;i<data.matches.length;i++){
+    var m=data.matches[i];
+    if(!byRound[m.round]) byRound[m.round]=[];
+    byRound[m.round].push(m);
+  }
+  for(var r in byRound){
+    byRound[r].sort(function(a,b){return a.match_index-b.match_index;});
+  }
+
+  for(var round=1; round<=totalRounds; round++){
+    var col=document.createElement("div");
+    col.className="bracket-round";
+    var title=document.createElement("div");
+    title.className="bracket-round-title";
+    title.textContent=roundName(round, totalRounds);
+    col.appendChild(title);
+
+    var matches=byRound[round]||[];
+    var expected=Math.pow(2, totalRounds-round);
+    for(var k=0;k<expected;k++){
+      var m=matches[k];
+      var box=document.createElement("div");
+      box.className="bracket-match";
+      if(m){
+        if(m.status==="active")box.classList.add("active");
+        if(m.status==="completed")box.classList.add("completed");
+        box.appendChild(makeBracketPlayer(m.player1_username,m.player1_avatar,m.winner_id && m.winner_id===m.player1_id,m.winner_id && m.player1_id && m.winner_id!==m.player1_id,m.player1_id));
+        var vs=document.createElement("div");
+        vs.className="bracket-vs";
+        vs.textContent="VS";
+        box.appendChild(vs);
+        if(!m.player2_id){
+          box.appendChild(makeByePlayer());
+        }else{
+          box.appendChild(makeBracketPlayer(m.player2_username,m.player2_avatar,m.winner_id && m.winner_id===m.player2_id,m.winner_id && m.player2_id && m.winner_id!==m.player2_id,m.player2_id));
+        }
+      }else{
+        box.appendChild(makeEmptySlot());
+        var vs2=document.createElement("div");
+        vs2.className="bracket-vs";vs2.textContent="VS";
+        box.appendChild(vs2);
+        box.appendChild(makeEmptySlot());
+      }
+      col.appendChild(box);
+    }
+    wrap.appendChild(col);
+  }
+}
+
+function makeBracketPlayer(name,avatar,isWinner,isLoser,id){
+  var el=document.createElement("div");
+  el.className="bracket-player";
+  if(isWinner)el.classList.add("winner");
+  else if(isLoser)el.classList.add("loser");
+  if(!id){
+    el.classList.add("empty");
+    el.textContent="— TBD —";
+    return el;
+  }
+  var img=document.createElement("img");
+  img.src=avatar||defaultAvatar();
+  img.alt="";
+  var nm=document.createElement("span");
+  nm.className="bp-name";
+  nm.textContent=name||"Player";
+  el.appendChild(img);
+  el.appendChild(nm);
+  return el;
+}
+function makeByePlayer(){
+  var el=document.createElement("div");
+  el.className="bracket-player bye";
+  el.textContent="BYE (auto-advance)";
+  return el;
+}
+function makeEmptySlot(){
+  var el=document.createElement("div");
+  el.className="bracket-player empty";
+  el.textContent="— TBD —";
+  return el;
+}
+
+/* Confetti */
+function launchConfetti(){
+  var layer=$("celebrateLayer");
+  layer.innerHTML="";
+  var colors=["#edc56b","#ffe5a0","#81b64c","#26c2a3","#5c8bb0","#fa412d"];
+  for(var i=0;i<80;i++){
+    var c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*100+"%";
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration=(2+Math.random()*2)+"s";
+    c.style.animationDelay=(Math.random()*0.5)+"s";
+    layer.appendChild(c);
+  }
+  setTimeout(function(){layer.innerHTML="";},4500);
+   }
+ /* ============ TOURN MATCH AUTO-DETECT ============ */
+function startTournMatchWatcher(){
+  if(tournMatchCheckTimer)clearInterval(tournMatchCheckTimer);
+  tournMatchCheckTimer=setInterval(checkTournMatchStatus, 2000);
+}
+
+async function checkTournMatchStatus(){
+  if(!sb||!currentUser||!tournCurrent||tournCurrent.status!=="active")return;
+  if(!tournBracketRendered||!tournBracketRendered.matches)return;
+
+  // پیدا کردن بازی فعلی من
+  var myMatch=null;
+  for(var i=0;i<tournBracketRendered.matches.length;i++){
+    var m=tournBracketRendered.matches[i];
+    if(m.status==="active" && (m.player1_id===currentUser.id || m.player2_id===currentUser.id)){
+      myMatch=m; break;
+    }
+  }
+
+  if(!myMatch){
+    // بازی ندارم
+    if(tournActiveMatch){
+      tournActiveMatch=null;
+      say("");
+    }
+    return;
+  }
+
+  // اگه همین بازیه که دارم بازی می‌کنم
+  if(tournActiveMatch && tournActiveMatch.id===myMatch.id)return;
+
+  // بازی جدید! شروعش کن
+  await startTournamentGame(myMatch);
+}
+
+async function startTournamentGame(match){
+  if(!sb)return;
+  tournActiveMatch=match;
+  say("🏆 Tournament match starting…");
+
+  var myColor = (match.player1_id===currentUser.id)?"w":"b";
+  var opponentId = myColor==="w"?match.player2_id:match.player1_id;
+  var opponentName = myColor==="w"?match.player2_username:match.player1_username;
+  var opponentAvatar = myColor==="w"?match.player2_avatar:match.player1_avatar;
+
+  // اگه game_id از قبل ساخته شده، به اون ملحق شو
+  if(match.game_id){
+    await joinTournamentGame(match.game_id);
+  }else{
+    // بساز
+    var uname=(currentUser.user_metadata&&currentUser.user_metadata.username)||"You";
+    var avatar=(currentUser.user_metadata&&currentUser.user_metadata.avatar_url)||null;
+
+    var whiteId = myColor==="w"?currentUser.id:opponentId;
+    var whiteName = myColor==="w"?uname:opponentName;
+    var whiteAvatar = myColor==="w"?avatar:opponentAvatar;
+    var blackId = myColor==="b"?currentUser.id:opponentId;
+    var blackName = myColor==="b"?uname:opponentName;
+    var blackAvatar = myColor==="b"?avatar:opponentAvatar;
+
+    var insert=await sb.from("kf_games").insert({
+      white_id: whiteId,
+      black_id: blackId,
+      white_username: whiteName,
+      black_username: blackName,
+      white_avatar: whiteAvatar,
+      black_avatar: blackAvatar,
+      fen: new Chess().fen(),
+      pgn: "",
+      turn: "w",
+      status: "active",
+      is_tournament: true,
+      tournament_match_id: match.id
+    }).select().maybeSingle();
+
+    if(insert.error){
+      say("Could not create tournament game: "+insert.error.message);
+      return;
+    }
+
+    // ثبت game_id روی match
+    await sb.from("kf_tournament_matches")
+      .update({game_id: insert.data.id, status:"active"})
+      .eq("id", match.id);
+
+    await joinTournamentGame(insert.data.id);
+  }
+}
+
+async function joinTournamentGame(gameId){
+  if(!sb||!currentUser)return;
+  var res=await sb.from("kf_games").select("*").eq("id",gameId).maybeSingle();
+  if(res.error||!res.data){say("Could not load tournament game.");return}
+  var data=res.data;
+
+  // بستن دیالوگ تورنمنت
+  if($("tournDialog").open)$("tournDialog").close();
+
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+  onlineGameId=gameId;
+  onlineGame=data;
+  resetClocks();
+  lastClockAt=Date.now();
+  document.body.classList.remove("computer-mode");
+  document.body.classList.add("online");
+  $("gameClockLabel").textContent="🏆 TOURNAMENT · 5 MIN";
+  $("new").disabled=true;
+  $("undo").disabled=true;
+  setQuickState("Tournament match in progress",{lock:true});
+  renderPlayers(data);
+  if(game&&game.fen()!==data.fen)game.load(data.fen);
+  selected=null;
+  targets=[];
+  last=data.last_move||null;
+  draw();
+  var side=(data.white_id===currentUser.id)?"White":"Black";
+  say("🏆 Tournament match! You are "+side+". White must move within 30s.");
+
+  // چک کردن حرکت اول
+  startFirstMoveTimer(data);
+
+  gameChannel=sb.channel("kf-game-"+gameId)
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+gameId},function(payload){applyOnlineGame(payload.new)})
+    .subscribe();
+}
+
+var firstMoveTimer=null;
+var firstMoveWarned=false;
+
+function startFirstMoveTimer(gameRow){
+  if(firstMoveTimer){clearTimeout(firstMoveTimer);firstMoveTimer=null}
+  firstMoveWarned=false;
+  // فقط اگه هنوز هیچ حرکتی انجام نشده
+  if(game.history().length>0)return;
+  firstMoveTimer=setTimeout(async function(){
+    if(game.history().length>0)return;
+    if(!onlineGameId||!tournActiveMatch)return;
+    // اگه White حرکت نکرده → باخت
+    var gameRes=await sb.from("kf_games").select("turn").eq("id",onlineGameId).maybeSingle();
+    if(gameRes.data&&gameRes.data.turn==="w"){
+      var whiteId=onlineGame.white_id;
+      var loserName=onlineGame.white_username;
+      say("⏱️ "+loserName+" didn't move in time. Tournament game awarded.");
+      await finishTournamentMatch(whiteId, false);
+    }
+  }, 30000);
+}
+
+async function handleTournamentTimeout(loserColor){
+  if(!onlineGameId||!tournActiveMatch)return;
+  var loserId = loserColor==="White"?onlineGame.white_id:onlineGame.black_id;
+  var winnerId = loserColor==="White"?onlineGame.black_id:onlineGame.white_id;
+  say((loserColor==="White"?"White":"Black")+" ran out of time. Tournament match awarded.");
+  await finishTournamentMatch(winnerId, true);
+}
+
+async function finishTournamentMatch(winnerId, opponentEliminated){
+  if(!sb||!onlineGameId||!tournActiveMatch)return;
+  try{
+    await sb.rpc("kf_report_match_result",{
+      p_match_id: tournActiveMatch.id,
+      p_winner_id: winnerId
+    });
+    // پایان بازی
+    await sb.from("kf_games").update({
+      status:"completed",
+      result: winnerId===onlineGame.white_id?"1-0":"0-1",
+      winner_id: winnerId
+    }).eq("id",onlineGameId);
+  }catch(e){console.warn(e)}
+ }
+ /* ============ ONLINE GAME LOGIC ============ */
 async function getCurrentProfile(){
   if(!sb)return null;
   var res=await sb.auth.getUser();
@@ -569,11 +1351,13 @@ async function leaveOnlineState(){
   computerMode=false;
   computerBusy=false;
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+  if(firstMoveTimer){clearTimeout(firstMoveTimer);firstMoveTimer=null}
   await stopQueuePoll();
   if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
   onlineGameId=null;
   onlineGame=null;
   submittingMove=false;
+  tournActiveMatch=null;
   document.body.classList.remove("online","computer-mode");
   $("gameClockLabel").textContent="KINGSFALL · 5 MIN";
   $("new").disabled=false;
@@ -609,7 +1393,7 @@ async function loadOnlineGame(id){
   lastClockAt=Date.now();
   document.body.classList.remove("computer-mode");
   document.body.classList.add("online");
-  $("gameClockLabel").textContent="KINGSFALL · 5 MIN";
+  $("gameClockLabel").textContent = data.is_tournament ? "🏆 TOURNAMENT · 5 MIN" : "KINGSFALL · 5 MIN";
   $("new").disabled=true;
   $("undo").disabled=true;
   setQuickState("Match found · game in progress",{lock:true});
@@ -620,7 +1404,7 @@ async function loadOnlineGame(id){
   last=data.last_move||null;
   draw();
   var side=(data.white_id===currentUser.id)?"White":"Black";
-  say("Matched! You are "+side+".");
+  say((data.is_tournament?"🏆 Tournament match! ":"Matched! ")+"You are "+side+".");
   gameChannel=sb.channel("kf-game-"+id)
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+id},function(payload){applyOnlineGame(payload.new)})
     .subscribe();
@@ -638,21 +1422,43 @@ function applyOnlineGame(row){
       selected=null;
       targets=[];
       draw();
+      // اگه حرکت اول انجام شد، تایمر رو کنسل کن
+      if(firstMoveTimer&&game.history().length>0){
+        clearTimeout(firstMoveTimer);
+        firstMoveTimer=null;
+      }
     }catch(e){
       say("Received an invalid game position.");
     }
   }
   if(row.status==="completed"){
+    // اگه تورنمنتی بود
+    if(row.is_tournament && tournActiveMatch){
+      var iWon = row.winner_id===currentUser?.id;
+      setQuickState("Tournament match finished");
+      say(iWon?"🏆 You won! Advancing to next round.":"Tournament match lost. Better luck next time.");
+      if(iWon)launchConfetti();
+      tournActiveMatch=null;
+      onlineGameId=null;
+      onlineGame=null;
+      if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+      document.body.classList.remove("online","computer-mode");
+      $("gameClockLabel").textContent="KINGSFALL · 5 MIN";
+      $("new").disabled=false;
+      setTimeout(refreshTournLive,1500);
+      return;
+    }
+    // بازی معمولی
     setQuickState("Game finished · "+(row.result||"result recorded"));
     var msg;
     if(row.result==="1/2-1/2")msg="Game drawn.";
-    else if(currentUser&&row.winner_id===currentUser.id)msg="You won!";
+    else if(currentUser&&row.winner_id===currentUser.id)msg="You won! Your win total has been updated.";
     else msg="Game finished.";
     say(msg);
     onlineGameId=null;
     onlineGame=null;
     if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
-    document.body.classList.remove("online");
+    document.body.classList.remove("online","computer-mode");
     $("gameClockLabel").textContent="KINGSFALL · 5 MIN";
     $("new").disabled=false;
   }
@@ -697,6 +1503,10 @@ async function cancelQuickPlay(){
 }
 async function submitOnlineMove(m){
   if(!sb||!onlineGameId||!onlineGame)return;
+  // اگه تورنمنتی بود، از RPC مخصوص خودش استفاده کن
+  if(onlineGame.is_tournament && tournActiveMatch){
+    return await submitTournamentMove(m);
+  }
   var result=null;
   var winnerId=null;
   var status="active";
@@ -735,6 +1545,50 @@ async function submitOnlineMove(m){
     say(msg);
   }
 }
+
+async function submitTournamentMove(m){
+  var status="active";
+  var winnerId=null;
+  var result=null;
+  if(game.game_over()){
+    status="completed";
+    if(game.in_checkmate()){
+      result=game.turn()==="w"?"0-1":"1-0";
+      winnerId=game.turn()==="w"?onlineGame.black_id:onlineGame.white_id;
+    }else{
+      result="1/2-1/2";
+      // در تورنمنت تساوی مجاز نیست — ولی فعلاً هر کس مهره بیشتر داره
+      // ساده‌تر: اگه تساوی شد، سفید برنده
+      winnerId=onlineGame.white_id;
+    }
+  }
+  // آپدیت بازی
+  var upd=await sb.from("kf_games").update({
+    fen: game.fen(),
+    pgn: game.pgn(),
+    turn: game.turn(),
+    last_move: {from:m.from,to:m.to,san:m.san},
+    status: status,
+    result: result,
+    winner_id: winnerId
+  }).eq("id",onlineGameId);
+  if(upd.error){
+    game.undo();
+    selected=null;
+    targets=[];
+    draw();
+    say("Move could not be saved: "+upd.error.message);
+    return;
+  }
+  // اگه بازی تموم شد
+  if(status==="completed"){
+    await finishTournamentMatch(winnerId, true);
+    var iWon = winnerId===currentUser.id;
+    say(iWon?"🏆 Checkmate — you won!":"Checkmate — you lost.");
+    if(iWon)launchConfetti();
+  }
+   }
+ /* ============ BOARD & PIECES ============ */
 function svg(p){
   var w=p.color==="w";
   var glyphMap={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
@@ -884,6 +1738,11 @@ async function clickSquare(s){
       if(onlineGameId)lastClockAt=Date.now();
       say(m.san);
       draw();
+      // کنسل تایمر حرکت اول
+      if(firstMoveTimer&&game.history().length>0){
+        clearTimeout(firstMoveTimer);
+        firstMoveTimer=null;
+      }
       if(onlineGameId){
         submittingMove=true;
         await submitOnlineMove(m);
@@ -907,6 +1766,7 @@ async function clickSquare(s){
   }
 }
 $("new").onclick=function(){
+  if(onlineGameId){say("You cannot reset an online or tournament game.");return}
   if(computerMode){
     if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
     clockExpired=false;
@@ -920,11 +1780,11 @@ $("new").onclick=function(){
     say("New computer game started. You play White.");
     return;
   }
-  if(onlineGameId){say("You cannot reset an online game.");return}
   if(confirm("Start a new local game?"))start();
 };
 $("flip").onclick=function(){flipped=!flipped;draw()};
 $("undo").onclick=function(){
+  if(onlineGameId){say("Undo is unavailable during online games.");return}
   if(computerMode){
     if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
     computerBusy=false;
@@ -938,7 +1798,6 @@ $("undo").onclick=function(){
     say("Move undone.");
     return;
   }
-  if(onlineGameId){say("Undo is unavailable during online games.");return}
   if(game.undo()){
     selected=null;
     targets=[];
@@ -962,7 +1821,7 @@ $("computerRating").addEventListener("input",function(){
   $("computerRatingLabel").textContent=String(computerRating);
 });
 $("computerPlay").onclick=function(){
-  if(onlineGameId){say("Finish the online game first.");return}
+  if(onlineGameId){say("Finish the current game first.");return}
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
   stopQueuePoll();
   computerMode=true;
@@ -993,7 +1852,7 @@ $("computerPlay").onclick=function(){
   say("Computer game started. You play White against Stockfish.");
   draw();
 };
- /* ---------- Stockfish Engine (local file) ---------- */
+/* ============ STOCKFISH ENGINE ============ */
 var stockfishWorker = null;
 var stockfishReady = false;
 var stockfishThinking = false;
@@ -1133,8 +1992,7 @@ function makeComputerMove() {
   }
   triggerStockfishGo();
 }
-
-/* ---------- Analysis ---------- */
+ /* ============ ANALYSIS ============ */
 var analysisMoves = [];
 var analysisPositions = [];
 var analysisIndex = 0;
@@ -1407,8 +2265,8 @@ function updateEvalBar(idx) {
     label = (evalCp >= 0 ? "+" : "") + (evalCp / 100).toFixed(1);
   }
   $("anEvalLabel").textContent = label;
-   }
- /* ---------- Auth ---------- */
+}
+ /* ============ AUTH ============ */
 function openAuth(m){
   mode=m;
   $("authForm").reset();
@@ -1428,6 +2286,7 @@ $("signIn").onclick=function(){openAuth("signin")};
 $("signUp").onclick=function(){openAuth("signup")};
 $("close").onclick=function(){$("authDialog").close()};
 $("switch").onclick=function(){openAuth(mode==="signup"?"signin":"signup")};
+
 $("authForm").addEventListener("submit",async function(e){
   e.preventDefault();
   if(!sb){$("authMessage").textContent="Supabase did not load.";return}
@@ -1461,6 +2320,7 @@ $("authForm").addEventListener("submit",async function(e){
     submit.textContent=mode==="signup"?"Create account":"Sign In";
   }
 });
+
 async function updateAuth(){
   if(!sb)return;
   var res=await sb.auth.getSession();
@@ -1477,6 +2337,7 @@ async function updateAuth(){
   $("profile").hidden=!user;
   $("signOut").hidden=!user;
 }
+
 $("profile").onclick=async function(){
   if(!sb)return;
   var res=await sb.auth.getUser();
@@ -1491,6 +2352,7 @@ $("profile").onclick=async function(){
   $("profileDialog").showModal();
 };
 $("profileClose").onclick=function(){$("profileDialog").close()};
+
 $("avatarFile").addEventListener("change",function(){
   var f=$("avatarFile").files?$("avatarFile").files[0]:null;
   if(!f)return;
@@ -1510,6 +2372,7 @@ $("avatarFile").addEventListener("change",function(){
   };
   reader.readAsDataURL(f);
 });
+
 $("uploadAvatar").onclick=async function(){
   if(!sb)return;
   var file=$("avatarFile").files?$("avatarFile").files[0]:null;
@@ -1552,6 +2415,7 @@ $("uploadAvatar").onclick=async function(){
     btn.textContent="Upload photo";
   }
 };
+
 $("profileForm").addEventListener("submit",async function(e){
   e.preventDefault();
   if(!sb)return;
@@ -1584,6 +2448,7 @@ $("profileForm").addEventListener("submit",async function(e){
     btn.textContent="Save username";
   }
 });
+
 $("signOut").onclick=async function(){
   if(!sb)return;
   var res=await sb.auth.signOut();
@@ -1594,14 +2459,32 @@ $("signOut").onclick=async function(){
     say("Signed out.");
   }
 };
+
+/* ============ INIT ============ */
 if(sb){
-  sb.auth.onAuthStateChange(function(){updateAuth()});
-  updateAuth().then(function(){getCurrentProfile().catch(function(){})});
+  sb.auth.onAuthStateChange(function(){
+    updateAuth();
+    checkMyTournamentEntry().then(function(){
+      if($("tournDialog").open)renderTournDialog();
+      updateTournButton();
+    });
+  });
+  updateAuth().then(function(){
+    getCurrentProfile().then(function(){
+      loadTournamentState();
+      loadChampion();
+    }).catch(function(){});
+  });
 }else{
   say("Supabase client failed to load.");
 }
+
 renderPlayers(null);
 start();
+startTournTick();
+startTournMatchWatcher();
+setInterval(loadChampion, 60000);
+
 })();
 </script>
 </body>
