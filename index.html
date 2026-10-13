@@ -189,6 +189,7 @@ dialog{background:#26060f;border-color:#783042}
 #anBoard .light{background:linear-gradient(135deg,#fff0da,#ead7bb)}
 #anBoard .dark{background:linear-gradient(135deg,#89664f,#6b4938)}
 #anBoard .piece{width:100%;height:100%}
+.an-badge{position:absolute;top:2px;right:2px;font-size:11px;font-weight:900;padding:2px 6px;border-radius:4px;line-height:1.2;box-shadow:0 2px 4px #000a;z-index:3;pointer-events:none}
 .an-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .an-nav button{padding:10px 4px;font-size:14px;font-weight:800;background:#310812;border:1px solid #5d1d2b;color:#f8edf0;border-radius:6px;cursor:pointer}
 .an-nav button:hover{background:#4a0c1a}
@@ -201,6 +202,8 @@ dialog{background:#26060f;border-color:#783042}
 .an-move:hover{background:#ffffff10}
 .an-move.active{background:#4a0c1a;box-shadow:inset 0 0 0 1px #edc56b}
 .an-move .q{font-size:10px;font-weight:900;margin-left:5px;padding:1px 5px;border-radius:3px;line-height:1.4;flex:none}
+.q-brilliant{background:#26c2a3;color:#fff}
+.q-great{background:#5c8bb0;color:#fff}
 .q-best{background:#81b64c;color:#fff}
 .q-excellent{background:#96bc4b;color:#fff}
 .q-good{background:#95b776;color:#fff}
@@ -1131,33 +1134,7 @@ function makeComputerMove() {
   triggerStockfishGo();
 }
 
-function analyzePosition(fen, depth, callback) {
-  if (!stockfishWorker) initStockfish();
-  var tryAnalyze = function () {
-    if (!stockfishWorker || !stockfishReady) {
-      setTimeout(tryAnalyze, 300);
-      return;
-    }
-    stockfishAnalysisMode = true;
-    stockfishCallback = callback;
-    stockfishThinking = true;
-    stockfishWorker.postMessage("setoption name Skill Level value 20");
-    stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
-    stockfishWorker.postMessage("position fen " + fen);
-    stockfishWorker.postMessage("go depth " + (depth || 16));
-    setTimeout(function () {
-      if (stockfishThinking && stockfishAnalysisMode) {
-        stockfishThinking = false;
-        stockfishAnalysisMode = false;
-        var cb = stockfishCallback;
-        stockfishCallback = null;
-        if (cb) cb(null);
-      }
-    }, 20000);
-  };
-  tryAnalyze();
-}
- /* ---------- Analysis ---------- */
+/* ---------- Analysis ---------- */
 var analysisMoves = [];
 var analysisPositions = [];
 var analysisIndex = 0;
@@ -1235,15 +1212,26 @@ async function runFullAnalysis() {
     var evalAfter = after && after.score != null ? -after.score : 0;
     var loss = evalBefore - evalAfter;
     var quality;
-    if (bestUci && playedUci === bestUci) quality = "best";
-    else if (loss <= 30) quality = "excellent";
-    else if (loss <= 80) quality = "good";
-    else if (loss <= 150) quality = "inaccuracy";
-    else if (loss <= 400) quality = "mistake";
+    if (bestUci && playedUci === bestUci) {
+      if (history[j].captured || history[j].san.indexOf("+") !== -1 || history[j].san.indexOf("#") !== -1) {
+        if (evalBefore > -100 && evalAfter > 150) quality = "brilliant";
+        else quality = "great";
+      } else if (loss === 0 && Math.abs(evalBefore) < 50) {
+        quality = "great";
+      } else {
+        quality = "best";
+      }
+    }
+    else if (loss <= 20) quality = "excellent";
+    else if (loss <= 50) quality = "good";
+    else if (loss <= 120) quality = "inaccuracy";
+    else if (loss <= 300) quality = "mistake";
     else quality = "blunder";
     moves.push({
       san: history[j].san,
       color: history[j].color,
+      from: history[j].from,
+      to: history[j].to,
       quality: quality,
       evalBefore: evalBefore,
       evalAfter: evalAfter,
@@ -1293,6 +1281,8 @@ function analyzeFenPromise(fen, depth) {
 }
 
 function qualityMark(q) {
+  if (q === "brilliant") return "!!";
+  if (q === "great") return "!";
   if (q === "best") return "★";
   if (q === "excellent") return "✓";
   if (q === "good") return "✓";
@@ -1342,11 +1332,13 @@ function renderMoveList() {
 }
 
 function renderSummary() {
-  var counts = { best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, blunder: 0 };
+  var counts = { brilliant: 0, great: 0, best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, blunder: 0 };
   analysisMoves.forEach(function (m) { counts[m.quality]++; });
   var el = $("anSummary");
   el.innerHTML =
     '<div style="font-weight:800;margin-bottom:6px;">Move quality</div>' +
+    '<div class="stat-row"><span>!! Brilliant</span><span>' + counts.brilliant + '</span></div>' +
+    '<div class="stat-row"><span>! Great</span><span>' + counts.great + '</span></div>' +
     '<div class="stat-row"><span>★ Best</span><span>' + counts.best + '</span></div>' +
     '<div class="stat-row"><span>✓ Excellent</span><span>' + counts.excellent + '</span></div>' +
     '<div class="stat-row"><span>✓ Good</span><span>' + counts.good + '</span></div>' +
@@ -1360,7 +1352,8 @@ function gotoAnalysisIndex(idx) {
   if (idx > analysisMoves.length) idx = analysisMoves.length;
   analysisIndex = idx;
   var fen = idx === 0 ? analysisPositions[0] : analysisMoves[idx - 1].fenAfter;
-  renderAnalysisBoard(fen);
+  var lastMoveInfo = idx > 0 ? analysisMoves[idx - 1] : null;
+  renderAnalysisBoard(fen, lastMoveInfo);
   updateEvalBar(idx);
   highlightActiveMove(idx);
 }
@@ -1372,7 +1365,7 @@ function highlightActiveMove(idx) {
   }
 }
 
-function renderAnalysisBoard(fen) {
+function renderAnalysisBoard(fen, lastMoveInfo) {
   var tempGame = new Chess(fen);
   var board = $("anBoard");
   board.innerHTML = "";
@@ -1383,6 +1376,12 @@ function renderAnalysisBoard(fen) {
       var b = document.createElement("div");
       b.className = "square " + ((vr + vc) % 2 === 0 ? "light" : "dark");
       if (p) b.innerHTML = svg(p);
+      if (lastMoveInfo && lastMoveInfo.to === s) {
+        var badge = document.createElement("span");
+        badge.className = "an-badge q-" + lastMoveInfo.quality;
+        badge.textContent = qualityMark(lastMoveInfo.quality);
+        b.appendChild(badge);
+      }
       board.appendChild(b);
     }
   }
@@ -1408,9 +1407,8 @@ function updateEvalBar(idx) {
     label = (evalCp >= 0 ? "+" : "") + (evalCp / 100).toFixed(1);
   }
   $("anEvalLabel").textContent = label;
-}
-
-/* ---------- Auth ---------- */
+   }
+ /* ---------- Auth ---------- */
 function openAuth(m){
   mode=m;
   $("authForm").reset();
