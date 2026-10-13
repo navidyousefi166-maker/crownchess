@@ -773,7 +773,7 @@ function askPromotion(color){
     dlg.oncancel=function(e){e.preventDefault();dlg.close();resolve("q")};
     dlg.showModal();
   });
-}
+              }
  async function clickSquare(s){
   if(!game)return;
   if(game.game_over()||clockExpired)return;
@@ -912,30 +912,15 @@ $("computerPlay").onclick=function(){
   draw();
 };
 
-/* ---------- Stockfish Engine (Web Worker + Blob) ---------- */
- function initStockfish() {
-  if (stockfishWorker) return;
-  try {
-    stockfishWorker = new Worker(STOCKFISH_URL);
-    stockfishWorker.onmessage = function (e) {
-      handleStockfishMessage(String(e.data || ""));
-    };
-    stockfishWorker.onerror = function (evt) {
-      console.error("Stockfish worker error:", evt);
-      try { if (stockfishWorker) stockfishWorker.terminate(); } catch (err) {}
-      stockfishWorker = null;
-      stockfishReady = false;
-      stockfishThinking = false;
-      computerBusy = false;
-      say("Stockfish could not load. Check your internet connection.");
-    };
-    stockfishWorker.postMessage("uci");
-  } catch (err) {
-    console.error("Stockfish init failed:", err);
-    stockfishWorker = null;
-    say("Stockfish could not start: " + (err.message || "unknown"));
-  }
- }
+/* ---------- Stockfish Engine ---------- */
+var stockfishWorker = null;
+var stockfishReady = false;
+var stockfishThinking = false;
+var stockfishFallbackTimer = null;
+var stockfishAnalysisMode = false;
+var stockfishCallback = null;
+var STOCKFISH_URL = "https://cdn.jsdelivr.net/npm/stockfish@10.0.2/src/stockfish.js";
+
 function initStockfish() {
   if (stockfishWorker) return;
   try {
@@ -1026,13 +1011,8 @@ function triggerStockfishGo() {
   stockfishThinking = true;
   stockfishAnalysisMode = false;
   var skill = Math.max(0, Math.min(20, Math.round((computerRating - 800) / 60)));
-  if (computerRating < 1000) {
-    stockfishWorker.postMessage("setoption name UCI_LimitStrength value true");
-    stockfishWorker.postMessage("setoption name UCI_Elo value " + computerRating);
-  } else {
-    stockfishWorker.postMessage("setoption name Skill Level value " + skill);
-    stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
-  }
+  stockfishWorker.postMessage("setoption name Skill Level value " + skill);
+  stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
   stockfishWorker.postMessage("position fen " + game.fen());
   var depth = computerRating < 1100 ? 3 : computerRating < 1400 ? 6 : computerRating < 1700 ? 10 : 14;
   stockfishWorker.postMessage("go depth " + depth);
@@ -1057,7 +1037,6 @@ function makeComputerMove() {
   triggerStockfishGo();
 }
 
-/* ---------- Analysis API ---------- */
 function analyzePosition(fen, depth, callback) {
   if (!stockfishWorker) initStockfish();
   var tryAnalyze = function () {
