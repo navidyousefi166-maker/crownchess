@@ -1192,9 +1192,9 @@ function startFirstMoveTimer(gameRow){
     if(!onlineGameId||!tournActiveMatch)return;
     var gameRes=await sb.from("kf_games").select("turn").eq("id",onlineGameId).maybeSingle();
     if(gameRes.data&&gameRes.data.turn==="w"){
-      var whiteId=onlineGame.white_id;
-      say("⏱️ "+onlineGame.white_username+" didn't move in time.");
-      await finishTournamentMatch(whiteId, false);
+     var blackId=onlineGame.black_id;
+say("⏱️ "+onlineGame.white_username+" didn't move in time. "+onlineGame.black_username+" advances.");
+await finishTournamentMatch(blackId, true);
     }
   },30000);
 }
