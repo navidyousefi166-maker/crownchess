@@ -566,7 +566,47 @@ body.game-focus .game-fullscreen{display:flex}
   .gfs-resign,.gfs-draw{font-size:14px;min-width:34px;height:28px;padding:3px 6px}
 }
 .humil-badge{font-size:9px;padding:2px 7px;border-radius:10px;background:var(--gold);color:#2a0710;font-weight:900;letter-spacing:.5px;white-space:nowrap}
-.humil-banner{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(74,42,6,.95),rgba(42,20,3,.95));border:1px solid var(--gold);border-radius:12px;padding:10px 16px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:50;display:flex;align-items:center;gap:12px;font-size:13px;cursor:pointer;animation:humilPop .4s ease-out;max-width:calc(100% - 20px)}
+  .humil-mask-icon{
+  display:inline-block;
+  width:22px;
+  height:11px;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 60 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cellipse cx='14' cy='15' rx='11' ry='13' fill='%23edc56b' stroke='%232a1810' stroke-width='1.5'/%3E%3Cellipse cx='10' cy='11' rx='1.5' ry='2' fill='%232a1810'/%3E%3Cellipse cx='18' cy='11' rx='1.5' ry='2' fill='%232a1810'/%3E%3Cpath d='M 8 18 Q 14 23 20 18' stroke='%232a1810' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='46' cy='15' rx='11' ry='13' fill='%23edc56b' stroke='%232a1810' stroke-width='1.5'/%3E%3Cellipse cx='42' cy='11' rx='1.5' ry='2' fill='%232a1810'/%3E%3Cellipse cx='50' cy='11' rx='1.5' ry='2' fill='%232a1810'/%3E%3Cpath d='M 40 20 Q 46 15 52 20' stroke='%232a1810' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:contain;
+  vertical-align:middle;
+  flex:none;
+}
+.humil-banner{
+  position:fixed;
+  top:60px;
+  left:50%;
+  transform:translateX(-50%);
+  background:linear-gradient(135deg,rgba(74,42,6,.95),rgba(42,20,3,.95));
+  border:1px solid var(--gold);
+  border-radius:12px;
+  padding:10px 16px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:13px;
+  cursor:pointer;
+  animation:humilPop .4s ease-out;
+  max-width:calc(100% - 20px);
+  transition:filter .25s,opacity .25s,border-color .25s;
+}
+.humil-banner.grayed{
+  filter:grayscale(1);
+  opacity:.65;
+}
+.humil-banner.active{
+  filter:none;
+  opacity:1;
+  border-color:var(--gold2);
+  box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 20px rgba(237,197,107,.5);
+  }
 @keyframes humilPop{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 .humil-banner:hover{border-color:var(--gold2)}
 .humil-banner .hb-icon{font-size:22px;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
