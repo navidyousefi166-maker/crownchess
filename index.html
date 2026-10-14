@@ -1879,6 +1879,17 @@ function applyOnlineGame(row){
       if(firstMoveTimer&&game.history().length>0){clearTimeout(firstMoveTimer);firstMoveTimer=null}
     }catch(e){say("Received an invalid game position.")}
   }
+  if(row.draw_offer_by && row.draw_offer_by !== currentUser.id && row.draw_offer_status==="pending" && !$("drawOfferDialog").open){
+  $("drawOfferDialog").showModal();
+}
+if(row.draw_offer_status==="declined" && onlineGame && onlineGame.draw_offer_by===currentUser.id){
+  say("Your draw offer was declined.");
+}
+if(row.draw_offer_by && row.draw_offer_by === currentUser.id){
+  $("gfsDrawBtn").disabled = true;
+} else {
+  $("gfsDrawBtn").disabled = false;
+}
   if(row.status==="completed" && !celebTimer){
     if(row.is_tournament && tournActiveMatch)handleTournamentEnd(row);
     else handleQuickPlayEnd(row);
