@@ -2517,6 +2517,77 @@ $("fen").onclick=async function(){
   try{await navigator.clipboard.writeText(game.fen());say("Position copied as FEN.")}
   catch(e){prompt("Copy this FEN position:",game.fen())}
 };
+  /* ===== ROULETTE ===== */
+var pendingQueueIsRoulette=false;
+var currentGameIsRoulette=false;
+var rouletteOpenings=[
+  {name:"Italian Game",moves:["e4","e5","Nf3","Nc6","Bc4","Bc5"]},
+  {name:"Sicilian Defense",moves:["e4","c5","Nf3","d6","d4","cxd4"]},
+  {name:"French Defense",moves:["e4","e6","d4","d5","Nc3","Nf6"]},
+  {name:"Queen's Gambit",moves:["d4","d5","c4","e6","Nc3","Nf6"]},
+  {name:"King's Indian",moves:["d4","Nf6","c4","g6","Nc3","Bg7"]},
+  {name:"Ruy Lopez",moves:["e4","e5","Nf3","Nc6","Bb5","a6"]},
+  {name:"Caro-Kann",moves:["e4","c6","d4","d5","Nc3","dxe4"]},
+  {name:"English Opening",moves:["c4","e5","Nc3","Nf6","Nf3","Nc6"]},
+  {name:"Scandinavian",moves:["e4","d5","exd5","Qxd5","Nc3","Qa5"]},
+  {name:"Réti Opening",moves:["Nf3","d5","c4","e6","g3","Nf6"]}
+];
+function kfHash(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}return Math.abs(h)}
+function kfRng(seed){var x=seed||1;return function(){x=(x*1103515245+12345)&0x7fffffff;return x/0x7fffffff}}
+function pickRouletteOpening(gameId){var rng=kfRng(kfHash(gameId));return rouletteOpenings[Math.floor(rng()*rouletteOpenings.length)]}
+function spinJackpot(opening){
+  return new Promise(function(resolve){
+    var overlay=$("jackpotOverlay");
+    var colW=$("jpColWhite"),colB=$("jpColBlack"),colL=$("jpColLine"),res=$("jpResult");
+    colW.className="jackpot-col spinning";colB.className="jackpot-col spinning";colL.className="jackpot-col spinning";
+    res.textContent="";res.classList.remove("show");
+    overlay.classList.add("show");
+    var wPool=["e4","d4","c4","Nf3","e3","g3","b3"];
+    var bPool=["e5","c5","e6","c6","d5","Nf6","d6","g6"];
+    var lPool=rouletteOpenings.map(function(o){return o.name});
+    var tw=setInterval(function(){colW.textContent=wPool[Math.floor(Math.random()*wPool.length)]},70);
+    var tb=setInterval(function(){colB.textContent=bPool[Math.floor(Math.random()*bPool.length)]},70);
+    var tl=setInterval(function(){colL.textContent=lPool[Math.floor(Math.random()*lPool.length)]},70);
+    setTimeout(function(){clearInterval(tw);colW.textContent=opening.moves[0];colW.className="jackpot-col locked"},1400);
+    setTimeout(function(){clearInterval(tb);colB.textContent=opening.moves[1];colB.className="jackpot-col locked"},2200);
+    setTimeout(function(){clearInterval(tl);colL.textContent=opening.name;colL.className="jackpot-col locked";res.textContent="🎯 "+opening.name;res.classList.add("show")},3000);
+    setTimeout(function(){overlay.classList.remove("show");resolve(opening)},4800);
+  });
+}
+function applyRouletteOpening(opening){
+  if(!game)return;
+  for(var i=0;i<opening.moves.length;i++){try{var m=game.move(opening.moves[i]);if(!m)break}catch(e){break}}
+  selected=null;targets=[];
+  var hist=game.history({verbose:true});
+  if(hist.length){var lm=hist[hist.length-1];last={from:lm.from,to:lm.to}}
+  draw();
+}
+async function startRoulette(){
+  if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+  computerMode=false;document.body.classList.remove("computer-mode");
+  if(!sb){say("Supabase is unavailable.");return}
+  var sess=await sb.auth.getSession();
+  var session=sess.data&&sess.data.session?sess.data.session:null;
+  if(!session){openAuth("signin");say("Sign in before using Roulette.");return}
+  currentUser=session.user;
+  humilApplied=false;humilChosenType=null;
+  pendingQueueIsRoulette=true;
+  setQuickState("Roulette: finding opponent…",{lock:true,cancel:true});
+  say("");
+  try{
+    var res=await sb.rpc("kf_join_quick_play",{p_is_roulette:true});
+    if(res.error)throw res.error;
+    var data=res.data;
+    if(data&&data.status==="matched"&&data.game_id)await loadOnlineGame(data.game_id);
+    else{
+      setQuickState("Roulette queue · 5 min…",{lock:true,cancel:true});
+      queuePoll=setInterval(pollQueue,1800);
+      queueTimeout=setTimeout(async function(){if(onlineGameId)return;await cancelQuickPlay();say("No roulette opponents found — timed out.")},120000);
+      await pollQueue();
+    }
+  }catch(err){setQuickState("5-minute game · Match by wins");say("Roulette error: "+(err.message||"Unknown"))}
+}
+$("rouletteBtn").onclick=startRoulette;
 $("quickPlay").onclick=startQuickPlay;
 $("cancelQueue").onclick=cancelQuickPlay;
 $("computerRating").addEventListener("input",function(){
