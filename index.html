@@ -1354,7 +1354,7 @@ function paintClocks(){
   if(document.body.classList.contains("game-focus")){
     var topColor = fsPlayerColor === "w" ? "black" : "white";
     var topVal = topColor === "white" ? clockWhite : clockBlack;
-    var botVal = fsPlayerColor === "white" ? clockWhite : clockBlack;
+    var botVal = fsPlayerColor === "w" ? clockWhite : clockBlack;
     var topEl=$("gfsTopClock"),botEl=$("gfsBotClock");
     if(topEl){
       topEl.textContent=fmtClock(topVal);
