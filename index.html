@@ -1417,20 +1417,14 @@ async function submitOnlineMove(m){
   function tickClock(){
   if(computerMode||!game||game.game_over()||clockExpired){paintClocks();return}
   if(!onlineGameId||!onlineGame){paintClocks();return}
-  var now = Date.now();
-  var lastMoveAt = onlineGame.updated_at ? new Date(onlineGame.updated_at).getTime() : now;
-  var elapsed = Math.max(0, (now - lastMoveAt) / 1000);
-  if(elapsed > 600) elapsed = 600;
-  var turn = onlineGame.turn || "w";
-  var wLeft = (onlineGame.white_time_left != null) ? onlineGame.white_time_left : 300;
-  var bLeft = (onlineGame.black_time_left != null) ? onlineGame.black_time_left : 300;
-  if(turn === "w"){
-    clockWhite = Math.max(0, wLeft - elapsed);
-    clockBlack = bLeft;
-  } else {
-    clockBlack = Math.max(0, bLeft - elapsed);
-    clockWhite = wLeft;
-  }
+  var now=Date.now();
+  if(lastClockAt===null)lastClockAt=now;
+  var elapsed=(now-lastClockAt)/1000;
+  if(elapsed>2)elapsed=2;
+  lastClockAt=now;
+  var turn=onlineGame.turn||"w";
+  if(turn==="w")clockWhite=Math.max(0,clockWhite-elapsed);
+  else clockBlack=Math.max(0,clockBlack-elapsed);
   if(clockWhite<=0||clockBlack<=0){
     clockExpired=true;
     var loser=clockWhite<=0?"White":"Black";
