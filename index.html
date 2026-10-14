@@ -2025,15 +2025,8 @@ async function submitTournamentMove(m){
       winnerId=game.turn()==="w"?onlineGame.black_id:onlineGame.white_id;
     }else{result="1/2-1/2";winnerId=onlineGame.white_id}
   }
-  var moverTurn=onlineGame.turn||"w";
-  var now=Date.now();
-  if(lastClockAt===null)lastClockAt=now;
-  var elapsed=Math.max(0,(now-lastClockAt)/1000);
-  if(elapsed>2)elapsed=2;
-  var newWhiteTime=onlineGame.white_time_left!=null?onlineGame.white_time_left:300;
-  var newBlackTime=onlineGame.black_time_left!=null?onlineGame.black_time_left:300;
-  if(moverTurn==="w") newWhiteTime=Math.max(0,newWhiteTime-elapsed);
-  else newBlackTime=Math.max(0,newBlackTime-elapsed);
+  var newWhiteTime = clockWhite;
+var newBlackTime = clockBlack;
   var upd={
     fen:game.fen(),
     pgn:game.pgn(),
