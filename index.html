@@ -1859,6 +1859,8 @@ function applyOnlineGame(row){
   if(!session){openAuth("signin");say("Sign in before using Quick Play.");return}
   currentUser=session.user;
   humilApplied=false;humilChosenType=null;
+    pendingQueueIsRoulette=false;
+      currentGameIsRoulette=false;=false;
   setQuickState("Finding an opponent · 5-minute game…",{lock:true,cancel:true});
   say("");
   try{
