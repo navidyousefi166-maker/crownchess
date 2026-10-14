@@ -2465,8 +2465,8 @@ async function updateAuth(){
   var avatarUrl=user&&user.user_metadata?user.user_metadata.avatar_url:null;
   $("userBadge").textContent=username||(user?user.email:"");
   $("userBadge").title=username?("Signed in as "+username):(user?user.email:"");
-  $("avatarThumb").src=avatarUrl||"";
-  $("avatarThumb").style.display=avatarUrl?"block":"none";
+  $("avatarThumb").src=avatarUrl||defaultAvatar();
+$("avatarThumb").style.display=user?"block":"none";
   $("signIn").hidden=!!user;$("signUp").hidden=!!user;$("signOut").hidden=!user;
 }
 $("avatarThumb").onclick=async function(){
