@@ -2086,7 +2086,7 @@ function applyRouletteOpening(opening){
     var res=await sb.rpc("kf_join_quick_play",{p_is_roulette:true});
     if(res.error)throw res.error;
     var data=res.data;
-    if(data&&data.status==="matched"&&data.game_id){setRouletteState("Random opening · 3 moves each auto-played",{});await loadOnlineGame(data.game_id)}
+    if(data&&data.status==="matched"&&data.game_id){currentGameIsRoulette=true;setRouletteState("Random opening · 3 moves each auto-played",{});await loadOnlineGame(data.game_id)}
     else{
       setRouletteState("Searching · 5 min game…",{lock:true,cancel:true});
       queuePoll=setInterval(pollQueue,1800);
