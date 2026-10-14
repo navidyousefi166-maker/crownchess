@@ -2042,6 +2042,43 @@ function exitFullscreenGame(){
     else panel.appendChild(boardEl);
   }
 }
+  /* ===== Draw Offer ===== */
+$("gfsDrawBtn").onclick = async function(){
+  if(!sb||!onlineGameId||!onlineGame||!currentUser)return;
+  if(onlineGame.status==="completed"){say("Game is already finished.");return}
+  if(onlineGame.draw_offer_by===currentUser.id){say("You already offered a draw.");return}
+  if(!confirm("Offer a draw to your opponent?"))return;
+  var upd={draw_offer_by:currentUser.id,draw_offer_status:"pending"};
+  var res=await sb.from("kf_games").update(upd).eq("id",onlineGameId);
+  if(res.error){say("Could not send draw offer: "+res.error.message);return}
+  onlineGame=Object.assign({},onlineGame,upd);
+  say("Draw offer sent. Waiting for opponent…");
+};
+async function respondDrawOffer(accept){
+  if(!sb||!onlineGameId||!onlineGame||!currentUser)return;
+  if(onlineGame.draw_offer_by===currentUser.id)return;
+  if(accept){
+    var upd={
+      status:"completed",
+      result:"1/2-1/2",
+      winner_id:null,
+      draw_offer_status:"accepted",
+      completed_at:new Date().toISOString()
+    };
+    var res=await sb.from("kf_games").update(upd).eq("id",onlineGameId);
+    if(res.error){say("Could not accept draw: "+res.error.message);return}
+    onlineGame=Object.assign({},onlineGame,upd);
+    applyOnlineGame(onlineGame);
+  }else{
+    var res2=await sb.from("kf_games").update({draw_offer_by:null,draw_offer_status:"declined"}).eq("id",onlineGameId);
+    if(res2.error){say("Could not decline: "+res2.error.message);return}
+    onlineGame=Object.assign({},onlineGame,{draw_offer_by:null,draw_offer_status:"declined"});
+    say("Draw offer declined.");
+  }
+  $("drawOfferDialog").close();
+}
+$("drawAcceptBtn").onclick=function(){respondDrawOffer(true)};
+$("drawDeclineBtn").onclick=function(){respondDrawOffer(false)};
 $("gfsResignBtn").onclick = async function(){
   if(!onlineGameId||!onlineGame)return;
   if(!confirm("Are you sure you want to resign? Your opponent will win."))return;
