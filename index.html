@@ -1870,8 +1870,8 @@ async function loadOnlineGame(id){
   selected=null;targets=[];last=data.last_move||null;
   draw();
   gameChannel=sb.channel("kf-game-"+id)
-    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+id},function(payload){applyOnlineGame(payload.new)})
-    .subscribe();
+  .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+id},function(payload){say("RT: "+new Date().toLocaleTimeString());applyOnlineGame(payload.new)})
+  .subscribe();
   if(currentGameIsRoulette && game.history().length === 0){
     var opening = pickRouletteOpening(id);
     await spinJackpot(opening);
