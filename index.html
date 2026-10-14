@@ -2063,11 +2063,20 @@ function spinJackpot(opening){
 }
 function applyRouletteOpening(opening){
   if(!game)return;
-  for(var i=0;i<opening.moves.length;i++){try{var m=game.move(opening.moves[i]);if(!m)break}catch(e){break}}
-  selected=null;targets=[];
-  var hist=game.history({verbose:true});
-  if(hist.length){var lm=hist[hist.length-1];last={from:lm.from,to:lm.to}}
-  draw();
+  var i=0;
+  function playNext(){
+    if(i>=opening.moves.length)return;
+    try{
+      var m=game.move(opening.moves[i]);
+      if(!m)return;
+      last={from:m.from,to:m.to};
+      draw();
+      say(m.san);
+    }catch(e){return}
+    i++;
+    if(i<opening.moves.length)setTimeout(playNext,700);
+  }
+  playNext();
 }
   async function startRoulette(){
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
