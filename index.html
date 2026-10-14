@@ -2715,7 +2715,7 @@ function showHumilBanner(){
   var banner = document.createElement("div");
   banner.id = "humilBanner";
   banner.className = "humil-banner";
-  banner.innerHTML = '<span class="hb-icon">🏳️</span><div class="hb-text"><div class="hb-title">Sacrifice a piece?</div><div class="hb-sub">Give up Knight, Bishop, Rook or Queen for bonus wins</div></div>';
+  banner.innerHTML = '<span class="hb-icon"><span class="humil-mask-icon"></span></span><div class="hb-text"><div class="hb-title">Sacrifice a piece?</div><div class="hb-sub">Give up Knight, Bishop, Rook or Queen for bonus wins</div></div>';
   banner.onclick = function(){ if(!onlineGame || game.history().length > 0) return; openHumilDialog() };
   document.body.appendChild(banner);
 }
