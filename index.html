@@ -3238,6 +3238,35 @@ function askPromotion(color){
 }
 async function clickSquare(s){
   if(!game)return;
+  if(humilSelecting){
+  if(isHumilEligiblePiece(s)){
+    var pName = names[game.get(s).type];
+    var ok = confirm("Are you sure you want to sacrifice your " + pName + "?");
+    if(ok){
+      var color = fsPlayerColor;
+      var type = game.get(s).type;
+      var myHandicapField = (onlineGame && onlineGame.white_id === currentUser.id) ? "white_handicap" : "black_handicap";
+      var upd = {}; upd[myHandicapField] = type;
+      var res = await sb.from("kf_games").update(upd).eq("id", onlineGameId);
+      if(res.error){
+        say("Error: " + res.error.message);
+        return;
+      }
+      onlineGame = Object.assign({}, onlineGame, upd);
+      humilApplied = true;
+      humilSelecting = false;
+      applyHandicapToGame(color, type);
+      playWindSound();
+      var banner = $("humilBanner");
+      if(banner) banner.remove();
+    } else {
+      exitHumilSelection();
+    }
+  } else {
+    exitHumilSelection();
+  }
+  return;
+  }
   if(game.game_over()||clockExpired)return;
   if(computerMode){
     var compColor = (computerUserColor === "w") ? "b" : "w";
