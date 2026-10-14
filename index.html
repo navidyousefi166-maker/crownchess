@@ -2752,11 +2752,16 @@ $("signOut").onclick=async function(){
 /* ===== Humiliation ===== */
 function showHumilBanner(){
   if($("humilBanner"))return;
+  if(humilApplied)return;
   var banner = document.createElement("div");
   banner.id = "humilBanner";
-  banner.className = "humil-banner";
-  banner.innerHTML = '<span class="hb-icon"><span class="humil-mask-icon"></span></span><div class="hb-text"><div class="hb-title">Sacrifice a piece?</div><div class="hb-sub">Give up Knight, Bishop, Rook or Queen for bonus wins</div></div>';
-  banner.onclick = function(){ if(!onlineGame || game.history().length > 0) return; openHumilDialog() };
+  banner.className = "humil-banner grayed";
+  banner.innerHTML = '<span class="hb-icon"><span class="humil-mask-icon"></span></span><div class="hb-text"><div class="hb-title">Sacrifice a piece?</div><div class="hb-sub">Tap to sacrifice · Bonus wins</div></div>';
+  banner.onclick = function(){
+    if(!onlineGame || !game || game.history().length > 0 || humilApplied) return;
+    if(humilSelecting){ exitHumilSelection(); return; }
+    enterHumilSelection();
+  };
   document.body.appendChild(banner);
 }
 function hideHumilBanner(){var b=$("humilBanner");if(b)b.remove()}
