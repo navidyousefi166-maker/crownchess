@@ -1379,7 +1379,8 @@ function tickClock(){
   var elapsed=(now-lastClockAt)/1000;
   if(elapsed>2)elapsed=2;
   lastClockAt=now;
-  if(game.turn()==="w")clockWhite-=elapsed;else clockBlack-=elapsed;
+  var turn = (onlineGame && onlineGame.turn) ? onlineGame.turn : game.turn();
+  if(turn==="w")clockWhite-=elapsed;else clockBlack-=elapsed;
   if(clockWhite<=0||clockBlack<=0){
     clockWhite=Math.max(0,clockWhite);clockBlack=Math.max(0,clockBlack);
     clockExpired=true;
