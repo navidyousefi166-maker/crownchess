@@ -1387,13 +1387,15 @@ async function submitOnlineMove(m){
       winnerId=game.turn()==="w"?onlineGame.black_id:onlineGame.white_id;
     }else result="1/2-1/2";
   }
-  var now = Date.now();
-  var lastMoveAt = onlineGame.updated_at ? new Date(onlineGame.updated_at).getTime() : now;
-  var elapsed = Math.max(0, (now - lastMoveAt) / 1000);
-  var newWhiteTime = onlineGame.white_time_left != null ? onlineGame.white_time_left : 300;
-  var newBlackTime = onlineGame.black_time_left != null ? onlineGame.black_time_left : 300;
-  if(onlineGame.turn === "w") newWhiteTime = Math.max(0, newWhiteTime - elapsed);
-  else newBlackTime = Math.max(0, newBlackTime - elapsed);
+  var moverTurn=onlineGame.turn||"w";
+  var now=Date.now();
+  if(lastClockAt===null)lastClockAt=now;
+  var elapsed=Math.max(0,(now-lastClockAt)/1000);
+  if(elapsed>2)elapsed=2;
+  var newWhiteTime=onlineGame.white_time_left!=null?onlineGame.white_time_left:300;
+  var newBlackTime=onlineGame.black_time_left!=null?onlineGame.black_time_left:300;
+  if(moverTurn==="w") newWhiteTime=Math.max(0,newWhiteTime-elapsed);
+  else newBlackTime=Math.max(0,newBlackTime-elapsed);
   var upd={
     fen:game.fen(),
     pgn:game.pgn(),
@@ -1402,18 +1404,18 @@ async function submitOnlineMove(m){
     status:status,
     result:result,
     winner_id:winnerId,
-    white_time_left: Math.round(newWhiteTime),
-    black_time_left: Math.round(newBlackTime)
+    white_time_left:Math.round(newWhiteTime),
+    black_time_left:Math.round(newBlackTime)
   };
   if(status==="completed")upd.completed_at=new Date().toISOString();
   var res=await sb.from("kf_games").update(upd).eq("id",onlineGameId);
   if(res.error){game.undo();selected=null;targets=[];draw();say("Move could not be saved: "+res.error.message);return}
-  onlineGame.turn = upd.turn;
-  onlineGame.white_time_left = upd.white_time_left;
-  onlineGame.black_time_left = upd.black_time_left;
-  onlineGame.updated_at = new Date().toISOString();
+  onlineGame.turn=upd.turn;
+  onlineGame.white_time_left=upd.white_time_left;
+  onlineGame.black_time_left=upd.black_time_left;
+  lastClockAt=Date.now();
   if(status==="completed")await finalizeOnlineGame(winnerId);
-}
+      }
   function tickClock(){
   if(computerMode||!game||game.game_over()||clockExpired){paintClocks();return}
   if(!onlineGameId||!onlineGame){paintClocks();return}
