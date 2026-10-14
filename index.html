@@ -3141,7 +3141,13 @@ async function clickSquare(s){
       say(m.san);draw();
       if(firstMoveTimer&&game.history().length>0){clearTimeout(firstMoveTimer);firstMoveTimer=null}
       if(humilApplied||game.history().length>0){hideHumilBanner()}
-      if(onlineGameId){submittingMove=true;await submitOnlineMove(m);submittingMove=false}
+       if(onlineGameId){
+  if(onlineGame)onlineGame.turn=game.turn();
+  lastClockAt=Date.now();
+  submittingMove=true;
+  await submitOnlineMove(m);
+  submittingMove=false;
+       }
       else if(computerMode&&!game.game_over()){
         lastClockAt=Date.now();
         var compColor = (computerUserColor === "w") ? "b" : "w";
