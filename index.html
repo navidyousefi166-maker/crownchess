@@ -1409,6 +1409,33 @@ async function submitOnlineMove(m){
   onlineGame.updated_at = new Date().toISOString();
   if(status==="completed")await finalizeOnlineGame(winnerId);
 }
+  function tickClock(){
+  if(computerMode||!game||game.game_over()||clockExpired){paintClocks();return}
+  if(!onlineGameId||!onlineGame){paintClocks();return}
+  var now = Date.now();
+  var lastMoveAt = onlineGame.updated_at ? new Date(onlineGame.updated_at).getTime() : now;
+  var elapsed = Math.max(0, (now - lastMoveAt) / 1000);
+  if(elapsed > 600) elapsed = 600;
+  var turn = onlineGame.turn || "w";
+  var wLeft = (onlineGame.white_time_left != null) ? onlineGame.white_time_left : 300;
+  var bLeft = (onlineGame.black_time_left != null) ? onlineGame.black_time_left : 300;
+  if(turn === "w"){
+    clockWhite = Math.max(0, wLeft - elapsed);
+    clockBlack = bLeft;
+  } else {
+    clockBlack = Math.max(0, bLeft - elapsed);
+    clockWhite = wLeft;
+  }
+  if(clockWhite<=0||clockBlack<=0){
+    clockExpired=true;
+    var loser=clockWhite<=0?"White":"Black";
+    var winner=loser==="White"?"Black":"White";
+    say(loser+" ran out of time. "+winner+" wins on time.");
+    if(onlineGameId&&tournActiveMatch){handleTournamentTimeout(loser)}
+    else if(onlineGameId){handleOnlineTimeout(loser)}
+  }
+  paintClocks();
+  }
 setInterval(tickClock,250);
 
 function renderPlayers(row){
