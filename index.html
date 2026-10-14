@@ -2017,23 +2017,7 @@ async function cancelQuickPlay(){
   setRouletteState("Random opening · 3 moves each auto-played");
   say("Search cancelled.");
 }
-  async function submitOnlineMove(m){
-  if(!sb||!onlineGameId||!onlineGame)return;
-  if(onlineGame.is_tournament && tournActiveMatch)return await submitTournamentMove(m);
-  var result=null,winnerId=null,status="active";
-  if(game.game_over()){
-    status="completed";
-    if(game.in_checkmate()){
-      result=game.turn()==="w"?"0-1":"1-0";
-      winnerId=game.turn()==="w"?onlineGame.black_id:onlineGame.white_id;
-    }else result="1/2-1/2";
-  }
-  var upd={fen:game.fen(),pgn:game.pgn(),turn:game.turn(),last_move:{from:m.from,to:m.to,san:m.san},status:status,result:result,winner_id:winnerId};
-  if(status==="completed")upd.completed_at=new Date().toISOString();
-  var res=await sb.from("kf_games").update(upd).eq("id",onlineGameId);
-  if(res.error){game.undo();selected=null;targets=[];draw();say("Move could not be saved: "+res.error.message);return}
-  if(status==="completed")await finalizeOnlineGame(winnerId);
-}
+
 async function submitTournamentMove(m){
   var status="active",winnerId=null,result=null;
   if(game.game_over()){
