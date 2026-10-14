@@ -2765,6 +2765,34 @@ function showHumilBanner(){
   document.body.appendChild(banner);
 }
 function hideHumilBanner(){var b=$("humilBanner");if(b)b.remove()}
+  function isHumilEligiblePiece(sq){
+  if(!game) return false;
+  var p = game.get(sq);
+  if(!p) return false;
+  if(p.color !== fsPlayerColor) return false;
+  if(p.type === "p" || p.type === "k") return false;
+  var row = 8 - parseInt(sq.charAt(1), 10);
+  var col = files.indexOf(sq.charAt(0));
+  if(row < 0 || row > 7 || col < 0 || col > 7) return false;
+  if(fsPlayerColor === "w" && row < 6) return false;
+  if(fsPlayerColor === "b" && row > 1) return false;
+  return true;
+}
+function enterHumilSelection(){
+  if(!game || game.history().length > 0 || humilApplied) return;
+  humilSelecting = true;
+  var banner = $("humilBanner");
+  if(banner){ banner.classList.remove("grayed"); banner.classList.add("active"); }
+  draw();
+  say("Tap one of your pieces (Knight, Bishop, Rook, Queen) to sacrifice. Tap empty space to cancel.");
+}
+function exitHumilSelection(){
+  humilSelecting = false;
+  var banner = $("humilBanner");
+  if(banner){ banner.classList.remove("active"); banner.classList.add("grayed"); }
+  draw();
+  say("");
+      }
 function openHumilDialog(){
   humilChosenType=null;
   document.querySelectorAll(".humil-piece").forEach(function(el){el.classList.remove("selected")});
