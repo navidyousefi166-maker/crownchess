@@ -1119,22 +1119,39 @@ body.game-focus .game-fullscreen{display:flex}
 </div>
 <div class="game-fullscreen" id="gameFullscreen">
   <div class="gfs-topbar">
-    <img class="gfs-avatar" id="gfsTopAvatar" alt="">
-    <div class="gfs-info">
-      <div class="gfs-name" id="gfsTopName">Opponent</div>
-      <div class="gfs-stats" id="gfsTopStats"></div>
+    <div class="gfs-left">
+      <div class="gfs-clock" id="gfsTopClock">05:00</div>
     </div>
-    <div class="gfs-clock" id="gfsTopClock">05:00</div>
+    <div class="gfs-right">
+      <div class="gfs-profile">
+        <img class="gfs-avatar" id="gfsTopAvatar" alt="">
+        <div class="gfs-info">
+          <div class="gfs-name" id="gfsTopName">Opponent</div>
+          <div class="gfs-stats" id="gfsTopStats"></div>
+        </div>
+      </div>
+      <div class="gfs-humil-badge" id="gfsTopHumil" hidden><span>🏳️</span><span>HUMILIATION</span></div>
+    </div>
   </div>
   <div class="gfs-board-wrap" id="gfsBoardWrap"></div>
   <div class="gfs-bottombar">
-    <button class="gfs-resign" id="gfsResignBtn" type="button">🏳️ Resign</button>
-    <div class="gfs-clock" id="gfsBotClock">05:00</div>
-    <div class="gfs-info">
-      <div class="gfs-name" id="gfsBotName">You</div>
-      <div class="gfs-stats" id="gfsBotStats"></div>
+    <div class="gfs-left">
+      <div class="gfs-clock" id="gfsBotClock">05:00</div>
+      <div class="gfs-actions">
+        <button class="gfs-draw" id="gfsDrawBtn" type="button" title="Draw">🤝</button>
+        <button class="gfs-resign" id="gfsResignBtn" type="button" title="Resign">🏳️</button>
+      </div>
     </div>
-    <img class="gfs-avatar" id="gfsBotAvatar" alt="">
+    <div class="gfs-right">
+      <div class="gfs-profile">
+        <img class="gfs-avatar" id="gfsBotAvatar" alt="">
+        <div class="gfs-info">
+          <div class="gfs-name" id="gfsBotName">You</div>
+          <div class="gfs-stats" id="gfsBotStats"></div>
+        </div>
+      </div>
+      <div class="gfs-humil-badge" id="gfsBotHumil" hidden><span>🏳️</span><span>HUMILIATION</span></div>
+    </div>
   </div>
 </div>
 
