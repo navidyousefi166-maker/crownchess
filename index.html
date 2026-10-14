@@ -1908,8 +1908,9 @@ async function cancelQuickPlay(){
   await stopQueuePoll();
   try{if(sb)await sb.rpc("kf_cancel_quick_play")}catch(e){}
   setQuickState("5-minute game · Match by wins");
+  setRouletteState("Random opening · 3 moves each auto-played");
   say("Search cancelled.");
- }
+}
   async function submitOnlineMove(m){
   if(!sb||!onlineGameId||!onlineGame)return;
   if(onlineGame.is_tournament && tournActiveMatch)return await submitTournamentMove(m);
