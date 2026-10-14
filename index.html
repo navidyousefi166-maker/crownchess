@@ -1859,6 +1859,7 @@ async function joinTournamentGame(gameId){
   if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
   onlineGameId=gameId;onlineGame=data;
   resetClocks();lastClockAt=Date.now();
+  humilApplied=false;humilChosenType=null;humilSelecting=false;
   document.body.classList.remove("computer-mode");
   document.body.classList.add("online");
   enterFullscreenGame(data);
