@@ -1369,7 +1369,12 @@ function paintClocks(){
   }
 }
 function resetClocks(){
-  clockWhite=300;clockBlack=300;lastClockAt=Date.now();clockExpired=false;paintClocks();
+  clockWhite=300;clockBlack=300;lastClockAt=Date.now();clockExpired=false;
+  if(onlineGame){
+    if(onlineGame.white_time_left!=null) clockWhite=onlineGame.white_time_left;
+    if(onlineGame.black_time_left!=null) clockBlack=onlineGame.black_time_left;
+  }
+  paintClocks();
 }
 async function submitOnlineMove(m){
   if(!sb||!onlineGameId||!onlineGame)return;
