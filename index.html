@@ -2272,7 +2272,7 @@ function applyRouletteOpening(opening){
   var session=sess.data&&sess.data.session?sess.data.session:null;
   if(!session){openAuth("signin");say("Sign in before using Roulette.");return}
   currentUser=session.user;
-  humilApplied=false;humilChosenType=null;
+   humilApplied=false;humilChosenType=null;humilSelecting=false; 
   pendingQueueIsRoulette=true;
   currentGameIsRoulette=false;
   setRouletteState("Finding opponent…",{lock:true,cancel:true});
