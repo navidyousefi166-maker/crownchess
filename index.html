@@ -2138,7 +2138,7 @@ $("gfsBotHumil").hidden = !meHadHandicap;
   $("gfsBotAvatar").src = botAvatar || defaultAvatar();
   $("gfsResignBtn").disabled = false;
   renderFullscreenStats();
-  if (!row.is_tournament && game.history().length === 0 && !humilApplied) showHumilBanner();
+  if (game.history().length === 0 && !humilApplied) showHumilBanner();
   draw();
 }
 async function renderFullscreenStats(){
