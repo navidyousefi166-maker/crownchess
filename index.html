@@ -3196,8 +3196,6 @@ async function clickSquare(s){
       if(firstMoveTimer&&game.history().length>0){clearTimeout(firstMoveTimer);firstMoveTimer=null}
       if(humilApplied||game.history().length>0){hideHumilBanner()}
        if(onlineGameId){
-  if(onlineGame)onlineGame.turn=game.turn();
-  lastClockAt=Date.now();
   submittingMove=true;
   await submitOnlineMove(m);
   submittingMove=false;
