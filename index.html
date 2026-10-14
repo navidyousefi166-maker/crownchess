@@ -1984,8 +1984,8 @@ function enterFullscreenGame(row){
   botNameEl.textContent = botName || "You";
   var meHadHandicap = (fsPlayerColor === "w" && row.white_handicap) || (fsPlayerColor === "b" && row.black_handicap);
   var oppHadHandicap = (fsPlayerColor === "w" && row.black_handicap) || (fsPlayerColor === "b" && row.white_handicap);
-  if (meHadHandicap) { var b1=document.createElement("span");b1.className="humil-badge";b1.textContent="🏳️ HUMILIATION";botNameEl.appendChild(b1) }
-  if (oppHadHandicap) { var b2=document.createElement("span");b2.className="humil-badge";b2.textContent="🏳️ HUMILIATION";topNameEl.appendChild(b2) }
+  $("gfsTopHumil").hidden = !oppHadHandicap;
+$("gfsBotHumil").hidden = !meHadHandicap;
   $("gfsTopAvatar").src = topAvatar || defaultAvatar();
   $("gfsBotAvatar").src = botAvatar || defaultAvatar();
   $("gfsResignBtn").disabled = false;
