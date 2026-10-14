@@ -1790,13 +1790,15 @@ async function leaveOnlineState(){
 }
 async function pollQueue(){
   if(!sb||!currentUser)return;
-  var res=await sb.from("kf_match_queue").select("status,game_id").eq("user_id",currentUser.id)
-    .eq("is_roulette",false).order("created_at",{ascending:false}).limit(1).maybeSingle();
+  var res=await sb.from("kf_match_queue").select("status,game_id,is_roulette").eq("user_id",currentUser.id)
+    .eq("is_roulette",pendingQueueIsRoulette).order("created_at",{ascending:false}).limit(1).maybeSingle();
   if(res.error)return;
   var data=res.data;
   if(data&&data.status==="matched"&&data.game_id){
     await stopQueuePoll();
+    currentGameIsRoulette=!!data.is_roulette;
     await loadOnlineGame(data.game_id);
+  }
   }
 }
 async function loadOnlineGame(id){
