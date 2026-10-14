@@ -1379,7 +1379,9 @@ function tickClock(){
   var elapsed=(now-lastClockAt)/1000;
   if(elapsed>2)elapsed=2;
   lastClockAt=now;
-  var turn = (onlineGame && onlineGame.turn) ? onlineGame.turn : game.turn();
+  var turn = "w";
+  if(onlineGameId && onlineGame && onlineGame.turn) turn = onlineGame.turn;
+  else if(game) turn = game.turn();
   if(turn==="w")clockWhite-=elapsed;else clockBlack-=elapsed;
   if(clockWhite<=0||clockBlack<=0){
     clockWhite=Math.max(0,clockWhite);clockBlack=Math.max(0,clockBlack);
@@ -1391,7 +1393,7 @@ function tickClock(){
     else if(onlineGameId){handleOnlineTimeout(loser)}
   }
   paintClocks();
-}
+                                                               }
 setInterval(tickClock,250);
 
 function renderPlayers(row){
