@@ -3147,7 +3147,7 @@ function start(){
   _boardBuilt=false;
   draw();
 }
-function draw(){
+  function draw(){
   if(!game) return;
   paintClocks();
   if(!_boardBuilt || _boardFlipped !== flipped){
@@ -3165,14 +3165,22 @@ function draw(){
       if(!b) continue;
       b.innerHTML = "";
       b.classList.toggle("selected", selected===s);
+      b.classList.remove("humil-dim","humil-target");
       b.style.backgroundImage = "";
-      if(last && (last.from===s || last.to===s)){
+      if(humilSelecting){
+        if(isHumilEligiblePiece(s)){
+          b.classList.add("humil-target");
+        } else {
+          b.classList.add("humil-dim");
+        }
+      }
+      if(last && (last.from===s || last.to===s) && !humilSelecting){
         b.style.backgroundImage = "linear-gradient(#e5bd6545,#e5bd6545)";
       }
       var aria = s + (p ? ", " + (p.color==="w"?"white":"black") + " " + names[p.type] : "");
       b.setAttribute("aria-label", aria);
       if(p) b.innerHTML = svg(p);
-      if(targetsSet[s]){
+      if(targetsSet[s] && !humilSelecting){
         var mark = document.createElement("span");
         mark.className = p ? "ring" : "dot";
         b.appendChild(mark);
@@ -3195,7 +3203,7 @@ function draw(){
   $("bottom").textContent = flipped ? "Black pieces" : "White pieces";
   if(!onlineGameId && !computerMode) $("undo").disabled = !game.history().length;
   updateHistory();
-}
+                         }
 function updateHistory(){
   var h=game.history();
   if(!h.length){historyEl.textContent="No moves yet.";return}
