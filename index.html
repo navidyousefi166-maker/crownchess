@@ -1869,9 +1869,9 @@ async function loadOnlineGame(id){
   if(game&&game.fen()!==data.fen)game.load(data.fen);
   selected=null;targets=[];last=data.last_move||null;
   draw();
-  gameChannel=sb.channel("kf-game-"+id)
-  .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games"},function(payload){alert("RT fired!");applyOnlineGame(payload.new)})
-  .subscribe(function(status){alert("SUB status: "+status);});
+gameChannel=sb.channel("kf-game-"+id)
+  .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games"},function(payload){if(payload.new && payload.new.id===onlineGameId)applyOnlineGame(payload.new)})
+  .subscribe();
   if(currentGameIsRoulette && game.history().length === 0){
     var opening = pickRouletteOpening(id);
     await spinJackpot(opening);
