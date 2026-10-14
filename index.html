@@ -2016,10 +2016,31 @@ async function submitTournamentMove(m){
       winnerId=game.turn()==="w"?onlineGame.black_id:onlineGame.white_id;
     }else{result="1/2-1/2";winnerId=onlineGame.white_id}
   }
-  var upd={fen:game.fen(),pgn:game.pgn(),turn:game.turn(),last_move:{from:m.from,to:m.to,san:m.san},status:status,result:result,winner_id:winnerId};
+  var now = Date.now();
+  var lastMoveAt = onlineGame.updated_at ? new Date(onlineGame.updated_at).getTime() : now;
+  var elapsed = Math.max(0, (now - lastMoveAt) / 1000);
+  var newWhiteTime = onlineGame.white_time_left != null ? onlineGame.white_time_left : 300;
+  var newBlackTime = onlineGame.black_time_left != null ? onlineGame.black_time_left : 300;
+  if(onlineGame.turn === "w") newWhiteTime = Math.max(0, newWhiteTime - elapsed);
+  else newBlackTime = Math.max(0, newBlackTime - elapsed);
+  var upd={
+    fen:game.fen(),
+    pgn:game.pgn(),
+    turn:game.turn(),
+    last_move:{from:m.from,to:m.to,san:m.san},
+    status:status,
+    result:result,
+    winner_id:winnerId,
+    white_time_left: Math.round(newWhiteTime),
+    black_time_left: Math.round(newBlackTime)
+  };
   if(status==="completed")upd.completed_at=new Date().toISOString();
   var res=await sb.from("kf_games").update(upd).eq("id",onlineGameId);
   if(res.error){game.undo();selected=null;targets=[];draw();say("Move could not be saved: "+res.error.message);return}
+  onlineGame.turn = upd.turn;
+  onlineGame.white_time_left = upd.white_time_left;
+  onlineGame.black_time_left = upd.black_time_left;
+  onlineGame.updated_at = new Date().toISOString();
   if(status==="completed")await finishTournamentMatch(winnerId, true);
 }
 async function finalizeOnlineGame(winnerId){
