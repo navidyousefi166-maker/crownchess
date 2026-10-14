@@ -1820,6 +1820,12 @@ async function loadOnlineGame(id){
   gameChannel=sb.channel("kf-game-"+id)
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+id},function(payload){applyOnlineGame(payload.new)})
     .subscribe();
+  if(currentGameIsRoulette && game.history().length === 0){
+  var opening = pickRouletteOpening(id);
+  await spinJackpot(opening);
+  applyRouletteOpening(opening);
+  say("🎰 Opening: " + opening.name);
+  }
 }
 function applyOnlineGame(row){
   if(!row||row.id!==onlineGameId)return;
