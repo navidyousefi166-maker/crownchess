@@ -1870,7 +1870,7 @@ async function loadOnlineGame(id){
   selected=null;targets=[];last=data.last_move||null;
   draw();
   gameChannel=sb.channel("kf-game-"+id)
-  .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+id},function(payload){alert("RT fired!");applyOnlineGame(payload.new)})
+  .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games"},function(payload){alert("RT fired!");applyOnlineGame(payload.new)})
   .subscribe(function(status){alert("SUB status: "+status);});
   if(currentGameIsRoulette && game.history().length === 0){
     var opening = pickRouletteOpening(id);
