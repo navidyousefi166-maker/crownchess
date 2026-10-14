@@ -529,23 +529,42 @@ body.game-focus .board-panel{padding:0;border:0;background:none;box-shadow:none;
 body.game-focus #board{max-width:none;border:0;box-shadow:none;border-radius:0}
 .game-fullscreen{position:fixed;inset:0;background:var(--bg3);display:none;z-index:200;flex-direction:column}
 body.game-focus .game-fullscreen{display:flex}
-.gfs-topbar,.gfs-bottombar{flex:none;display:flex;align-items:center;gap:10px;padding:8px 12px;background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2));border-bottom:1px solid var(--line2);min-height:56px}
-.gfs-bottombar{border-bottom:0;border-top:1px solid var(--line2)}
-.gfs-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--btn-bg);flex:none}
-.gfs-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.gfs-bottombar .gfs-info{text-align:right}
-.gfs-name{font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
-.gfs-bottombar .gfs-name{justify-content:flex-end}
-.gfs-stats{font-size:11px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
-.gfs-bottombar .gfs-stats{justify-content:flex-end}
-.gfs-stat{padding:1px 7px;border-radius:8px;background:var(--panel-bg2);border:1px solid var(--line);font-size:10px;font-weight:700;color:var(--gold)}
-.gfs-clock{font-variant-numeric:tabular-nums;font-weight:900;font-size:26px;letter-spacing:1px;padding:4px 12px;border-radius:8px;background:var(--panel-bg2);border:1px solid var(--line);color:var(--text);flex:none;transition:border-color .3s,box-shadow .3s}
+  .gfs-topbar,.gfs-bottombar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;box-sizing:border-box;min-height:86px;background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2))}
+.gfs-topbar{border-bottom:1px solid var(--line2)}
+.gfs-bottombar{border-top:1px solid var(--line2)}
+.gfs-left{flex:0 0 auto;display:flex;align-items:center;gap:10px;min-width:0}
+.gfs-right{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;margin-left:auto}
+.gfs-profile{display:flex;align-items:center;gap:10px;min-width:0}
+.gfs-avatar{width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);background:var(--btn-bg);flex:none}
+.gfs-info{min-width:0;display:flex;flex-direction:column;gap:3px}
+.gfs-info .gfs-name{font-weight:900;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.gfs-info .gfs-stats{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.gfs-bottombar .gfs-info{text-align:right;align-items:flex-end}
+.gfs-bottombar .gfs-info .gfs-name{justify-content:flex-end}
+.gfs-bottombar .gfs-info .gfs-stats{justify-content:flex-end}
+.gfs-stat{padding:2px 9px;border-radius:9px;background:var(--panel-bg2);border:1px solid var(--line);font-size:11px;font-weight:700;color:var(--gold)}
+.gfs-clock{font-variant-numeric:tabular-nums;font-weight:900;font-size:34px;letter-spacing:1px;padding:6px 14px;border-radius:10px;background:var(--panel-bg2);border:1px solid var(--line);color:var(--text);flex:none;transition:border-color .3s,box-shadow .3s}
 .gfs-clock.active{border-color:var(--gold);box-shadow:0 0 12px rgba(237,197,107,.4),inset 0 0 0 1px rgba(237,197,107,.27);color:var(--gold2)}
-.gfs-resign{flex:none;background:var(--btn-hover);border:1px solid var(--danger);color:#ffb8c4;font-weight:800;font-size:12px;padding:8px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;letter-spacing:.5px}
+.gfs-actions{display:flex;flex-direction:column;gap:5px;flex:none}
+.gfs-resign,.gfs-draw{flex:none;font-weight:800;font-size:16px;padding:4px 8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;min-width:38px;height:32px}
+.gfs-resign{background:var(--btn-hover);border:1px solid var(--danger);color:#ffb8c4}
 .gfs-resign:hover{filter:brightness(1.15)}
 .gfs-resign:disabled{opacity:.4;cursor:not-allowed}
-.gfs-board-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;min-height:0;background:var(--bg3)}
-.gfs-board-wrap #board{width:min(100%,calc(100vh - 140px));height:auto;aspect-ratio:1;max-width:100%}
+.gfs-draw{background:var(--btn-bg);border:1px solid var(--line);color:var(--text)}
+.gfs-draw:hover{background:var(--btn-hover);border-color:var(--gold)}
+.gfs-draw:disabled{opacity:.4;cursor:not-allowed}
+.gfs-humil-badge{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:10px;background:linear-gradient(135deg,rgba(74,42,6,.9),rgba(42,20,3,.9));border:1px solid var(--gold);color:var(--gold2);font-weight:800;font-size:10px;letter-spacing:.5px;flex:none;white-space:nowrap}
+.gfs-board-wrap{flex:1 1 auto;display:flex;align-items:center;justify-content:center;padding:0;min-height:0;background:var(--bg3);overflow:hidden}
+.gfs-board-wrap #board{width:min(100%,calc(100vh - 180px));height:auto;aspect-ratio:1;max-width:100%}
+@media(max-width:900px){
+  .gfs-board-wrap #board{width:min(100%,calc(100vh - 180px))}
+  .gfs-clock{font-size:26px;padding:5px 10px}
+  .gfs-avatar{width:50px;height:50px;border-width:2px}
+  .gfs-info .gfs-name{font-size:15px}
+  .gfs-info .gfs-stats{font-size:10px}
+  .gfs-humil-badge{font-size:9px;padding:5px 8px}
+  .gfs-resign,.gfs-draw{font-size:14px;min-width:34px;height:28px;padding:3px 6px}
+}
 .humil-badge{font-size:9px;padding:2px 7px;border-radius:10px;background:var(--gold);color:#2a0710;font-weight:900;letter-spacing:.5px;white-space:nowrap}
 .humil-banner{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(74,42,6,.95),rgba(42,20,3,.95));border:1px solid var(--gold);border-radius:12px;padding:10px 16px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:50;display:flex;align-items:center;gap:12px;font-size:13px;cursor:pointer;animation:humilPop .4s ease-out;max-width:calc(100% - 20px)}
 @keyframes humilPop{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
