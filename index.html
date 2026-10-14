@@ -1354,6 +1354,12 @@ function setQuickState(text,opts){
   $("cancelQueue").hidden=!opts.cancel;
   $("quickPlay").disabled=!!(opts.lock||onlineGameId);
 }
+  function setRouletteState(text,opts){
+  opts=opts||{};
+  $("rouletteSub").textContent=text;
+  $("cancelRoulette").hidden=!opts.cancel;
+  $("rouletteBtn").disabled=!!(opts.lock||onlineGameId);
+  }
 function fmtCountdown(ms){
   if(ms<0)ms=0;
   var s=Math.floor(ms/1000);
