@@ -2074,7 +2074,7 @@ function applyRouletteOpening(opening){
       say(m.san);
     }catch(e){return}
     i++;
-    if(i<opening.moves.length)setTimeout(playNext,700);
+    if(i<opening.moves.length)setTimeout(playNext,1000);
   }
   playNext();
 }
