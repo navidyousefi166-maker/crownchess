@@ -1,4 +1,4 @@
-<!doctype html>
+.gfs-resign:disabled{o<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -40,7 +40,7 @@ body{
   min-height:100vh;transition:background .3s ease;
 }
 .wrap{width:min(1440px,calc(100% - 36px));margin:auto}
-  header.topnav{
+header.topnav{
   display:flex;justify-content:space-between;align-items:center;
   gap:12px;padding:12px 0;border-bottom:1px solid var(--header-border);
   flex-wrap:wrap;
@@ -73,7 +73,7 @@ body{
 .nav-tab:hover{color:var(--text);background:rgba(255,255,255,.05)}
 .nav-tab.active{color:var(--gold);background:rgba(237,197,107,.1);box-shadow:inset 0 -2px 0 var(--gold)}
 .nav-tab .nt-icon{font-size:16px;line-height:1}
-  .topnav-right{display:flex;gap:8px;align-items:center;flex:none}
+.topnav-right{display:flex;gap:8px;align-items:center;flex:none}
 @media(max-width:700px){
   .topnav-left{gap:10px}
   .brand-crown{width:32px;height:32px;font-size:17px}
@@ -100,7 +100,7 @@ button{font:inherit;cursor:pointer}
 }
 #avatarThumb:hover{transform:scale(1.08);box-shadow:0 0 10px var(--gold)}
 #userBadge{font-size:12px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis}
-  .page{display:none}
+.page{display:none}
 .page.active{display:block}
 main{padding:16px 0 24px}
 .kicker{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:2px}
@@ -177,7 +177,7 @@ main{padding:16px 0 24px}
   .computer-head .btn{font-size:11px;padding:8px}
   .rating-scale{font-size:9px}
 }
-  .player-card{
+.player-card{
   display:flex;align-items:center;gap:10px;border:1px solid var(--line2);
   border-radius:12px;padding:12px;background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2));
   box-shadow:0 8px 24px rgba(0,0,0,.25);min-width:0;
@@ -211,7 +211,7 @@ body.computer-mode .board-label span:first-child{color:var(--muted)}
   .mobile-players .pwins{font-size:10px}
   .mobile-players .clock{font-size:22px;min-width:0;padding:5px}
 }
-  .layout{display:grid;grid-template-columns:minmax(160px,.78fr) minmax(320px,2fr) minmax(210px,.85fr);gap:16px;align-items:stretch}
+.layout{display:grid;grid-template-columns:minmax(160px,.78fr) minmax(320px,2fr) minmax(210px,.85fr);gap:16px;align-items:stretch}
 .board-panel,.side{
   padding:12px;border:1px solid var(--line2);border-radius:12px;
   background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2));
@@ -291,7 +291,7 @@ h3{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:upperca
   .hist-result-badge{font-size:10px;padding:2px 7px}
   .hist-analyze{font-size:10px;padding:4px 8px}
 }
-  footer{
+footer{
   border-top:1px solid var(--line);padding:18px 0 30px;color:var(--muted);font-size:12px;
   text-align:center;
 }
@@ -307,7 +307,7 @@ footer .foot-support a{
 }
 footer .foot-support a:hover{opacity:.8}
 footer .foot-copy{font-size:11px;color:var(--muted);margin-top:12px}
-  dialog{width:min(420px,calc(100% - 24px));background:var(--panel-bg2);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:0}
+dialog{width:min(420px,calc(100% - 24px));background:var(--panel-bg2);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:0}
 dialog::backdrop{background:rgba(2,6,17,.79);backdrop-filter:blur(4px)}
 .modal{padding:20px}
 .modal-head{display:flex;justify-content:space-between;align-items:center}
@@ -328,8 +328,7 @@ dialog::backdrop{background:rgba(2,6,17,.79);backdrop-filter:blur(4px)}
 .profile-modal .submit{width:100%;margin-top:16px}
 #profileMessage{font-size:12px;color:#8bd5a7;margin-top:9px;min-height:18px}
 #profileMessage.error{color:#ef8b83}
-  /* ===== Analysis dialog ===== */
-#analysisDialog{
+  #analysisDialog{
   width:min(900px,calc(100% - 16px));
   max-height:95vh;
   overflow-y:auto;
@@ -555,7 +554,7 @@ body.game-focus .game-fullscreen{display:flex}
 .humil-banner .hb-text{display:flex;flex-direction:column;gap:1px}
 .humil-banner .hb-title{font-weight:800;color:var(--gold2);letter-spacing:.5px}
 .humil-banner .hb-sub{font-size:11px;color:var(--muted)}
-#humilDialog{width:min(500px,calc(100% - 20px));padding:0;border-radius:14px}
+  #humilDialog{width:min(500px,calc(100% - 20px));padding:0;border-radius:14px}
 .humil-panel{padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px}
 .humil-head h2{margin:0;font-size:20px;color:var(--gold2)}
 .humil-head .kicker{font-size:10px}
@@ -575,7 +574,7 @@ body.game-focus .game-fullscreen{display:flex}
   .gfs-board-wrap #board{width:min(100%,calc(100vh - 130px))}
   .gfs-clock{font-size:22px;padding:3px 9px}
 }
-  .champion-banner{
+.champion-banner{
   display:none;align-items:center;gap:14px;padding:12px 18px;margin:14px 0;
   border:1px solid var(--gold);border-radius:12px;
   background:linear-gradient(120deg,rgba(74,42,6,.7),rgba(42,20,3,.7));
@@ -590,7 +589,7 @@ body.game-focus .game-fullscreen{display:flex}
 .champion-label{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:2px;font-weight:800}
 .champion-name{font-size:20px;font-weight:900;color:var(--gold2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .champion-sub{font-size:11px;color:var(--muted)}
-.celebration{position:fixed;inset:0;background:radial-gradient(circle at 50% 50%,var(--panel-bg1),var(--bg3) 70%);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+  .celebration{position:fixed;inset:0;background:radial-gradient(circle at 50% 50%,var(--panel-bg1),var(--bg3) 70%);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
 .celebration.show{display:flex;animation:celebFade .5s ease-out}
 @keyframes celebFade{from{opacity:0}to{opacity:1}}
 .celebration.win{background:radial-gradient(circle at 50% 50%,#3a2408,var(--bg3) 70%)}
@@ -617,8 +616,7 @@ body.game-focus .game-fullscreen{display:flex}
   .celeb-text{font-size:clamp(16px,5vw,24px)}
   .celeb-wins-row{font-size:28px}
 }
-/* ===== Leaderboard ===== */
-#leaderboardPage{padding:16px 0 24px}
+  #leaderboardPage{padding:16px 0 24px}
 .lb-wrap{
   border:1px solid var(--line2);border-radius:12px;
   background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2));
@@ -684,7 +682,7 @@ body.game-focus .game-fullscreen{display:flex}
   .lb-user .lb-name{font-size:12px}
   .lb-stat{font-size:12px}
 }
-  @media(max-width:900px){
+@media(max-width:900px){
   .layout{grid-template-columns:minmax(0,1fr) minmax(0,2fr)}
   .side{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .side h2,.side .status,.side #message,.side .hint{grid-column:1/-1}
@@ -706,7 +704,7 @@ body.game-focus .game-fullscreen{display:flex}
   .piece{width:91%;height:91%}
   .side #history{height:115px}
 }
-  </style>
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -740,137 +738,136 @@ body.game-focus .game-fullscreen{display:flex}
     </div>
   </header>
   <div class="page active" id="pageHome">
-  <div class="champion-banner" id="championBanner">
-    <span class="champion-trophy">🏆</span>
-    <img id="championAvatar" alt="Champion avatar">
-    <div class="champion-info">
-      <div class="champion-label">CHAMPION OF THE DAY</div>
-      <div class="champion-name" id="championName">—</div>
-      <div class="champion-sub" id="championSub">—</div>
+<div class="champion-banner" id="championBanner">
+  <span class="champion-trophy">🏆</span>
+  <img id="championAvatar" alt="Champion avatar">
+  <div class="champion-info">
+    <div class="champion-label">CHAMPION OF THE DAY</div>
+    <div class="champion-name" id="championName">—</div>
+    <div class="champion-sub" id="championSub">—</div>
+  </div>
+</div>
+
+<div class="quickbar">
+  <button class="quickplay" id="quickPlay">QUICK PLAY</button>
+  <span class="quickstate" id="quickState">5-minute game · Match by wins</span>
+  <button class="btn" id="cancelQueue" hidden style="margin-right:8px">Cancel</button>
+</div>
+
+<div class="tournament-bar">
+  <button class="tourn-btn" id="tournamentBtn" type="button">
+    <div class="tb-left">
+      <span class="tb-icon">🏆</span>
+      <div class="tb-text">
+        <span class="tb-title">KNOCKOUT TOURNAMENT</span>
+        <span class="tb-sub" id="tournBtnSub">Tap to join the next knockout cup</span>
+      </div>
+    </div>
+    <span class="tb-timer" id="tournBtnTimer">--:--:--</span>
+  </button>
+</div>
+
+<div class="roulette-bar">
+  <button class="roulette-btn" id="rouletteBtn" type="button">
+    <div class="rb-left">
+      <span class="rb-icon">🎰</span>
+      <div class="rb-text">
+        <span class="rb-title">ROULETTE</span>
+        <span class="rb-sub" id="rouletteSub">Random opening · 3 moves each auto-played</span>
+      </div>
+    </div>
+    <span class="rb-badge" id="rouletteBadge">NEW</span>
+  </button>
+</div>
+
+<section class="computer-panel" aria-label="Play against computer">
+  <div class="computer-head">
+    <div>
+      <div class="computer-title">PLAY VS COMPUTER</div>
+      <div class="computer-sub">Powered by Stockfish · Practice anytime</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn gold" id="computerPlayWhite">♔ Play as White</button>
+      <button class="btn" id="computerPlayBlack">♚ Play as Black</button>
     </div>
   </div>
-
-  <div class="quickbar">
-    <button class="quickplay" id="quickPlay">QUICK PLAY</button>
-    <span class="quickstate" id="quickState">5-minute game · Match by wins</span>
-    <button class="btn" id="cancelQueue" hidden style="margin-right:8px">Cancel</button>
+  <div class="computer-strength">
+    <label for="computerRating">Computer strength <strong id="computerRatingLabel">1400</strong></label>
+    <input id="computerRating" type="range" min="800" max="2000" step="100" value="1400">
+    <div class="rating-scale"><span>800 · Beginner</span><span>1400 · Club</span><span>2000 · Expert</span></div>
   </div>
-
-  <div class="tournament-bar">
-    <button class="tourn-btn" id="tournamentBtn" type="button">
-      <div class="tb-left">
-        <span class="tb-icon">🏆</span>
-        <div class="tb-text">
-          <span class="tb-title">KNOCKOUT TOURNAMENT</span>
-          <span class="tb-sub" id="tournBtnSub">Tap to join the next knockout cup</span>
+</section>
+  <main>
+  <section class="layout">
+    <div class="players-stack desktop-players">
+      <div class="player-card empty" id="blackCard">
+        <img id="blackAvatar" alt="Black player avatar">
+        <div class="player-info">
+          <div class="side-label">Black</div>
+          <div class="pname" id="blackName">Waiting for opponent</div>
+          <div class="pwins" id="blackWins">— wins</div>
         </div>
+        <div class="clock" id="blackClock">05:00</div>
       </div>
-      <span class="tb-timer" id="tournBtnTimer">--:--:--</span>
-    </button>
-  </div>
-
-  <div class="roulette-bar">
-    <button class="roulette-btn" id="rouletteBtn" type="button">
-      <div class="rb-left">
-        <span class="rb-icon">🎰</span>
-        <div class="rb-text">
-          <span class="rb-title">ROULETTE</span>
-          <span class="rb-sub" id="rouletteSub">Random opening · 3 moves each auto-played</span>
+      <div class="player-card empty" id="whiteCard">
+        <img id="whiteAvatar" alt="White player avatar">
+        <div class="player-info">
+          <div class="side-label">White</div>
+          <div class="pname" id="whiteName">Waiting for opponent</div>
+          <div class="pwins" id="whiteWins">— wins</div>
         </div>
-      </div>
-      <span class="rb-badge" id="rouletteBadge">NEW</span>
-    </button>
-  </div>
-
-  <section class="computer-panel" aria-label="Play against computer">
-    <div class="computer-head">
-      <div>
-        <div class="computer-title">PLAY VS COMPUTER</div>
-        <div class="computer-sub">Powered by Stockfish · Practice anytime</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn gold" id="computerPlayWhite">♔ Play as White</button>
-        <button class="btn" id="computerPlayBlack">♚ Play as Black</button>
+        <div class="clock" id="whiteClock">05:00</div>
       </div>
     </div>
-    <div class="computer-strength">
-      <label for="computerRating">Computer strength <strong id="computerRatingLabel">1400</strong></label>
-      <input id="computerRating" type="range" min="800" max="2000" step="100" value="1400">
-      <div class="rating-scale"><span>800 · Beginner</span><span>1400 · Club</span><span>2000 · Expert</span></div>
-    </div>
-  </section>
-    <main>
-    <section class="layout">
-      <div class="players-stack desktop-players">
-        <div class="player-card empty" id="blackCard">
-          <img id="blackAvatar" alt="Black player avatar">
+    <div class="board-panel">
+      <div class="players-stack mobile-players" style="display:none">
+        <div class="player-card empty" id="blackCardMobile">
+          <img id="blackAvatarMobile" alt="Black player avatar">
           <div class="player-info">
             <div class="side-label">Black</div>
-            <div class="pname" id="blackName">Waiting for opponent</div>
-            <div class="pwins" id="blackWins">— wins</div>
+            <div class="pname" id="blackNameMobile">Waiting for opponent</div>
+            <div class="pwins" id="blackWinsMobile">— wins</div>
           </div>
-          <div class="clock" id="blackClock">05:00</div>
+          <div class="clock" id="blackClockMobile">05:00</div>
         </div>
-        <div class="player-card empty" id="whiteCard">
-          <img id="whiteAvatar" alt="White player avatar">
+        <div class="player-card empty" id="whiteCardMobile">
+          <img id="whiteAvatarMobile" alt="White player avatar">
           <div class="player-info">
             <div class="side-label">White</div>
-            <div class="pname" id="whiteName">Waiting for opponent</div>
-            <div class="pwins" id="whiteWins">— wins</div>
+            <div class="pname" id="whiteNameMobile">Waiting for opponent</div>
+            <div class="pwins" id="whiteWinsMobile">— wins</div>
           </div>
-          <div class="clock" id="whiteClock">05:00</div>
+          <div class="clock" id="whiteClockMobile">05:00</div>
         </div>
       </div>
-      <div class="board-panel">
-        <div class="players-stack mobile-players" style="display:none">
-          <div class="player-card empty" id="blackCardMobile">
-            <img id="blackAvatarMobile" alt="Black player avatar">
-            <div class="player-info">
-              <div class="side-label">Black</div>
-              <div class="pname" id="blackNameMobile">Waiting for opponent</div>
-              <div class="pwins" id="blackWinsMobile">— wins</div>
-            </div>
-            <div class="clock" id="blackClockMobile">05:00</div>
-          </div>
-          <div class="player-card empty" id="whiteCardMobile">
-            <img id="whiteAvatarMobile" alt="White player avatar">
-            <div class="player-info">
-              <div class="side-label">White</div>
-              <div class="pname" id="whiteNameMobile">Waiting for opponent</div>
-              <div class="pwins" id="whiteWinsMobile">— wins</div>
-            </div>
-            <div class="clock" id="whiteClockMobile">05:00</div>
-          </div>
-        </div>
-        <div class="board-label">
-          <span id="top">Black pieces</span>
-          <span id="gameClockLabel">KINGSFALL · 5 MIN</span>
-        </div>
-        <div id="board" aria-label="Chess board"></div>
-        <div class="board-label">
-          <span id="bottom">White pieces</span>
-          <span>Tap a piece, then a square</span>
-        </div>
+      <div class="board-label">
+        <span id="top">Black pieces</span>
+        <span id="gameClockLabel">KINGSFALL · 5 MIN</span>
       </div>
-      <aside class="side">
-        <h2>Game console</h2>
-        <div class="status" id="status">White to move</div>
-        <div class="controls">
-          <button class="btn gold" id="new">New Game</button>
-          <button class="btn" id="flip">Flip Board</button>
-          <button class="btn" id="undo">Undo Move</button>
-          <button class="btn" id="fen">Copy Position</button>
-          <button class="btn" id="analyze" style="grid-column:1/-1;">Analyze Game</button>
-        </div>
-        <h3>Move history</h3>
-        <div id="history">No moves yet.</div>
-        <div id="message"></div>
-        <p class="hint">Quick Play pairs you with the available player closest to your number of wins.</p>
-      </aside>
-    </section>
+      <div id="board" aria-label="Chess board"></div>
+      <div class="board-label">
+        <span id="bottom">White pieces</span>
+        <span>Tap a piece, then a square</span>
+      </div>
+    </div>
+    <aside class="side">
+      <h2>Game console</h2>
+      <div class="status" id="status">White to move</div>
+      <div class="controls">
+        <button class="btn gold" id="new">New Game</button>
+        <button class="btn" id="flip">Flip Board</button>
+        <button class="btn" id="undo">Undo Move</button>
+        <button class="btn" id="fen">Copy Position</button>
+        <button class="btn" id="analyze" style="grid-column:1/-1;">Analyze Game</button>
+      </div>
+      <h3>Move history</h3>
+      <div id="history">No moves yet.</div>
+      <div id="message"></div>
+      <p class="hint">Quick Play pairs you with the available player closest to your number of wins.</p>
+    </aside>
+  </section>
   </main>
-
-  <section class="history-section" id="historySection">
+    <section class="history-section" id="historySection">
     <div class="history-head">
       <h2>📜 RECENT GAMES</h2>
       <span class="hi-sub">Your last 5 finished games</span>
@@ -1145,13 +1142,12 @@ body.game-focus .game-fullscreen{display:flex}
 </div>
 
 <div class="bracket-celebrate" id="celebrateLayer"></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
 "use strict";
-  var SUPABASE_URL="https://cyqactlxetfjyjvklpox.supabase.co";
+var SUPABASE_URL="https://cyqactlxetfjyjvklpox.supabase.co";
 var SUPABASE_KEY="sb_publishable_5kPdWhNs53AY_PB29pRGBw_pvXiB0_k";
 var REDIRECT="https://navidyousefi166-maker.github.io/crownchess/";
 var sb=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
@@ -1182,7 +1178,8 @@ function showPage(name){
 }
 $("navHome").onclick=function(){showPage("home")};
 $("navTable").onclick=function(){showPage("table")};
-  var boardEl=$("board");
+
+var boardEl=$("board");
 var historyEl=$("history");
 var game=null;
 var selected=null;
@@ -1239,9 +1236,25 @@ var celebTimer=null;
 var celebInterval=null;
 
 /* Roulette */
-var roulettePoll=null;
-var rouletteTimeout=null;
-  function defaultAvatar(){
+var pendingQueueIsRoulette=false;
+var currentGameIsRoulette=false;
+var rouletteOpenings=[
+  {name:"Italian Game",moves:["e4","e5","Nf3","Nc6","Bc4","Bc5"]},
+  {name:"Sicilian Defense",moves:["e4","c5","Nf3","d6","d4","cxd4"]},
+  {name:"French Defense",moves:["e4","e6","d4","d5","Nc3","Nf6"]},
+  {name:"Queen's Gambit",moves:["d4","d5","c4","e6","Nc3","Nf6"]},
+  {name:"King's Indian",moves:["d4","Nf6","c4","g6","Nc3","Bg7"]},
+  {name:"Ruy Lopez",moves:["e4","e5","Nf3","Nc6","Bb5","a6"]},
+  {name:"Caro-Kann",moves:["e4","c6","d4","d5","Nc3","dxe4"]},
+  {name:"English Opening",moves:["c4","e5","Nc3","Nf6","Nf3","Nc6"]},
+  {name:"Scandinavian",moves:["e4","d5","exd5","Qxd5","Nc3","Qa5"]},
+  {name:"Réti Opening",moves:["Nf3","d5","c4","e6","g3","Nf6"]}
+];
+function kfHash(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}return Math.abs(h)}
+function kfRng(seed){var x=seed||1;return function(){x=(x*1103515245+12345)&0x7fffffff;return x/0x7fffffff}}
+function pickRouletteOpening(gameId){var rng=kfRng(kfHash(gameId));return rouletteOpenings[Math.floor(rng()*rouletteOpenings.length)]}
+
+function defaultAvatar(){
   var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#172337"/><circle cx="50" cy="36" r="19" fill="#9AA9BE"/><path d="M16 92c3-23 16-34 34-34s31 11 34 34" fill="#9AA9BE"/></svg>';
   return "data:image/svg+xml,"+encodeURIComponent(svg);
 }
@@ -1328,7 +1341,8 @@ function tickClock(){
   paintClocks();
 }
 setInterval(tickClock,250);
-  function renderPlayers(row){
+
+function renderPlayers(row){
   if(!row){setPlayer("Black",null);setPlayer("White",null);return}
   setPlayer("White",{username:row.white_username,wins:row.white_wins,avatar_url:row.white_avatar});
   setPlayer("Black",{username:row.black_username,wins:row.black_wins,avatar_url:row.black_avatar});
@@ -1394,7 +1408,8 @@ async function loadLeaderboard(){
   }
 }
 $("lbRefresh").onclick=loadLeaderboard;
-  /* ============ TOURNAMENT ============ */
+
+/* ============ TOURNAMENT ============ */
 async function loadTournamentState(){
   if(!sb)return;
   try{
@@ -1456,7 +1471,7 @@ async function loadChampion(){
     banner.classList.add("show");
   }else{banner.classList.remove("show")}
 }
-  function updateTournButton(){
+function updateTournButton(){
   var btn=$("tournamentBtn"),tmr=$("tournBtnTimer"),sub=$("tournBtnSub");
   if(!tournCurrent){tmr.textContent="--:--:--";sub.textContent="Tap to join the next knockout cup";btn.classList.remove("registered","live");return}
   var now=Date.now();
@@ -1507,7 +1522,7 @@ function updateTournBigTimer(){
     $("tournBigSub").textContent="Champion: "+(tournCurrent.winner_username||"—");
   }
 }
-  function openTournDialog(){
+function openTournDialog(){
   if(!tournCurrent){say("Tournament data loading…");return}
   renderTournDialog();
   $("tournDialog").showModal();
@@ -1574,7 +1589,7 @@ $("tournamentBtn").onclick=function(){
   if(!currentUser){say("Sign in to join the tournament.");openAuth("signin");return}
   openTournDialog();
 };
-  function roundName(round, totalRounds){
+function roundName(round, totalRounds){
   var fromEnd = totalRounds - round;
   if(fromEnd === 0) return "Final";
   if(fromEnd === 1) return "Semi-Finals";
@@ -1583,8 +1598,8 @@ $("tournamentBtn").onclick=function(){
   if(fromEnd === 4) return "Round of 32";
   if(fromEnd === 5) return "Round of 64";
   return "Round " + round;
-}
-function renderBracket(data){
+  }
+  function renderBracket(data){
   var wrap=$("tournBracket");wrap.innerHTML="";
   if(!data || !data.matches) return;
   var bracketSize = data.bracket_size || 2;
@@ -1646,7 +1661,7 @@ function launchConfetti(){
   }
   setTimeout(function(){layer.innerHTML="";},4500);
 }
-  function startTournMatchWatcher(){
+function startTournMatchWatcher(){
   if(tournMatchCheckTimer)clearInterval(tournMatchCheckTimer);
   tournMatchCheckTimer=setInterval(checkTournMatchStatus, 2000);
 }
@@ -1715,8 +1730,8 @@ async function joinTournamentGame(gameId){
   gameChannel=sb.channel("kf-game-"+gameId)
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+gameId},function(payload){applyOnlineGame(payload.new)})
     .subscribe();
-  }
-  var firstMoveTimer=null;
+}
+var firstMoveTimer=null;
 function startFirstMoveTimer(gameRow){
   if(firstMoveTimer){clearTimeout(firstMoveTimer);firstMoveTimer=null}
   if(game.history().length>0)return;
@@ -1730,8 +1745,8 @@ function startFirstMoveTimer(gameRow){
       await finishTournamentMatch(blackId, true);
     }
   },30000);
-}
-async function handleTournamentTimeout(loserColor){
+  }
+  async function handleTournamentTimeout(loserColor){
   if(!onlineGameId||!tournActiveMatch)return;
   var loserId=loserColor==="White"?onlineGame.white_id:onlineGame.black_id;
   var winnerId=loserColor==="White"?onlineGame.black_id:onlineGame.white_id;
@@ -1756,7 +1771,7 @@ async function finishTournamentMatch(winnerId, opponentEliminated){
     }
   }catch(e){console.warn(e)}
 }
-  async function getCurrentProfile(){
+async function getCurrentProfile(){
   if(!sb)return null;
   var res=await sb.auth.getUser();
   var user=res.data&&res.data.user?res.data.user:null;
@@ -1799,7 +1814,6 @@ async function pollQueue(){
     currentGameIsRoulette=!!data.is_roulette;
     await loadOnlineGame(data.game_id);
   }
-  }
 }
 async function loadOnlineGame(id){
   if(!sb)return;
@@ -1821,10 +1835,10 @@ async function loadOnlineGame(id){
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+id},function(payload){applyOnlineGame(payload.new)})
     .subscribe();
   if(currentGameIsRoulette && game.history().length === 0){
-  var opening = pickRouletteOpening(id);
-  await spinJackpot(opening);
-  applyRouletteOpening(opening);
-  say("🎰 Opening: " + opening.name);
+    var opening = pickRouletteOpening(id);
+    await spinJackpot(opening);
+    applyRouletteOpening(opening);
+    say("🎰 Opening: " + opening.name);
   }
 }
 function applyOnlineGame(row){
@@ -1849,7 +1863,7 @@ function applyOnlineGame(row){
     else handleQuickPlayEnd(row);
   }
 }
-  async function startQuickPlay(){
+async function startQuickPlay(){
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
   computerMode=false;
   document.body.classList.remove("computer-mode");
@@ -1859,8 +1873,8 @@ function applyOnlineGame(row){
   if(!session){openAuth("signin");say("Sign in before using Quick Play.");return}
   currentUser=session.user;
   humilApplied=false;humilChosenType=null;
-    pendingQueueIsRoulette=false;
-      currentGameIsRoulette=false;
+  pendingQueueIsRoulette=false;
+  currentGameIsRoulette=false;
   setQuickState("Finding an opponent · 5-minute game…",{lock:true,cancel:true});
   say("");
   try{
@@ -1888,8 +1902,8 @@ async function cancelQuickPlay(){
   try{if(sb)await sb.rpc("kf_cancel_quick_play")}catch(e){}
   setQuickState("5-minute game · Match by wins");
   say("Search cancelled.");
-}
-async function submitOnlineMove(m){
+ }
+  async function submitOnlineMove(m){
   if(!sb||!onlineGameId||!onlineGame)return;
   if(onlineGame.is_tournament && tournActiveMatch)return await submitTournamentMove(m);
   var result=null,winnerId=null,status="active";
@@ -1945,7 +1959,7 @@ async function handleOnlineTimeout(loserColor){
   await finalizeOnlineGame(winnerId);
   onlineGame = Object.assign({}, onlineGame, upd);
 }
-  function enterFullscreenGame(row){
+function enterFullscreenGame(row){
   document.body.classList.add("game-focus");
   fsPlayerColor = (row.white_id === currentUser.id) ? "w" : "b";
   flipped = (fsPlayerColor === "b");
@@ -2018,533 +2032,8 @@ $("gfsResignBtn").onclick = async function(){
   else await finalizeOnlineGame(winnerId);
   applyOnlineGame(onlineGame);
 };
-  /* ===== Humiliation ===== */
-function showHumilBanner(){
-  if($("humilBanner"))return;
-  var banner = document.createElement("div");
-  banner.id = "humilBanner";
-  banner.className = "humil-banner";
-  banner.innerHTML = '<span class="hb-icon">🏳️</span><div class="hb-text"><div class="hb-title">Sacrifice a piece?</div><div class="hb-sub">Give up Knight, Bishop, Rook or Queen for bonus wins</div></div>';
-  banner.onclick = function(){ if(!onlineGame || game.history().length > 0) return; openHumilDialog() };
-  document.body.appendChild(banner);
-}
-function hideHumilBanner(){var b=$("humilBanner");if(b)b.remove()}
-function openHumilDialog(){
-  humilChosenType=null;
-  document.querySelectorAll(".humil-piece").forEach(function(el){el.classList.remove("selected")});
-  $("humilConfirm").disabled=true;$("humilMsg").textContent="";
-  var w = fsPlayerColor;
-  $("hpPieceN").innerHTML = svg({color:w,type:"n"});
-  $("hpPieceB").innerHTML = svg({color:w,type:"b"});
-  $("hpPieceR").innerHTML = svg({color:w,type:"r"});
-  $("hpPieceQ").innerHTML = svg({color:w,type:"q"});
-  $("humilDialog").showModal();
-}
-$("humilCancel").onclick = function(){ $("humilDialog").close(); };
-document.querySelectorAll(".humil-piece").forEach(function(el){
-  el.onclick = function(){
-    document.querySelectorAll(".humil-piece").forEach(function(x){x.classList.remove("selected")});
-    el.classList.add("selected");
-    humilChosenType = el.dataset.type;
-    $("humilConfirm").disabled=false;
-    $("humilMsg").textContent = "Selected: "+names[humilChosenType]+" (+"+el.dataset.reward+" wins)";
-  };
-});
-$("humilConfirm").onclick = async function(){
-  if(!humilChosenType || !onlineGameId || !onlineGame) return;
-  var myHandicapField = (onlineGame.white_id === currentUser.id) ? "white_handicap" : "black_handicap";
-  var upd = {};upd[myHandicapField] = humilChosenType;
-  var res = await sb.from("kf_games").update(upd).eq("id",onlineGameId);
-  if(res.error){$("humilMsg").textContent="Error: "+res.error.message;return}
-  onlineGame = Object.assign({}, onlineGame, upd);
-  humilApplied = true;
-  applyHandicapToGame(fsPlayerColor, humilChosenType);
-  playWindSound();
-  $("humilDialog").close();
-  hideHumilBanner();
-};
-function applyHandicapToGame(color, type){
-  if(!game)return;
-  var board = game.board();
-  for (var r=0;r<8;r++) for (var c=0;c<8;c++){
-    var p = board[r][c];
-    if (p && p.color === color && p.type === type) {
-      var sqName = files[c] + (8-r);
-      game.remove(sqName);
-      last=null;selected=null;targets=[];
-      draw();
-      return;
-    }
-  }
-                    }
-  /* ===== Sounds ===== */
-function playWindSound(){
-  try{
-    var ctx = new (window.AudioContext || window.webkitAudioContext)();
-    var bufferSize = ctx.sampleRate * 0.8;
-    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    var data = buffer.getChannelData(0);
-    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
-    var src = ctx.createBufferSource(); src.buffer = buffer;
-    var filter = ctx.createBiquadFilter();
-    filter.type = "bandpass"; filter.frequency.value = 2000; filter.Q.value = 1.2;
-    var gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.4, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-    src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-    src.start();
-  }catch(e){}
-}
-function playVictorySound(){
-  try{
-    var ctx = new (window.AudioContext || window.webkitAudioContext)();
-    var notes = [523.25, 659.25, 783.99, 1046.5];
-    var t = ctx.currentTime;
-    notes.forEach(function(freq, i){
-      var osc = ctx.createOscillator();
-      osc.type = "triangle"; osc.frequency.value = freq;
-      var g = ctx.createGain();
-      g.gain.setValueAtTime(0, t + i*0.15);
-      g.gain.linearRampToValueAtTime(0.35, t + i*0.15 + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.001, t + i*0.15 + 0.4);
-      osc.connect(g); g.connect(ctx.destination);
-      osc.start(t + i*0.15); osc.stop(t + i*0.15 + 0.5);
-    });
-  }catch(e){}
-}
-function playDefeatSound(){
-  try{
-    var ctx = new (window.AudioContext || window.webkitAudioContext)();
-    var t = ctx.currentTime;
-    var bufferSize = ctx.sampleRate * 1.2;
-    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    var data = buffer.getChannelData(0);
-    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1) * Math.max(0,1 - i/bufferSize*1.5);
-    var src = ctx.createBufferSource(); src.buffer = buffer;
-    var filter = ctx.createBiquadFilter();
-    filter.type = "lowpass"; filter.frequency.setValueAtTime(4000, t); filter.frequency.exponentialRampToValueAtTime(200, t+0.9);
-    var g = ctx.createGain(); g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t+1.0);
-    src.connect(filter); filter.connect(g); g.connect(ctx.destination); src.start(t);
-    var osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.setValueAtTime(120, t+0.7); osc.frequency.exponentialRampToValueAtTime(40, t+1.4);
-    var g2 = ctx.createGain(); g2.gain.setValueAtTime(0, t+0.7); g2.gain.linearRampToValueAtTime(0.5, t+0.75); g2.gain.exponentialRampToValueAtTime(0.001, t+1.5);
-    osc.connect(g2); g2.connect(ctx.destination); osc.start(t+0.7); osc.stop(t+1.5);
-  }catch(e){}
-                                 }
-  /* ===== Celebration ===== */
-function showCelebration(opts){
-  var screen = $("celebrationScreen");
-  screen.className = "celebration show " + opts.outcome;
-  var text = "";
-  if (opts.outcome === "win" && opts.hasHumiliation) text = "The Crown Is Yours, Brave King";
-  else if (opts.outcome === "win") text = "The Crown Is Yours, My King";
-  else if (opts.outcome === "loss") text = "The King Has Fallen";
-  else text = "A Draw in the Battle";
-  $("celebText").textContent = text;
-  $("celebAvatar").src = opts.user && opts.user.user_metadata && opts.user.user_metadata.avatar_url ? opts.user.user_metadata.avatar_url : defaultAvatar();
-  var uname = opts.user && opts.user.user_metadata && opts.user.user_metadata.username ? opts.user.user_metadata.username : "Player";
-  $("celebName").textContent = uname;
-  $("celebWinsOld").textContent = "";
-  $("celebPlus").textContent = "";
-  $("celebWinsNew").textContent = "";
-  $("celebHumilTag").hidden = !(opts.hasHumiliation && opts.outcome === "win");
-  if (opts.outcome === "win") setTimeout(playVictorySound, 300);
-  else if (opts.outcome === "loss") setTimeout(playDefeatSound, 300);
-  if (opts.outcome === "win") launchConfetti();
-  var oldW = opts.oldWins || 0;
-  var newW = opts.newWins || oldW;
-  setTimeout(function(){$("celebWinsOld").textContent = oldW}, 900);
-  setTimeout(function(){$("celebPlus").textContent = (newW - oldW > 0) ? "+" + (newW - oldW) : ""}, 1400);
-  setTimeout(function(){$("celebWinsNew").textContent = "→ " + newW}, 1500);
-  var dur = opts.isTournament ? 3000 : 5000;
-  $("celebAuto").textContent = "Closing in " + Math.ceil(dur/1000) + "s…";
-  if (celebTimer) clearTimeout(celebTimer);
-  if (celebInterval) clearInterval(celebInterval);
-  var startTime = Date.now();
-  celebInterval = setInterval(function(){
-    var remain = Math.max(0, dur - (Date.now() - startTime));
-    $("celebAuto").textContent = "Closing in " + Math.ceil(remain/1000) + "s…";
-    if (remain <= 0) clearInterval(celebInterval);
-  }, 250);
-  celebTimer = setTimeout(function(){
-    clearInterval(celebInterval);
-    hideCelebration();
-    if (opts.onDone) opts.onDone();
-  }, dur);
-}
-function hideCelebration(){
-  if (celebTimer) { clearTimeout(celebTimer); celebTimer = null; }
-  if (celebInterval) { clearInterval(celebInterval); celebInterval = null; }
-  $("celebrationScreen").classList.remove("show","win","loss","draw");
-}
-$("celebExit").onclick = function(){
-  if(celebTimer){clearTimeout(celebTimer);celebTimer=null}
-  if(celebInterval){clearInterval(celebInterval);celebInterval=null}
-  hideCelebration();
-  onlineGameId=null;onlineGame=null;
-  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
-  exitFullscreenGame();
-  document.body.classList.remove("online","computer-mode","game-focus");
-  $("new").disabled=false;
-  setTimeout(loadHistory,300);
-  setTimeout(refreshTournLive,500);
-};
-$("celebAnalyze").onclick = function(){
-  if(celebTimer){clearTimeout(celebTimer);celebTimer=null}
-  if(celebInterval){clearInterval(celebInterval);celebInterval=null}
-  hideCelebration();
-  exitFullscreenGame();
-  setTimeout(openAnalysis,200);
-};
-  async function handleQuickPlayEnd(row){
-  var iWon = row.winner_id === currentUser.id;
-  var isDraw = row.result === "1/2-1/2" || (!row.winner_id && !row.result);
-  var outcome = isDraw ? "draw" : (iWon ? "win" : "loss");
-  var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id",currentUser.id).maybeSingle();
-  var currentWins = statsRes.data ? (statsRes.data.wins||0) : 0;
-  var bonus = 1;
-  if (iWon) {
-    var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
-    if (hcp === "n" || hcp === "b") bonus = 2;
-    else if (hcp === "r") bonus = 3;
-    else if (hcp === "q") bonus = 5;
-  } else bonus = 0;
-  var oldWins = currentWins - bonus;
-  var newWins = currentWins;
-  showCelebration({
-    outcome: outcome,
-    user: currentUser,
-    oldWins: oldWins,
-    newWins: newWins,
-    hasHumiliation: !!(row.white_handicap || row.black_handicap),
-    isTournament: false,
-    onDone: function(){
-      onlineGameId=null;onlineGame=null;
-      if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
-      exitFullscreenGame();
-      document.body.classList.remove("online","computer-mode","game-focus");
-      $("new").disabled=false;
-      setTimeout(loadHistory,300);
-    }
-  });
-  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
-}
-async function handleTournamentEnd(row){
-  var iWon = row.winner_id === currentUser.id;
-  if (!iWon) {
-    onlineGameId=null;onlineGame=null;tournActiveMatch=null;
-    if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
-    exitFullscreenGame();
-    document.body.classList.remove("online","computer-mode","game-focus");
-    $("new").disabled=false;
-    say("Tournament match lost. Better luck next time.");
-    setTimeout(refreshTournLive,500);
-    setTimeout(loadHistory,500);
-    return;
-  }
-  var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id",currentUser.id).maybeSingle();
-  var currentWins = statsRes.data ? (statsRes.data.wins||0) : 0;
-  var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
-  var bonus = 1;
-  if (hcp === "n" || hcp === "b") bonus = 2;
-  else if (hcp === "r") bonus = 3;
-  else if (hcp === "q") bonus = 5;
-  var oldWins = currentWins - bonus;
-  var newWins = currentWins;
-  showCelebration({
-    outcome: "win",
-    user: currentUser,
-    oldWins: oldWins,
-    newWins: newWins,
-    hasHumiliation: !!hcp,
-    isTournament: true,
-    onDone: function(){
-      onlineGameId=null;onlineGame=null;tournActiveMatch=null;
-      if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
-      exitFullscreenGame();
-      document.body.classList.remove("online","computer-mode","game-focus");
-      $("new").disabled=false;
-      setTimeout(refreshTournLive,300);
-      setTimeout(loadHistory,300);
-    }
-  });
-  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
-}
-  async function loadHistory(){
-  var section=$("historySection");
-  if(!sb||!currentUser){section.classList.remove("show");return}
-  var res=await sb.rpc("kf_get_my_history",{p_limit:5});
-  if(res.error){console.warn("History error:",res.error);section.classList.remove("show");return}
-  historyData=res.data||[];
-  renderHistory();
-  section.classList.add("show");
-}
-function renderHistory(){
-  var list=$("historyList");list.innerHTML="";
-  if(!historyData.length){list.innerHTML='<div class="history-empty">No finished games yet. Play a match to see your history!</div>';return}
-  for(var i=0;i<historyData.length;i++){
-    (function(g){
-      var row=document.createElement("div");row.className="hist-row";
-      var outcomeIcon = g.my_outcome==="win"?"🟢":g.my_outcome==="loss"?"🔴":"🟡";
-      var outcomeEl=document.createElement("span");outcomeEl.className="hist-outcome";outcomeEl.textContent=outcomeIcon;
-      var img=document.createElement("img");img.className="hist-avatar";img.src=g.opponent_avatar||defaultAvatar();img.alt="";
-      var info=document.createElement("div");info.className="hist-info";
-      var nm=document.createElement("div");nm.className="hist-name";nm.textContent="vs "+(g.opponent_username||"Opponent");
-      var meta=document.createElement("div");meta.className="hist-meta";
-      var tagClass = g.is_tournament ? "tourn" : (g.is_roulette ? "roulette" : "quick");
-      var tagText = g.is_tournament ? "🏆 Tournament" : (g.is_roulette ? "🎰 Roulette" : "⚡ Quick Play");
-      var tag=document.createElement("span");tag.className="hist-tag "+tagClass;
-      tag.textContent=tagText;
-      var when=document.createElement("span");when.textContent=fmtTimeLocal(g.completed_at);
-      var color=document.createElement("span");color.textContent=g.my_color==="w"?"Played White":"Played Black";
-      meta.appendChild(tag);meta.appendChild(when);meta.appendChild(color);
-      info.appendChild(nm);info.appendChild(meta);
-      var badge=document.createElement("span");badge.className="hist-result-badge "+g.my_outcome;
-      badge.textContent=g.my_outcome==="win"?"WIN":g.my_outcome==="loss"?"LOSS":"DRAW";
-      var ana=document.createElement("button");ana.className="hist-analyze";ana.type="button";ana.textContent="Analyze";
-      ana.onclick=function(e){e.stopPropagation();startAnalysisFromHistory(g)};
-      row.appendChild(outcomeEl);row.appendChild(img);row.appendChild(info);
-      row.appendChild(badge);row.appendChild(ana);
-      row.onclick=function(){startAnalysisFromHistory(g)};
-      list.appendChild(row);
-    })(historyData[i]);
-  }
-}
-function startAnalysisFromHistory(g){
-  if(!g.pgn){say("This game has no replay data.");return}
-  try{
-    var tempGame=new Chess();
-    tempGame.load_pgn(g.pgn);
-    if(!tempGame.history().length){say("Could not load this game.");return}
-    pendingAnalysisGame=game;
-    game=tempGame;
-    draw();
-    openAnalysis();
-  }catch(e){say("Could not load this game: "+e.message)}
-}
-  /* ===== SVG pieces (with cache) ===== */
-var _svgCache = {};
-function svg(p){
-  var key = p.color + p.type;
-  if (_svgCache[key]) return _svgCache[key];
-  var w=p.color==="w";
-  var glyphMap={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
-  var glyph=glyphMap[p.type];
-  var fill=w?"#fffdf7":"#20100d";
-  var stroke=w?"#2a1810":"#f0d8a8";
-  var strokeW=w?"2.6":"1.4";
-  var fontSizes={k:112,q:100,r:100,b:106,n:108,p:106};
-  var fontSize=fontSizes[p.type]||100;
-  var yPos=88;
-  var label=(w?"White ":"Black ")+names[p.type];
-  var result = '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg">'
-    +'<text x="50" y="'+yPos+'" text-anchor="middle" '
-    +'font-family="DejaVu Sans,Arial Unicode MS,Segoe UI Symbol,serif" '
-    +'font-size="'+fontSize+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+strokeW+'" '
-    +'paint-order="stroke fill" filter="drop-shadow(0 2px 2px #0008)">'+glyph+'</text></svg>';
-  _svgCache[key] = result;
-  return result;
-}
-function sq(r,c){return files[c]+(8-r)}
-  /* ===== Board build & draw ===== */
-function buildBoardOnce(){
-  boardEl.innerHTML = "";
-  _sqEls = {};
-  for(var vr=0;vr<8;vr++){
-    for(var vc=0;vc<8;vc++){
-      var r=flipped?7-vr:vr, c=flipped?7-vc:vc, s=sq(r,c);
-      var b=document.createElement("button");
-      b.type="button";
-      b.className="square "+((r+c)%2===0?"light":"dark");
-      b.dataset.sq = s;
-      b.onclick = (function(square){return function(){clickSquare(square)}})(s);
-      boardEl.appendChild(b);
-      _sqEls[s] = b;
-    }
-  }
-  _boardBuilt = true;
-  _boardFlipped = flipped;
-}
-function start(){
-  resetClocks();
-  if(!window.Chess){
-    $("status").textContent="Chess library unavailable";
-    say("Could not load chess.js. Check your connection and refresh.");
-    return;
-  }
-  game=new Chess();selected=null;targets=[];last=null;say("");
-  _boardBuilt=false;
-  draw();
-}
-function draw(){
-  if(!game) return;
-  paintClocks();
-  if(!_boardBuilt || _boardFlipped !== flipped){
-    buildBoardOnce();
-  }
-  var targetsSet = {};
-  for(var k=0;k<targets.length;k++) targetsSet[targets[k].to] = true;
-  for(var vr=0;vr<8;vr++){
-    for(var vc=0;vc<8;vc++){
-      var r = flipped?7-vr:vr;
-      var c = flipped?7-vc:vc;
-      var s = sq(r,c);
-      var p = game.get(s);
-      var b = _sqEls[s];
-      if(!b) continue;
-      b.innerHTML = "";
-      b.classList.toggle("selected", selected===s);
-      b.style.backgroundImage = "";
-      if(last && (last.from===s || last.to===s)){
-        b.style.backgroundImage = "linear-gradient(#e5bd6545,#e5bd6545)";
-      }
-      var aria = s + (p ? ", " + (p.color==="w"?"white":"black") + " " + names[p.type] : "");
-      b.setAttribute("aria-label", aria);
-      if(p) b.innerHTML = svg(p);
-      if(targetsSet[s]){
-        var mark = document.createElement("span");
-        mark.className = p ? "ring" : "dot";
-        b.appendChild(mark);
-      }
-      if((flipped?r===7:r===0) || c===(flipped?7:0)){
-        var co = document.createElement("span");
-        co.className = "coords";
-        co.textContent = (c===(flipped?7:0) ? 8-r : files[c]);
-        b.appendChild(co);
-      }
-    }
-  }
-  var turn = game.turn()==="w" ? "White" : "Black";
-  var statusText;
-  if(game.in_checkmate()) statusText = "Checkmate — " + (turn==="White"?"Black":"White") + " wins";
-  else if(game.in_draw()) statusText = "Draw";
-  else statusText = turn + " to move" + (game.in_check() ? " · Check" : "");
-  $("status").textContent = statusText;
-  $("top").textContent = flipped ? "White pieces" : "Black pieces";
-  $("bottom").textContent = flipped ? "Black pieces" : "White pieces";
-  if(!onlineGameId && !computerMode) $("undo").disabled = !game.history().length;
-  updateHistory();
-}
-function updateHistory(){
-  var h=game.history();
-  if(!h.length){historyEl.textContent="No moves yet.";return}
-  historyEl.innerHTML="";
-  for(var i=0;i<h.length;i+=2){
-    var row=document.createElement("div");row.className="move";
-    var cells=[""+(i/2+1)+".",h[i]||"",h[i+1]||""];
-    for(var j=0;j<cells.length;j++){
-      var span=document.createElement("span");span.textContent=cells[j];row.appendChild(span);
-    }
-    historyEl.appendChild(row);
-  }
-  historyEl.scrollTop=historyEl.scrollHeight;
-}
-  function askPromotion(color){
-  return new Promise(function(resolve){
-    var dlg=$("promotionDialog"),grid=$("promoGrid");
-    grid.innerHTML="";
-    var pieces=["q","r","b","n"];
-    for(var i=0;i<pieces.length;i++){
-      (function(type){
-        var btn=document.createElement("button");
-        btn.type="button";btn.className="promo-btn";btn.title=names[type];
-        btn.innerHTML=svg({color:color,type:type});
-        btn.onclick=function(){dlg.close();resolve(type)};
-        grid.appendChild(btn);
-      })(pieces[i]);
-    }
-    dlg.oncancel=function(e){e.preventDefault();dlg.close();resolve("q")};
-    dlg.showModal();
-  });
-}
-async function clickSquare(s){
-  if(!game)return;
-  if(game.game_over()||clockExpired)return;
-  if(computerMode){
-    var compColor = (computerUserColor === "w") ? "b" : "w";
-    if(game.turn() === compColor || computerBusy){say("The computer is thinking…");return}
-  }
-  if(onlineGameId){
-    if(submittingMove)return;
-    var myColor=null;
-    if(onlineGame&&currentUser){
-      if(onlineGame.white_id===currentUser.id)myColor="w";
-      else if(onlineGame.black_id===currentUser.id)myColor="b";
-    }
-    if(!myColor||game.turn()!==myColor){say("It's your opponent's turn.");return}
-  }
-  var p=game.get(s);
-  if(selected&&targets.some(function(m){return m.to===s})){
-    var piece=game.get(selected);
-    var promotion="q";
-    if(piece&&piece.type==="p"&&(s.charAt(1)==="8"||s.charAt(1)==="1")){
-      promotion=await askPromotion(piece.color);
-    }
-    var m=game.move({from:selected,to:s,promotion:promotion});
-    if(m){
-      last={from:m.from,to:m.to};selected=null;targets=[];
-      if(onlineGameId)lastClockAt=Date.now();
-      say(m.san);draw();
-      if(firstMoveTimer&&game.history().length>0){clearTimeout(firstMoveTimer);firstMoveTimer=null}
-      if(humilApplied||game.history().length>0){hideHumilBanner()}
-      if(onlineGameId){submittingMove=true;await submitOnlineMove(m);submittingMove=false}
-      else if(computerMode&&!game.game_over()){
-        lastClockAt=Date.now();
-        var compColor = (computerUserColor === "w") ? "b" : "w";
-        if(game.turn() === compColor) computerTimer=setTimeout(makeComputerMove,180);
-      }
-      return;
-    }
-  }
-  if(p&&p.color===game.turn()){
-    selected=s;targets=game.moves({square:s,verbose:true});say("");draw();
-  }else{selected=null;targets=[];draw()}
-}
-  $("new").onclick=function(){
-  if(onlineGameId){say("You cannot reset an online or tournament game.");return}
-  if(computerMode){
-    if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
-    clockExpired=false;lastClockAt=Date.now();
-    game=new Chess();selected=null;targets=[];last=null;computerBusy=false;
-    _boardBuilt=false;
-    draw();say("New computer game started.");return;
-  }
-  if(confirm("Start a new local game?"))start();
-};
-$("flip").onclick=function(){flipped=!flipped;draw()};
-$("undo").onclick=function(){
-  if(onlineGameId){say("Undo is unavailable during online games.");return}
-  if(computerMode){
-    if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
-    computerBusy=false;
-    if(!game.history().length){say("Nothing to undo.");return}
-    var count=game.turn()==="w"?2:1;
-    for(var i=0;i<count&&game.history().length;i++)game.undo();
-    selected=null;targets=[];last=null;draw();say("Move undone.");return;
-  }
-  if(game.undo()){selected=null;targets=[];last=null;say("Last move undone.");draw()}
-};
-$("fen").onclick=async function(){
-  try{await navigator.clipboard.writeText(game.fen());say("Position copied as FEN.")}
-  catch(e){prompt("Copy this FEN position:",game.fen())}
-};
-  /* ===== ROULETTE ===== */
-var pendingQueueIsRoulette=false;
-var currentGameIsRoulette=false;
-var rouletteOpenings=[
-  {name:"Italian Game",moves:["e4","e5","Nf3","Nc6","Bc4","Bc5"]},
-  {name:"Sicilian Defense",moves:["e4","c5","Nf3","d6","d4","cxd4"]},
-  {name:"French Defense",moves:["e4","e6","d4","d5","Nc3","Nf6"]},
-  {name:"Queen's Gambit",moves:["d4","d5","c4","e6","Nc3","Nf6"]},
-  {name:"King's Indian",moves:["d4","Nf6","c4","g6","Nc3","Bg7"]},
-  {name:"Ruy Lopez",moves:["e4","e5","Nf3","Nc6","Bb5","a6"]},
-  {name:"Caro-Kann",moves:["e4","c6","d4","d5","Nc3","dxe4"]},
-  {name:"English Opening",moves:["c4","e5","Nc3","Nf6","Nf3","Nc6"]},
-  {name:"Scandinavian",moves:["e4","d5","exd5","Qxd5","Nc3","Qa5"]},
-  {name:"Réti Opening",moves:["Nf3","d5","c4","e6","g3","Nf6"]}
-];
-function kfHash(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}return Math.abs(h)}
-function kfRng(seed){var x=seed||1;return function(){x=(x*1103515245+12345)&0x7fffffff;return x/0x7fffffff}}
-function pickRouletteOpening(gameId){var rng=kfRng(kfHash(gameId));return rouletteOpenings[Math.floor(rng()*rouletteOpenings.length)]}
+
+/* ===== ROULETTE SPIN & START ===== */
 function spinJackpot(opening){
   return new Promise(function(resolve){
     var overlay=$("jackpotOverlay");
@@ -2582,6 +2071,7 @@ async function startRoulette(){
   currentUser=session.user;
   humilApplied=false;humilChosenType=null;
   pendingQueueIsRoulette=true;
+  currentGameIsRoulette=false;
   setQuickState("Roulette: finding opponent…",{lock:true,cancel:true});
   say("");
   try{
@@ -2730,7 +2220,8 @@ function makeComputerMove(){
   if(!stockfishReady){say("Stockfish is warming up…");return}
   triggerStockfishGo();
 }
-  /* ============ ANALYSIS ============ */
+
+/* ============ ANALYSIS ============ */
 var analysisMoves=[],analysisPositions=[],analysisIndex=0,analysisRunning=false;
 $("analyze").onclick=function(){ if(!game||game.history().length<1){say("Play some moves first.");return} openAnalysis() };
 $("analysisClose").onclick=function(){
@@ -3058,6 +2549,520 @@ $("signOut").onclick=async function(){
   }
 };
 
+/* ===== Humiliation ===== */
+function showHumilBanner(){
+  if($("humilBanner"))return;
+  var banner = document.createElement("div");
+  banner.id = "humilBanner";
+  banner.className = "humil-banner";
+  banner.innerHTML = '<span class="hb-icon">🏳️</span><div class="hb-text"><div class="hb-title">Sacrifice a piece?</div><div class="hb-sub">Give up Knight, Bishop, Rook or Queen for bonus wins</div></div>';
+  banner.onclick = function(){ if(!onlineGame || game.history().length > 0) return; openHumilDialog() };
+  document.body.appendChild(banner);
+}
+function hideHumilBanner(){var b=$("humilBanner");if(b)b.remove()}
+function openHumilDialog(){
+  humilChosenType=null;
+  document.querySelectorAll(".humil-piece").forEach(function(el){el.classList.remove("selected")});
+  $("humilConfirm").disabled=true;$("humilMsg").textContent="";
+  var w = fsPlayerColor;
+  $("hpPieceN").innerHTML = svg({color:w,type:"n"});
+  $("hpPieceB").innerHTML = svg({color:w,type:"b"});
+  $("hpPieceR").innerHTML = svg({color:w,type:"r"});
+  $("hpPieceQ").innerHTML = svg({color:w,type:"q"});
+  $("humilDialog").showModal();
+}
+$("humilCancel").onclick = function(){ $("humilDialog").close(); };
+document.querySelectorAll(".humil-piece").forEach(function(el){
+  el.onclick = function(){
+    document.querySelectorAll(".humil-piece").forEach(function(x){x.classList.remove("selected")});
+    el.classList.add("selected");
+    humilChosenType = el.dataset.type;
+    $("humilConfirm").disabled=false;
+    $("humilMsg").textContent = "Selected: "+names[humilChosenType]+" (+"+el.dataset.reward+" wins)";
+  };
+});
+$("humilConfirm").onclick = async function(){
+  if(!humilChosenType || !onlineGameId || !onlineGame) return;
+  var myHandicapField = (onlineGame.white_id === currentUser.id) ? "white_handicap" : "black_handicap";
+  var upd = {};upd[myHandicapField] = humilChosenType;
+  var res = await sb.from("kf_games").update(upd).eq("id",onlineGameId);
+  if(res.error){$("humilMsg").textContent="Error: "+res.error.message;return}
+  onlineGame = Object.assign({}, onlineGame, upd);
+  humilApplied = true;
+  applyHandicapToGame(fsPlayerColor, humilChosenType);
+  playWindSound();
+  $("humilDialog").close();
+  hideHumilBanner();
+};
+function applyHandicapToGame(color, type){
+  if(!game)return;
+  var board = game.board();
+  for (var r=0;r<8;r++) for (var c=0;c<8;c++){
+    var p = board[r][c];
+    if (p && p.color === color && p.type === type) {
+      var sqName = files[c] + (8-r);
+      game.remove(sqName);
+      last=null;selected=null;targets=[];
+      draw();
+      return;
+    }
+  }
+}
+
+/* ===== Sounds ===== */
+function playWindSound(){
+  try{
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var bufferSize = ctx.sampleRate * 0.8;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+    var src = ctx.createBufferSource(); src.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = "bandpass"; filter.frequency.value = 2000; filter.Q.value = 1.2;
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+    src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    src.start();
+  }catch(e){}
+}
+function playVictorySound(){
+  try{
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var notes = [523.25, 659.25, 783.99, 1046.5];
+    var t = ctx.currentTime;
+    notes.forEach(function(freq, i){
+      var osc = ctx.createOscillator();
+      osc.type = "triangle"; osc.frequency.value = freq;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0, t + i*0.15);
+      g.gain.linearRampToValueAtTime(0.35, t + i*0.15 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i*0.15 + 0.4);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t + i*0.15); osc.stop(t + i*0.15 + 0.5);
+    });
+  }catch(e){}
+}
+function playDefeatSound(){
+  try{
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var t = ctx.currentTime;
+    var bufferSize = ctx.sampleRate * 1.2;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1) * Math.max(0,1 - i/bufferSize*1.5);
+    var src = ctx.createBufferSource(); src.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = "lowpass"; filter.frequency.setValueAtTime(4000, t); filter.frequency.exponentialRampToValueAtTime(200, t+0.9);
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t+1.0);
+    src.connect(filter); filter.connect(g); g.connect(ctx.destination); src.start(t);
+    var osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.setValueAtTime(120, t+0.7); osc.frequency.exponentialRampToValueAtTime(40, t+1.4);
+    var g2 = ctx.createGain(); g2.gain.setValueAtTime(0, t+0.7); g2.gain.linearRampToValueAtTime(0.5, t+0.75); g2.gain.exponentialRampToValueAtTime(0.001, t+1.5);
+    osc.connect(g2); g2.connect(ctx.destination); osc.start(t+0.7); osc.stop(t+1.5);
+  }catch(e){}
+}
+
+/* ===== Celebration ===== */
+function showCelebration(opts){
+  var screen = $("celebrationScreen");
+  screen.className = "celebration show " + opts.outcome;
+  var text = "";
+  if (opts.outcome === "win" && opts.hasHumiliation) text = "The Crown Is Yours, Brave King";
+  else if (opts.outcome === "win") text = "The Crown Is Yours, My King";
+  else if (opts.outcome === "loss") text = "The King Has Fallen";
+  else text = "A Draw in the Battle";
+  $("celebText").textContent = text;
+  $("celebAvatar").src = opts.user && opts.user.user_metadata && opts.user.user_metadata.avatar_url ? opts.user.user_metadata.avatar_url : defaultAvatar();
+  var uname = opts.user && opts.user.user_metadata && opts.user.user_metadata.username ? opts.user.user_metadata.username : "Player";
+  $("celebName").textContent = uname;
+  $("celebWinsOld").textContent = "";
+  $("celebPlus").textContent = "";
+  $("celebWinsNew").textContent = "";
+  $("celebHumilTag").hidden = !(opts.hasHumiliation && opts.outcome === "win");
+  if (opts.outcome === "win") setTimeout(playVictorySound, 300);
+  else if (opts.outcome === "loss") setTimeout(playDefeatSound, 300);
+  if (opts.outcome === "win") launchConfetti();
+  var oldW = opts.oldWins || 0;
+  var newW = opts.newWins || oldW;
+  setTimeout(function(){$("celebWinsOld").textContent = oldW}, 900);
+  setTimeout(function(){$("celebPlus").textContent = (newW - oldW > 0) ? "+" + (newW - oldW) : ""}, 1400);
+  setTimeout(function(){$("celebWinsNew").textContent = "→ " + newW}, 1500);
+  var dur = opts.isTournament ? 3000 : 5000;
+  $("celebAuto").textContent = "Closing in " + Math.ceil(dur/1000) + "s…";
+  if (celebTimer) clearTimeout(celebTimer);
+  if (celebInterval) clearInterval(celebInterval);
+  var startTime = Date.now();
+  celebInterval = setInterval(function(){
+    var remain = Math.max(0, dur - (Date.now() - startTime));
+    $("celebAuto").textContent = "Closing in " + Math.ceil(remain/1000) + "s…";
+    if (remain <= 0) clearInterval(celebInterval);
+  }, 250);
+  celebTimer = setTimeout(function(){
+    clearInterval(celebInterval);
+    hideCelebration();
+    if (opts.onDone) opts.onDone();
+  }, dur);
+}
+function hideCelebration(){
+  if (celebTimer) { clearTimeout(celebTimer); celebTimer = null; }
+  if (celebInterval) { clearInterval(celebInterval); celebInterval = null; }
+  $("celebrationScreen").classList.remove("show","win","loss","draw");
+}
+$("celebExit").onclick = function(){
+  if(celebTimer){clearTimeout(celebTimer);celebTimer=null}
+  if(celebInterval){clearInterval(celebInterval);celebInterval=null}
+  hideCelebration();
+  onlineGameId=null;onlineGame=null;
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+  exitFullscreenGame();
+  document.body.classList.remove("online","computer-mode","game-focus");
+  $("new").disabled=false;
+  setTimeout(loadHistory,300);
+  setTimeout(refreshTournLive,500);
+};
+$("celebAnalyze").onclick = function(){
+  if(celebTimer){clearTimeout(celebTimer);celebTimer=null}
+  if(celebInterval){clearInterval(celebInterval);celebInterval=null}
+  hideCelebration();
+  exitFullscreenGame();
+  setTimeout(openAnalysis,200);
+};
+async function handleQuickPlayEnd(row){
+  var iWon = row.winner_id === currentUser.id;
+  var isDraw = row.result === "1/2-1/2" || (!row.winner_id && !row.result);
+  var outcome = isDraw ? "draw" : (iWon ? "win" : "loss");
+  var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id",currentUser.id).maybeSingle();
+  var currentWins = statsRes.data ? (statsRes.data.wins||0) : 0;
+  var bonus = 1;
+  if (iWon) {
+    var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+    if (hcp === "n" || hcp === "b") bonus = 2;
+    else if (hcp === "r") bonus = 3;
+    else if (hcp === "q") bonus = 5;
+  } else bonus = 0;
+  var oldWins = currentWins - bonus;
+  var newWins = currentWins;
+  showCelebration({
+    outcome: outcome,
+    user: currentUser,
+    oldWins: oldWins,
+    newWins: newWins,
+    hasHumiliation: !!(row.white_handicap || row.black_handicap),
+    isTournament: false,
+    onDone: function(){
+      onlineGameId=null;onlineGame=null;
+      if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+      exitFullscreenGame();
+      document.body.classList.remove("online","computer-mode","game-focus");
+      $("new").disabled=false;
+      setTimeout(loadHistory,300);
+    }
+  });
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+}
+async function handleTournamentEnd(row){
+  var iWon = row.winner_id === currentUser.id;
+  if (!iWon) {
+    onlineGameId=null;onlineGame=null;tournActiveMatch=null;
+    if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+    exitFullscreenGame();
+    document.body.classList.remove("online","computer-mode","game-focus");
+    $("new").disabled=false;
+    say("Tournament match lost. Better luck next time.");
+    setTimeout(refreshTournLive,500);
+    setTimeout(loadHistory,500);
+    return;
+  }
+  var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id",currentUser.id).maybeSingle();
+  var currentWins = statsRes.data ? (statsRes.data.wins||0) : 0;
+  var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+  var bonus = 1;
+  if (hcp === "n" || hcp === "b") bonus = 2;
+  else if (hcp === "r") bonus = 3;
+  else if (hcp === "q") bonus = 5;
+  var oldWins = currentWins - bonus;
+  var newWins = currentWins;
+  showCelebration({
+    outcome: "win",
+    user: currentUser,
+    oldWins: oldWins,
+    newWins: newWins,
+    hasHumiliation: !!hcp,
+    isTournament: true,
+    onDone: function(){
+      onlineGameId=null;onlineGame=null;tournActiveMatch=null;
+      if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+      exitFullscreenGame();
+      document.body.classList.remove("online","computer-mode","game-focus");
+      $("new").disabled=false;
+      setTimeout(refreshTournLive,300);
+      setTimeout(loadHistory,300);
+    }
+  });
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+}
+async function loadHistory(){
+  var section=$("historySection");
+  if(!sb||!currentUser){section.classList.remove("show");return}
+  var res=await sb.rpc("kf_get_my_history",{p_limit:5});
+  if(res.error){console.warn("History error:",res.error);section.classList.remove("show");return}
+  historyData=res.data||[];
+  renderHistory();
+  section.classList.add("show");
+}
+function renderHistory(){
+  var list=$("historyList");list.innerHTML="";
+  if(!historyData.length){list.innerHTML='<div class="history-empty">No finished games yet. Play a match to see your history!</div>';return}
+  for(var i=0;i<historyData.length;i++){
+    (function(g){
+      var row=document.createElement("div");row.className="hist-row";
+      var outcomeIcon = g.my_outcome==="win"?"🟢":g.my_outcome==="loss"?"🔴":"🟡";
+      var outcomeEl=document.createElement("span");outcomeEl.className="hist-outcome";outcomeEl.textContent=outcomeIcon;
+      var img=document.createElement("img");img.className="hist-avatar";img.src=g.opponent_avatar||defaultAvatar();img.alt="";
+      var info=document.createElement("div");info.className="hist-info";
+      var nm=document.createElement("div");nm.className="hist-name";nm.textContent="vs "+(g.opponent_username||"Opponent");
+      var meta=document.createElement("div");meta.className="hist-meta";
+      var tagClass = g.is_tournament ? "tourn" : (g.is_roulette ? "roulette" : "quick");
+      var tagText = g.is_tournament ? "🏆 Tournament" : (g.is_roulette ? "🎰 Roulette" : "⚡ Quick Play");
+      var tag=document.createElement("span");tag.className="hist-tag "+tagClass;
+      tag.textContent=tagText;
+            var when=document.createElement("span");when.textContent=fmtTimeLocal(g.completed_at);
+      var color=document.createElement("span");color.textContent=g.my_color==="w"?"Played White":"Played Black";
+      meta.appendChild(tag);meta.appendChild(when);meta.appendChild(color);
+      info.appendChild(nm);info.appendChild(meta);
+      var badge=document.createElement("span");badge.className="hist-result-badge "+g.my_outcome;
+      badge.textContent=g.my_outcome==="win"?"WIN":g.my_outcome==="loss"?"LOSS":"DRAW";
+      var ana=document.createElement("button");ana.className="hist-analyze";ana.type="button";ana.textContent="Analyze";
+      ana.onclick=function(e){e.stopPropagation();startAnalysisFromHistory(g)};
+      row.appendChild(outcomeEl);row.appendChild(img);row.appendChild(info);
+      row.appendChild(badge);row.appendChild(ana);
+      row.onclick=function(){startAnalysisFromHistory(g)};
+      list.appendChild(row);
+    })(historyData[i]);
+  }
+}
+function startAnalysisFromHistory(g){
+  if(!g.pgn){say("This game has no replay data.");return}
+  try{
+    var tempGame=new Chess();
+    tempGame.load_pgn(g.pgn);
+    if(!tempGame.history().length){say("Could not load this game.");return}
+    pendingAnalysisGame=game;
+    game=tempGame;
+    draw();
+    openAnalysis();
+  }catch(e){say("Could not load this game: "+e.message)}
+}
+
+/* ===== SVG pieces (with cache) ===== */
+var _svgCache = {};
+function svg(p){
+  var key = p.color + p.type;
+  if (_svgCache[key]) return _svgCache[key];
+  var w=p.color==="w";
+  var glyphMap={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
+  var glyph=glyphMap[p.type];
+  var fill=w?"#fffdf7":"#20100d";
+  var stroke=w?"#2a1810":"#f0d8a8";
+  var strokeW=w?"2.6":"1.4";
+  var fontSizes={k:112,q:100,r:100,b:106,n:108,p:106};
+  var fontSize=fontSizes[p.type]||100;
+  var yPos=88;
+  var label=(w?"White ":"Black ")+names[p.type];
+  var result = '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg">'
+    +'<text x="50" y="'+yPos+'" text-anchor="middle" '
+    +'font-family="DejaVu Sans,Arial Unicode MS,Segoe UI Symbol,serif" '
+    +'font-size="'+fontSize+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+strokeW+'" '
+    +'paint-order="stroke fill" filter="drop-shadow(0 2px 2px #0008)">'+glyph+'</text></svg>';
+  _svgCache[key] = result;
+  return result;
+}
+function sq(r,c){return files[c]+(8-r)}
+
+/* ===== Board build & draw ===== */
+function buildBoardOnce(){
+  boardEl.innerHTML = "";
+  _sqEls = {};
+  for(var vr=0;vr<8;vr++){
+    for(var vc=0;vc<8;vc++){
+      var r=flipped?7-vr:vr, c=flipped?7-vc:vc, s=sq(r,c);
+      var b=document.createElement("button");
+      b.type="button";
+      b.className="square "+((r+c)%2===0?"light":"dark");
+      b.dataset.sq = s;
+      b.onclick = (function(square){return function(){clickSquare(square)}})(s);
+      boardEl.appendChild(b);
+      _sqEls[s] = b;
+    }
+  }
+  _boardBuilt = true;
+  _boardFlipped = flipped;
+}
+function start(){
+  resetClocks();
+  if(!window.Chess){
+    $("status").textContent="Chess library unavailable";
+    say("Could not load chess.js. Check your connection and refresh.");
+    return;
+  }
+  game=new Chess();selected=null;targets=[];last=null;say("");
+  _boardBuilt=false;
+  draw();
+}
+function draw(){
+  if(!game) return;
+  paintClocks();
+  if(!_boardBuilt || _boardFlipped !== flipped){
+    buildBoardOnce();
+  }
+  var targetsSet = {};
+  for(var k=0;k<targets.length;k++) targetsSet[targets[k].to] = true;
+  for(var vr=0;vr<8;vr++){
+    for(var vc=0;vc<8;vc++){
+      var r = flipped?7-vr:vr;
+      var c = flipped?7-vc:vc;
+      var s = sq(r,c);
+      var p = game.get(s);
+      var b = _sqEls[s];
+      if(!b) continue;
+      b.innerHTML = "";
+      b.classList.toggle("selected", selected===s);
+      b.style.backgroundImage = "";
+      if(last && (last.from===s || last.to===s)){
+        b.style.backgroundImage = "linear-gradient(#e5bd6545,#e5bd6545)";
+      }
+      var aria = s + (p ? ", " + (p.color==="w"?"white":"black") + " " + names[p.type] : "");
+      b.setAttribute("aria-label", aria);
+      if(p) b.innerHTML = svg(p);
+      if(targetsSet[s]){
+        var mark = document.createElement("span");
+        mark.className = p ? "ring" : "dot";
+        b.appendChild(mark);
+      }
+      if((flipped?r===7:r===0) || c===(flipped?7:0)){
+        var co = document.createElement("span");
+        co.className = "coords";
+        co.textContent = (c===(flipped?7:0) ? 8-r : files[c]);
+        b.appendChild(co);
+      }
+    }
+  }
+  var turn = game.turn()==="w" ? "White" : "Black";
+  var statusText;
+  if(game.in_checkmate()) statusText = "Checkmate — " + (turn==="White"?"Black":"White") + " wins";
+  else if(game.in_draw()) statusText = "Draw";
+  else statusText = turn + " to move" + (game.in_check() ? " · Check" : "");
+  $("status").textContent = statusText;
+  $("top").textContent = flipped ? "White pieces" : "Black pieces";
+  $("bottom").textContent = flipped ? "Black pieces" : "White pieces";
+  if(!onlineGameId && !computerMode) $("undo").disabled = !game.history().length;
+  updateHistory();
+}
+function updateHistory(){
+  var h=game.history();
+  if(!h.length){historyEl.textContent="No moves yet.";return}
+  historyEl.innerHTML="";
+  for(var i=0;i<h.length;i+=2){
+    var row=document.createElement("div");row.className="move";
+    var cells=[""+(i/2+1)+".",h[i]||"",h[i+1]||""];
+    for(var j=0;j<cells.length;j++){
+      var span=document.createElement("span");span.textContent=cells[j];row.appendChild(span);
+    }
+    historyEl.appendChild(row);
+  }
+  historyEl.scrollTop=historyEl.scrollHeight;
+}
+function askPromotion(color){
+  return new Promise(function(resolve){
+    var dlg=$("promotionDialog"),grid=$("promoGrid");
+    grid.innerHTML="";
+    var pieces=["q","r","b","n"];
+    for(var i=0;i<pieces.length;i++){
+      (function(type){
+        var btn=document.createElement("button");
+        btn.type="button";btn.className="promo-btn";btn.title=names[type];
+        btn.innerHTML=svg({color:color,type:type});
+        btn.onclick=function(){dlg.close();resolve(type)};
+        grid.appendChild(btn);
+      })(pieces[i]);
+    }
+    dlg.oncancel=function(e){e.preventDefault();dlg.close();resolve("q")};
+    dlg.showModal();
+  });
+}
+async function clickSquare(s){
+  if(!game)return;
+  if(game.game_over()||clockExpired)return;
+  if(computerMode){
+    var compColor = (computerUserColor === "w") ? "b" : "w";
+    if(game.turn() === compColor || computerBusy){say("The computer is thinking…");return}
+  }
+  if(onlineGameId){
+    if(submittingMove)return;
+    var myColor=null;
+    if(onlineGame&&currentUser){
+      if(onlineGame.white_id===currentUser.id)myColor="w";
+      else if(onlineGame.black_id===currentUser.id)myColor="b";
+    }
+    if(!myColor||game.turn()!==myColor){say("It's your opponent's turn.");return}
+  }
+  var p=game.get(s);
+  if(selected&&targets.some(function(m){return m.to===s})){
+    var piece=game.get(selected);
+    var promotion="q";
+    if(piece&&piece.type==="p"&&(s.charAt(1)==="8"||s.charAt(1)==="1")){
+      promotion=await askPromotion(piece.color);
+    }
+    var m=game.move({from:selected,to:s,promotion:promotion});
+    if(m){
+      last={from:m.from,to:m.to};selected=null;targets=[];
+      if(onlineGameId)lastClockAt=Date.now();
+      say(m.san);draw();
+      if(firstMoveTimer&&game.history().length>0){clearTimeout(firstMoveTimer);firstMoveTimer=null}
+      if(humilApplied||game.history().length>0){hideHumilBanner()}
+      if(onlineGameId){submittingMove=true;await submitOnlineMove(m);submittingMove=false}
+      else if(computerMode&&!game.game_over()){
+        lastClockAt=Date.now();
+        var compColor = (computerUserColor === "w") ? "b" : "w";
+        if(game.turn() === compColor) computerTimer=setTimeout(makeComputerMove,180);
+      }
+      return;
+    }
+  }
+  if(p&&p.color===game.turn()){
+    selected=s;targets=game.moves({square:s,verbose:true});say("");draw();
+  }else{selected=null;targets=[];draw()}
+}
+$("new").onclick=function(){
+  if(onlineGameId){say("You cannot reset an online or tournament game.");return}
+  if(computerMode){
+    if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+    clockExpired=false;lastClockAt=Date.now();
+    game=new Chess();selected=null;targets=[];last=null;computerBusy=false;
+    _boardBuilt=false;
+    draw();say("New computer game started.");return;
+  }
+  if(confirm("Start a new local game?"))start();
+};
+$("flip").onclick=function(){flipped=!flipped;draw()};
+$("undo").onclick=function(){
+  if(onlineGameId){say("Undo is unavailable during online games.");return}
+  if(computerMode){
+    if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+    computerBusy=false;
+    if(!game.history().length){say("Nothing to undo.");return}
+    var count=game.turn()==="w"?2:1;
+    for(var i=0;i<count&&game.history().length;i++)game.undo();
+    selected=null;targets=[];last=null;draw();say("Move undone.");return;
+  }
+  if(game.undo()){selected=null;targets=[];last=null;say("Last move undone.");draw()}
+};
+$("fen").onclick=async function(){
+  try{await navigator.clipboard.writeText(game.fen());say("Position copied as FEN.")}
+  catch(e){prompt("Copy this FEN position:",game.fen())}
+};
+
 /* ============ INIT ============ */
 if(sb){
   sb.auth.onAuthStateChange(function(){
@@ -3089,4 +3094,3 @@ setInterval(loadChampion, 60000);
 </script>
 </body>
 </html>
-  
