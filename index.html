@@ -1385,7 +1385,39 @@ function showPage(name){
 }
 $("navHome").onclick=function(){showPage("home")};
 $("navTable").onclick=function(){showPage("table")};
+/* ===== Mobile swipe navigation between Home / Table ===== */
+(function initSwipeNav(){
+  var startX = 0, startY = 0, startTime = 0;
+  var SWIPE_MIN = 70;
+  var SWIPE_MAX_TIME = 700;
 
+  document.addEventListener("touchstart", function(e){
+    if(document.body.classList.contains("game-focus")) return;
+    if(document.querySelector("dialog[open]")) return;
+    if(e.target && e.target.closest && e.target.closest("#board")) return;
+    if(e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    startTime = Date.now();
+  }, {passive:true});
+
+  document.addEventListener("touchend", function(e){
+    if(document.body.classList.contains("game-focus")) return;
+    if(document.querySelector("dialog[open]")) return;
+    if(e.target && e.target.closest && e.target.closest("#board")) return;
+    if(!e.changedTouches || e.changedTouches.length !== 1) return;
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+    var dt = Date.now() - startTime;
+    if(dt > SWIPE_MAX_TIME) return;
+    if(Math.abs(dx) < SWIPE_MIN) return;
+    if(Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    var current = document.querySelector(".page.active");
+    if(!current) return;
+    if(dx < 0 && current.id === "pageHome") showPage("table");
+    else if(dx > 0 && current.id === "pageTable") showPage("home");
+  }, {passive:true});
+})();
 var boardEl=$("board");
 var historyEl=$("history");
 var game=null;
