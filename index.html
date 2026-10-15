@@ -1352,6 +1352,23 @@ body.game-focus .game-fullscreen{display:flex}
     </div>
   </div>
 </dialog>
+  <dialog id="rematchDialog">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="kicker">REMATCH REQUEST</div>
+        <h2>Opponent wants a rematch</h2>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin:12px 0 0">
+      Your opponent wants to play again with <strong>colors swapped</strong>. Do you accept?
+    </p>
+    <div style="display:flex;gap:8px;margin-top:18px">
+      <button class="btn" id="rematchDeclineBtn" type="button" style="flex:1">Decline</button>
+      <button class="btn gold" id="rematchAcceptBtn" type="button" style="flex:1">Accept Rematch</button>
+    </div>
+  </div>
+  </dialog>
 <div class="jackpot-overlay" id="jackpotOverlay">
   <div class="jackpot-box">
     <div class="jackpot-title">🎰 KINGSFALL JACKPOT 🎰</div>
