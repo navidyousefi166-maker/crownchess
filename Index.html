@@ -2625,6 +2625,31 @@ function showHumilBanner(){
   document.body.appendChild(banner);
 }
 function hideHumilBanner(){var b=$("humilBanner");if(b)b.remove()}
+  function openHumilDialog(){
+  humilChosenType=null;
+  document.querySelectorAll(".humil-piece").forEach(function(el){el.classList.remove("selected")});
+  $("humilConfirm").disabled=true;$("humilMsg").textContent="";
+  var w = fsPlayerColor;
+  $("hpPieceN").innerHTML = svg({color:w,type:"n"});
+  $("hpPieceB").innerHTML = svg({color:w,type:"b"});
+  $("hpPieceR").innerHTML = svg({color:w,type:"r"});
+  $("hpPieceQ").innerHTML = svg({color:w,type:"q"});
+  $("humilDialog").showModal();
+}
+async function applyHumilFromDialog(){
+  if(!humilChosenType || !onlineGameId || !onlineGame) return;
+  var myHandicapField = (onlineGame.white_id === currentUser.id) ? "white_handicap" : "black_handicap";
+  var upd = {};upd[myHandicapField] = humilChosenType;
+  var res = await sb.from("kf_games").update(upd).eq("id",onlineGameId);
+  if(res.error){$("humilMsg").textContent="Error: "+res.error.message;return}
+  onlineGame = Object.assign({}, onlineGame, upd);
+  humilApplied = true;
+  humilSelecting = false;
+  applyHandicapToGame(fsPlayerColor, humilChosenType);
+  playWindSound();
+  $("humilDialog").close();
+  hideHumilBanner();
+                                 }
 function isHumilEligiblePiece(sq){
   if(!game) return false;
   var p = game.get(sq);
