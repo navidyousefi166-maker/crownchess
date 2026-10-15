@@ -1443,10 +1443,13 @@ function $(id){return document.getElementById(id)}
   try { saved = localStorage.getItem("kf_theme"); } catch(e){}
   if(saved === "ocean") document.body.classList.add("theme-ocean");
 })();
+var _themeRotation = 0;
 $("themeToggle").onclick = function(){
   document.body.classList.toggle("theme-ocean");
   var isOcean = document.body.classList.contains("theme-ocean");
   try { localStorage.setItem("kf_theme", isOcean ? "ocean" : "burgundy"); } catch(e){}
+  _themeRotation += 180;
+  this.style.setProperty("--rot", _themeRotation + "deg");
 };
 
 /* ===== NAV / PAGES ===== */
