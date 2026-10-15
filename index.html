@@ -2167,8 +2167,8 @@ async function handleOnlineTimeout(loserColor){
   var topNameEl = $("gfsTopName"),botNameEl = $("gfsBotName");
   topNameEl.textContent = topName || "Opponent";
   botNameEl.textContent = botName || "You";
-  var meHadHandicap = (fsPlayerColor === "w" && row.white_handicap) || (fsPlayerColor === "b" && row.black_handicap);
-  var oppHadHandicap = (fsPlayerColor === "w" && row.black_handicap) || (fsPlayerColor === "b" && row.white_handicap);
+   var meHadHandicap = (fsPlayerColor === "w" && isValidHcp(row.white_handicap)) || (fsPlayerColor === "b" && isValidHcp(row.black_handicap));
+var oppHadHandicap = (fsPlayerColor === "w" && isValidHcp(row.black_handicap)) || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
   humilApplied = !!meHadHandicap;
   humilSelecting = false;
   $("gfsTopHumil").hidden = !oppHadHandicap;
