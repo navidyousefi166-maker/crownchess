@@ -2368,6 +2368,7 @@ async function checkActiveGameAndJoin(){
       .select("*")
       .eq("status","active")
       .or("white_id.eq."+currentUser.id+",black_id.eq."+currentUser.id)
+      .gt("created_at", new Date(Date.now() - 10*60*1000).toISOString())
       .order("created_at",{ascending:false})
       .limit(1)
       .maybeSingle();
