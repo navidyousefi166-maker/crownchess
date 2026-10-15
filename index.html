@@ -547,7 +547,7 @@ body.game-focus .game-fullscreen{display:flex}
 .gfs-bottombar .gfs-info .gfs-name{justify-content:flex-end}
 .gfs-bottombar .gfs-info .gfs-stats{justify-content:flex-end}
 .gfs-stat{padding:2px 9px;border-radius:9px;background:var(--panel-bg2);border:1px solid var(--line);font-size:11px;font-weight:700;color:var(--gold)}
-.gfs-clock{font-variant-numeric:tabular-nums;font-weight:900;font-size:34px;letter-spacing:1px;padding:6px 14px;border-radius:10px;background:var(--panel-bg2);border:1px solid var(--line);color:var(--text);flex:none;transition:border-color .3s,box-shadow .3s}
+  .gfs-clock{font-variant-numeric:tabular-nums;font-weight:900;font-size:clamp(14px,5vw,30px);letter-spacing:1px;padding:0;border-radius:10px;background:var(--panel-bg2);border:1px solid var(--line);color:var(--text);flex:none;transition:border-color .3s,box-shadow .3s;width:calc(25% + 7px);aspect-ratio:2/1;display:flex;align-items:center;justify-content:center;line-height:1;margin-left:-14px}
 .gfs-clock.active{border-color:var(--gold);box-shadow:0 0 12px rgba(237,197,107,.4),inset 0 0 0 1px rgba(237,197,107,.27);color:var(--gold2)}
 .gfs-actions{display:flex;flex-direction:column;gap:5px;flex:none}
 .gfs-resign,.gfs-draw{flex:none;font-weight:800;font-size:16px;padding:4px 8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;min-width:38px;height:32px}
