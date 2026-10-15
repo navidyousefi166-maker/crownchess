@@ -3651,14 +3651,16 @@ if(sb){
       if($("tournDialog").open)renderTournDialog();
       updateTournButton();
     });
-    loadHistory();
-  });
+      loadHistory();
+  setTimeout(checkActiveGameAndJoin, 800);
+});
   updateAuth().then(function(){
     getCurrentProfile().then(function(){
-      loadTournamentState();
-      loadChampion();
-      loadHistory();
-    }).catch(function(){});
+  loadTournamentState();
+  loadChampion();
+  loadHistory();
+  setTimeout(checkActiveGameAndJoin, 800);
+}).catch(function(){});
   });
 }else{
   say("Supabase client failed to load.");
