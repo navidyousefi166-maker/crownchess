@@ -2249,10 +2249,17 @@ $("gfsTopHumil").hidden = !oppHadHcp;
   } else {
     $("gfsDrawBtn").disabled = false;
   }
-  if(row.status==="completed" && !celebTimer){
+  if(row.status==="completed"){
+  if(!window._kfFinalizedGames) window._kfFinalizedGames = {};
+  if(!window._kfFinalizedGames[row.id] && row.winner_id === currentUser.id){
+    window._kfFinalizedGames[row.id] = true;
+    finalizeOnlineGame(row.winner_id).catch(function(e){console.warn("finalize error:",e)});
+  }
+  if(!celebTimer){
     if(row.is_tournament && tournActiveMatch)handleTournamentEnd(row);
     else handleQuickPlayEnd(row);
   }
+}
 }
 async function startQuickPlay(){
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
