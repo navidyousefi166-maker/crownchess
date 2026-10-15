@@ -3026,19 +3026,11 @@ function draw(){
       var b = _sqEls[s];
       if(!b) continue;
       b.innerHTML = "";
-      b.classList.toggle("selected", selected===s);
-      b.classList.remove("humil-dim","humil-target");
-      b.style.backgroundImage = "";
-      if(humilSelecting){
-        if(isHumilEligiblePiece(s)){
-          b.classList.add("humil-target");
-        } else {
-          b.classList.add("humil-dim");
-        }
-      }
-      if(last && (last.from===s || last.to===s) && !humilSelecting){
-        b.style.backgroundImage = "linear-gradient(#e5bd6545,#e5bd6545)";
-      }
+b.classList.toggle("selected", selected===s);
+b.style.backgroundImage = "";
+if(last && (last.from===s || last.to===s)){
+  b.style.backgroundImage = "linear-gradient(#e5bd6545,#e5bd6545)";
+}
       var aria = s + (p ? ", " + (p.color==="w"?"white":"black") + " " + names[p.type] : "");
       b.setAttribute("aria-label", aria);
       if(p) b.innerHTML = svg(p);
