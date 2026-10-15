@@ -1422,6 +1422,8 @@ function showPage(name){
   if(pageEl)pageEl.classList.add("active");
   var tabEl=$("nav"+name.charAt(0).toUpperCase()+name.slice(1));
   if(tabEl)tabEl.classList.add("active");
+  var navTabsEl=document.querySelector(".nav-tabs");
+if(navTabsEl)navTabsEl.classList.toggle("table-active",name==="table");
   if(name==="table")loadLeaderboard();
 }
 $("navHome").onclick=function(){showPage("home")};
