@@ -3536,7 +3536,7 @@ updateRematchButton();
       setTimeout(loadHistory,300);
     }
   });
-  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+  
 }
 async function handleTournamentEnd(row){
   var iWon = row.winner_id === currentUser.id;
