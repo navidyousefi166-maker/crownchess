@@ -2353,7 +2353,6 @@ async function handleOnlineTimeout(loserColor){
   var winnerId = loserColor === "White" ? onlineGame.black_id : onlineGame.white_id;
   var upd = {status:"completed", winner_id: winnerId, result: winnerId===onlineGame.white_id?"1-0":"0-1", completed_at:new Date().toISOString()};
   await sb.from("kf_games").update(upd).eq("id",onlineGameId);
-  await finalizeOnlineGame(winnerId);
   onlineGame = Object.assign({}, onlineGame, upd);
 }
   function isValidHcp(v){ return v === "n" || v === "b" || v === "r" || v === "q"; }
