@@ -81,6 +81,39 @@ header.topnav{
   .nav-tab{padding:8px 10px;font-size:12px}
   .nav-tab .nt-label{display:none}
   .nav-tab .nt-icon{font-size:18px}
+  .nav-tabs{
+  position:relative;
+  width:104px;
+  height:38px;
+  flex:none;
+  display:block;
+}
+.nav-tabs .nav-tab{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  transition:transform .45s cubic-bezier(.4,0,.2,1), opacity .3s ease;
+}
+.nav-tabs .nav-tab[data-page="home"]{
+  transform:translate(-50%,-50%) translateX(-30px);
+  opacity:1;
+}
+.nav-tabs .nav-tab[data-page="table"]{
+  transform:translate(-50%,-50%) translateX(30px);
+  opacity:0;
+  pointer-events:none;
+}
+.nav-tabs.table-active .nav-tab[data-page="home"]{
+  transform:translate(-50%,-50%) translateX(-90px) scale(.65);
+  opacity:0;
+  pointer-events:none;
+}
+.nav-tabs.table-active .nav-tab[data-page="table"]{
+  transform:translate(-50%,-50%) translateX(0) scale(1);
+  opacity:1;
+  pointer-events:auto;
+}
   .topnav-right .btn{font-size:10px;padding:7px}
   .topnav-right #userBadge{display:none}
   #avatarThumb{width:32px;height:32px}
