@@ -3256,6 +3256,7 @@ async function handleQuickPlayEnd(row){
       exitFullscreenGame();
       document.body.classList.remove("online","computer-mode","game-focus");
       $("new").disabled=false;
+      resetQueueUI();
       setTimeout(loadHistory,300);
     }
   });
