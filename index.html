@@ -654,6 +654,46 @@ body.game-focus .game-fullscreen{display:flex}
 .humil-banner .hb-title{font-weight:800;color:var(--gold2);letter-spacing:.5px}
 .humil-banner .hb-sub{font-size:11px;color:var(--muted)}
 #humilDialog{width:min(500px,calc(100% - 20px));padding:0;border-radius:14px}
+  #humilConfirmDialog{width:min(320px,calc(100% - 24px))}
+.sacr-modal{padding:22px 20px;text-align:center}
+.sacr-title{
+  color:#fa412d;
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:5px;
+  margin:0 0 16px;
+  text-shadow:0 0 20px rgba(250,65,45,.55);
+  animation:sacrPulse 2s ease-in-out infinite;
+}
+@keyframes sacrPulse{
+  0%,100%{opacity:1;text-shadow:0 0 20px rgba(250,65,45,.55)}
+  50%{opacity:.85;text-shadow:0 0 32px rgba(250,65,45,.85)}
+}
+.sacr-scene{
+  position:relative;
+  width:130px;
+  height:130px;
+  margin:0 auto 20px;
+}
+.sacr-piece{width:100%;height:100%}
+.sacr-piece .piece{width:100%;height:100%;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7))}
+.sacr-sword{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.6));
+}
+.sacr-actions{display:flex;gap:8px}
+.sacr-actions .btn{flex:1;padding:11px 14px;font-weight:800;font-size:14px}
+.sacr-yes{
+  background:linear-gradient(135deg,#fa412d,#a00808);
+  border-color:#fa412d;
+  color:#fff;
+  font-weight:900;
+}
+.sacr-yes:hover{filter:brightness(1.12)}
 .humil-panel{padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px}
 .humil-head h2{margin:0;font-size:20px;color:var(--gold2)}
 .humil-head .kicker{font-size:10px}
