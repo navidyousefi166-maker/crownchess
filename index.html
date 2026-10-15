@@ -3298,6 +3298,7 @@ say("Tournament match lost. Better luck next time.");
       exitFullscreenGame();
       document.body.classList.remove("online","computer-mode","game-focus");
       $("new").disabled=false;
+      resetQueueUI();
       setTimeout(refreshTournLive,300);
       setTimeout(loadHistory,300);
     }
