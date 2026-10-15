@@ -2541,6 +2541,162 @@ async function respondDrawOffer(accept){
 }
 $("drawAcceptBtn").onclick=function(){respondDrawOffer(true)};
 $("drawDeclineBtn").onclick=function(){respondDrawOffer(false)};
+  $("drawDeclineBtn").onclick=function(){respondDrawOffer(false)};
+
+/* ===== REMATCH ===== */
+function updateRematchButton(){
+  var btn=$("celebRematch");
+  if(!btn||!onlineGame)return;
+  var isPending=onlineGame.rematch_status==="pending";
+  var isMine=onlineGame.rematch_requested_by===currentUser.id;
+  
+  if(isPending&&isMine){
+    btn.textContent="⏳ Waiting…";
+    btn.disabled=true;
+    btn.classList.add("rematch-waiting");
+    btn.classList.remove("rematch-pending");
+  }else if(isPending&&!isMine){
+    btn.textContent="✅ Accept Rematch";
+    btn.disabled=false;
+    btn.classList.add("rematch-pending");
+    btn.classList.remove("rematch-waiting");
+  }else{
+    btn.textContent="🔄 Rematch";
+    btn.disabled=false;
+    btn.classList.remove("rematch-waiting","rematch-pending");
+  }
+}
+async function requestRematch(){
+  if(!sb||!onlineGameId||!onlineGame||!currentUser)return;
+  if(onlineGame.status!=="completed"){say("Game is not finished yet.");return}
+  if(onlineGame.is_tournament){say("Rematch is not available in tournaments.");return}
+  if(onlineGame.rematch_status==="pending"||onlineGame.rematch_status==="accepted"){
+    say("A rematch is already in progress.");return;
+  }
+  
+  var upd={
+    rematch_requested_by:currentUser.id,
+    rematch_status:"pending",
+    rematch_expires_at:new Date(Date.now()+30000).toISOString(),
+    rematch_game_id:null
+  };
+  
+  var res=await sb.from("kf_games")
+    .update(upd)
+    .eq("id",onlineGameId)
+    .select()
+    .maybeSingle();
+  
+  if(res.error){say("Could not request rematch: "+res.error.message);return}
+  
+  onlineGame=Object.assign({},onlineGame,upd);
+  updateRematchButton();
+  say("Rematch requested. Waiting for opponent…");
+  
+  if(rematchRequestTimer)clearTimeout(rematchRequestTimer);
+  rematchRequestTimer=setTimeout(async function(){
+    if(!onlineGame||onlineGame.rematch_status!=="pending")return;
+    if(onlineGame.rematch_requested_by!==currentUser.id)return;
+    await sb.from("kf_games")
+      .update({rematch_status:"declined"})
+      .eq("id",onlineGameId)
+      .eq("rematch_requested_by",currentUser.id);
+    say("Rematch request expired.");
+    updateRematchButton();
+  },30000);
+}
+async function createRematchGame(){
+  if(!sb||!onlineGame||!currentUser)return null;
+  
+  var newWhiteId=onlineGame.black_id;
+  var newBlackId=onlineGame.white_id;
+  
+  var statsRes=await sb.from("kf_player_stats")
+    .select("user_id,wins")
+    .in("user_id",[newWhiteId,newBlackId]);
+  var statsMap={};
+  if(statsRes.data)statsRes.data.forEach(function(s){statsMap[s.user_id]=s.wins});
+  
+  var res=await sb.from("kf_games").insert({
+    white_id:newWhiteId,
+    black_id:newBlackId,
+    white_username:onlineGame.black_username,
+    black_username:onlineGame.white_username,
+    white_avatar:onlineGame.black_avatar,
+    black_avatar:onlineGame.white_avatar,
+    white_wins:statsMap[newWhiteId]!=null?statsMap[newWhiteId]:onlineGame.black_wins,
+    black_wins:statsMap[newBlackId]!=null?statsMap[newBlackId]:onlineGame.white_wins,
+    fen:new Chess().fen(),
+    pgn:"",
+    turn:"w",
+    status:"active",
+    white_time_left:300,
+    black_time_left:300,
+    is_tournament:false,
+    is_roulette:false,
+    is_rematch:true
+  }).select().maybeSingle();
+  
+  if(res.error)throw res.error;
+  return res.data;
+}
+async function respondRematch(accept){
+  if(!sb||!onlineGameId||!onlineGame||!currentUser)return;
+  if(onlineGame.rematch_requested_by===currentUser.id)return;
+  if(onlineGame.rematch_status!=="pending")return;
+  
+  if(!accept){
+    await sb.from("kf_games")
+      .update({rematch_status:"declined"})
+      .eq("id",onlineGameId);
+    $("rematchDialog").close();
+    rematchDialogShown=false;
+    say("You declined the rematch.");
+    onlineGameId=null;onlineGame=null;
+    if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+    exitFullscreenGame();
+    document.body.classList.remove("online","computer-mode","game-focus");
+    $("new").disabled=false;
+    resetQueueUI();
+    setTimeout(loadHistory,300);
+    return;
+  }
+  
+  _rematchAccepting=true;
+  try{
+    var newGame=await createRematchGame();
+    if(!newGame){say("Could not create rematch game.");return}
+    
+    await sb.from("kf_games")
+      .update({rematch_status:"accepted",rematch_game_id:newGame.id})
+      .eq("id",onlineGameId);
+    
+    $("rematchDialog").close();
+    rematchDialogShown=false;
+    hideCelebration();
+    exitFullscreenGame();
+    document.body.classList.remove("online","computer-mode","game-focus");
+    if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+    currentGameIsRoulette=false;
+    await loadOnlineGame(newGame.id);
+  }catch(e){
+    say("Rematch error: "+(e.message||"Unknown"));
+  }finally{
+    _rematchAccepting=false;
+  }
+}
+$("celebRematch").onclick=function(){
+  if(!onlineGame)return;
+  if(onlineGame.rematch_status==="pending"&&onlineGame.rematch_requested_by!==currentUser.id){
+    respondRematch(true);
+  }else if(onlineGame.rematch_status==="pending"&&onlineGame.rematch_requested_by===currentUser.id){
+    say("Waiting for opponent…");
+  }else{
+    requestRematch();
+  }
+};
+$("rematchAcceptBtn").onclick=function(){respondRematch(true)};
+$("rematchDeclineBtn").onclick=function(){respondRematch(false)};
 $("gfsResignBtn").onclick = async function(){
   if(!onlineGameId||!onlineGame)return;
   if(!confirm("Are you sure you want to resign? Your opponent will win."))return;
