@@ -3438,6 +3438,7 @@ function playDefeatSound(){
 /* ===== Celebration ===== */
 function showCelebration(opts){
   var screen = $("celebrationScreen");
+  _celebOnDone = opts.onDone || null;
   screen.className = "celebration show " + opts.outcome;
   var text = "";
   if (opts.outcome === "win" && opts.hasHumiliation) text = "The Crown Is Yours, Brave King";
