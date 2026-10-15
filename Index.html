@@ -1904,7 +1904,7 @@ async function startQuickPlay(){
   var session=sess.data&&sess.data.session?sess.data.session:null;
   if(!session){openAuth("signin");say("Sign in before using Quick Play.");return}
   currentUser=session.user;
-  humilApplied=false;humilChosenType=null;humilSelecting=false;
+  humilApplied=false;humilChosenType=null;
   pendingQueueIsRoulette=false;
   currentGameIsRoulette=false;
   setQuickState("Finding an opponent · 5-minute game…",{lock:true,cancel:true});
