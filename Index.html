@@ -3034,7 +3034,7 @@ if(last && (last.from===s || last.to===s)){
       var aria = s + (p ? ", " + (p.color==="w"?"white":"black") + " " + names[p.type] : "");
       b.setAttribute("aria-label", aria);
       if(p) b.innerHTML = svg(p);
-      if(targetsSet[s] && !humilSelecting){
+      if(targetsSet[s]){
         var mark = document.createElement("span");
         mark.className = p ? "ring" : "dot";
         b.appendChild(mark);
