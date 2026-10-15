@@ -61,7 +61,8 @@ header.topnav{
   box-shadow:0 0 8px rgba(237,197,107,.4);
   transition:transform .25s ease;margin-left:4px;
 }
-.theme-toggle:hover{transform:scale(1.15) rotate(180deg)}
+  .theme-toggle{transform:rotate(var(--rot,0deg));transition:transform .4s cubic-bezier(.4,0,.2,1)}
+.theme-toggle:hover{transform:rotate(var(--rot,0deg)) scale(1.15)}
 .nav-tabs{display:flex;gap:4px;align-items:center}
 .nav-tab{
   display:flex;align-items:center;gap:6px;
