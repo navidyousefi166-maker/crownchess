@@ -2497,7 +2497,6 @@ $("gfsResignBtn").onclick = async function(){
   if(res.error){say("Could not resign: "+res.error.message);return}
   onlineGame = Object.assign({}, onlineGame, upd);
   if(onlineGame.is_tournament && tournActiveMatch)await finishTournamentMatch(winnerId, true);
-  else await finalizeOnlineGame(winnerId);
   applyOnlineGame(onlineGame);
 };
 
