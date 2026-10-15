@@ -2301,6 +2301,37 @@ $("gfsTopHumil").hidden = !oppHadHcp;
   } else {
     $("gfsDrawBtn").disabled = false;
   }
+  // ===== REMATCH handling =====
+if(row.rematch_status==="pending" 
+   && row.rematch_requested_by 
+   && row.rematch_requested_by!==currentUser.id 
+   && !rematchDialogShown 
+   && !$("rematchDialog").open){
+  rematchDialogShown=true;
+  hideCelebration();
+  setTimeout(function(){
+    if(!$("rematchDialog").open)$("rematchDialog").showModal();
+  },100);
+  say("🏆 Opponent wants a rematch!");
+}
+if(row.rematch_status==="accepted" 
+   && row.rematch_game_id 
+   && !_rematchAccepting){
+  var newId=row.rematch_game_id;
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+  hideCelebration();
+  exitFullscreenGame();
+  document.body.classList.remove("online","computer-mode","game-focus");
+  currentGameIsRoulette=false;
+  setTimeout(function(){loadOnlineGame(newId)},200);
+  return;
+}
+if(row.rematch_status==="declined" 
+   && onlineGame 
+   && onlineGame.rematch_requested_by===currentUser.id){
+  say("Opponent declined the rematch.");
+  updateRematchButton();
+}
   if(row.status==="completed"){
   if(!window._kfFinalizedGames) window._kfFinalizedGames = {};
   if(!window._kfFinalizedGames[row.id] && row.winner_id === currentUser.id){
