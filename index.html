@@ -1180,6 +1180,42 @@ body.game-focus .game-fullscreen{display:flex}
     <div id="humilMsg" style="text-align:center;font-size:12px;color:var(--muted);min-height:16px"></div>
   </div>
 </dialog>
+  <dialog id="humilConfirmDialog">
+  <div class="sacr-modal">
+    <h2 class="sacr-title">SACRIFICE</h2>
+    <div class="sacr-scene">
+      <div class="sacr-piece" id="sacrPiece"></div>
+      <svg class="sacr-sword" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="bladeGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#777"/>
+            <stop offset="50%" stop-color="#f0f0f0"/>
+            <stop offset="100%" stop-color="#777"/>
+          </linearGradient>
+        </defs>
+        <g transform="translate(50 50) rotate(-35) translate(-50 -50)">
+          <polygon points="50,8 55,18 55,60 45,60 45,18" fill="url(#bladeGrad)" stroke="#111" stroke-width="1.5"/>
+          <polygon points="50,8 55,18 45,18" fill="#fafafa" stroke="#111" stroke-width="1.5"/>
+          <rect x="33" y="58" width="34" height="6" fill="#c9a961" stroke="#111" stroke-width="1.5" rx="1"/>
+          <rect x="33" y="58" width="34" height="2" fill="#ffe5a0" opacity=".6"/>
+          <rect x="45" y="64" width="10" height="20" fill="#5a3010" stroke="#111" stroke-width="1.5"/>
+          <line x1="47" y1="68" x2="53" y2="72" stroke="#3a1a06" stroke-width="1"/>
+          <line x1="47" y1="73" x2="53" y2="77" stroke="#3a1a06" stroke-width="1"/>
+          <circle cx="50" cy="86" r="4" fill="#c9a961" stroke="#111" stroke-width="1.5"/>
+          <circle cx="50" cy="85" r="1.5" fill="#ffe5a0" opacity=".8"/>
+        </g>
+        <ellipse cx="42" cy="68" rx="2" ry="3.5" fill="#a80808"/>
+        <ellipse cx="45" cy="78" rx="1.8" ry="3" fill="#a80808"/>
+        <circle cx="43" cy="85" r="1.5" fill="#a80808"/>
+        <ellipse cx="56" cy="72" rx="1.5" ry="2.5" fill="#a80808"/>
+      </svg>
+    </div>
+    <div class="sacr-actions">
+      <button type="button" class="btn" id="humilConfirmNo">Cancel</button>
+      <button type="button" class="btn sacr-yes" id="humilConfirmYes">Sacrifice</button>
+    </div>
+  </div>
+  </dialog>
 <dialog id="drawOfferDialog">
   <div class="modal">
     <div class="modal-head">
