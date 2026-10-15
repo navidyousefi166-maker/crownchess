@@ -2898,6 +2898,10 @@ function updateHumilBadge(){
 }
 function showHumilBanner(){ /* حذف شد — دیگر بنر شناور نمایش داده نمی‌شود */ }
 function hideHumilBanner(){var b=$("humilBanner");if(b)b.remove()}
+  function renderSacrificeScene(color, type){
+  var el = $("sacrPiece");
+  if(el) el.innerHTML = svg({color:color, type:type});
+  }
 function isHumilEligiblePiece(sq){
   if(!game) return false;
   var p = game.get(sq);
