@@ -1745,7 +1745,12 @@ async function loadLeaderboard(){
   if(!sb){list.innerHTML='<div class="lb-empty">Supabase is unavailable.</div>';return}
   list.innerHTML='<div class="lb-loading">Loading leaderboard…</div>';
   var res=await sb.rpc("kf_get_leaderboard",{p_limit:100});
-  if(res.error){list.innerHTML='<div class="lb-empty">Could not load leaderboard.</div>';return}
+  if(res.error){
+    console.error("Leaderboard error:", res);
+    list.innerHTML='<div class="lb-empty">Could not load leaderboard.<br><small style="color:#ef8b83;word-break:break-word;display:block;margin-top:8px">'+
+      (res.error.message||JSON.stringify(res.error))+'</small></div>';
+    return;
+  }
   var data=res.data||[];
   if(!data.length){
     list.innerHTML='<div class="lb-empty">No players yet. Play a match to appear here!</div>';
