@@ -3461,7 +3461,7 @@ function showCelebration(opts){
   setTimeout(function(){$("celebWinsOld").textContent = oldW}, 900);
   setTimeout(function(){$("celebPlus").textContent = (newW - oldW > 0) ? "+" + (newW - oldW) : ""}, 1400);
   setTimeout(function(){$("celebWinsNew").textContent = "→ " + newW}, 1500);
-  var dur = opts.isTournament ? 3000 : 5000;
+  var dur = opts.isTournament ? 10000 : 10000;
   $("celebAuto").textContent = "Closing in " + Math.ceil(dur/1000) + "s…";
   if (celebTimer) clearTimeout(celebTimer);
   if (celebInterval) clearInterval(celebInterval);
