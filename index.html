@@ -3381,7 +3381,13 @@ async function clickSquare(s){
   if(humilSelecting){
   if(isHumilEligiblePiece(s)){
     var pName = names[game.get(s).type];
-    var ok = confirm("Are you sure you want to sacrifice your " + pName + "?");
+    renderSacrificeScene(fsPlayerColor, game.get(s).type);
+$("humilConfirmDialog").showModal();
+var ok = await new Promise(function(resolve){
+  $("humilConfirmYes").onclick = function(){ $("humilConfirmDialog").close(); resolve(true); };
+  $("humilConfirmNo").onclick  = function(){ $("humilConfirmDialog").close(); resolve(false); };
+  $("humilConfirmDialog").oncancel = function(e){ e.preventDefault(); $("humilConfirmDialog").close(); resolve(false); };
+});
     if(ok){
       var color = fsPlayerColor;
       var type = game.get(s).type;
