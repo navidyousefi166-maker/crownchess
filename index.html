@@ -2023,6 +2023,8 @@ function applyOnlineGame(row){
   var prevHumil = onlineGame ? onlineGame.white_handicap : null;
   var prevHumilB = onlineGame ? onlineGame.black_handicap : null;
   onlineGame=row;
+  var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap)) || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
+$("gfsTopHumil").hidden = !oppHadHcp;
   if(row.white_time_left!=null) clockWhite=row.white_time_left;
   if(row.black_time_left!=null) clockBlack=row.black_time_left;
   lastClockAt=Date.now();
