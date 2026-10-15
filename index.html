@@ -836,6 +836,32 @@ body.game-focus .game-fullscreen{display:flex}
   .celeb-text{font-size:clamp(16px,5vw,24px)}
   .celeb-wins-row{font-size:28px}
 }
+  /* ===== REMATCH ===== */
+#celebRematch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+#celebRematch[hidden]{display:none!important}
+#celebRematch.rematch-pending{
+  background: linear-gradient(135deg, var(--gold2), var(--gold3)) !important;
+  border-color: var(--gold) !important;
+  color: #2a0710 !important;
+  animation: rematchGlow 1.5s ease-in-out infinite;
+}
+#celebRematch.rematch-waiting{
+  opacity: .65;
+  cursor: wait;
+}
+@keyframes rematchGlow{
+  0%,100%{box-shadow:0 0 0 0 rgba(237,197,107,.5)}
+  50%{box-shadow:0 0 0 10px rgba(237,197,107,0)}
+}
+@media(max-width:600px){
+  .celeb-actions{flex-wrap:wrap;justify-content:center}
+  .celeb-actions button{padding:10px 14px;font-size:13px;flex:1 1 auto;min-width:110px}
+}
+
 #leaderboardPage{padding:16px 0 24px}
 .lb-wrap{
   border:1px solid var(--line2);border-radius:12px;
