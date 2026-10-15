@@ -3270,7 +3270,8 @@ async function handleTournamentEnd(row){
     exitFullscreenGame();
     document.body.classList.remove("online","computer-mode","game-focus");
     $("new").disabled=false;
-    say("Tournament match lost. Better luck next time.");
+    resetQueueUI();
+say("Tournament match lost. Better luck next time.");
     setTimeout(refreshTournLive,500);
     setTimeout(loadHistory,500);
     return;
