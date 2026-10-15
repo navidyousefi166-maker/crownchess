@@ -2881,12 +2881,21 @@ $("humilConfirm").onclick = async function(){
   $("humilDialog").close();
   updateHumilBadge();
 };
-function applyHandicapToGame(color, type){
+function applyHandicapToGame(color, type, square){
   if(!game)return;
+  if(square){
+    var p = game.get(square);
+    if(p && p.color === color && p.type === type){
+      game.remove(square);
+      last=null;selected=null;targets=[];
+      draw();
+      return;
+    }
+  }
   var board = game.board();
   for (var r=0;r<8;r++) for (var c=0;c<8;c++){
-    var p = board[r][c];
-    if (p && p.color === color && p.type === type) {
+    var p2 = board[r][c];
+    if (p2 && p2.color === color && p2.type === type) {
       var sqName = files[c] + (8-r);
       game.remove(sqName);
       last=null;selected=null;targets=[];
