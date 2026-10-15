@@ -766,6 +766,40 @@ body.game-focus .game-fullscreen{display:flex}
   .piece{width:91%;height:91%}
   .side #history{height:115px}
 }
+ /* ==== OVERRIDE: clock absolutely positioned, flush left, 2 squares wide ==== */
+.gfs-topbar, .gfs-bottombar { position:relative !important; padding:0 !important; }
+.gfs-topbar .gfs-left, .gfs-bottombar .gfs-left { flex:0 0 0 !important; width:0 !important; margin:0 !important; padding:0 !important; }
+.gfs-topbar .gfs-clock, .gfs-bottombar .gfs-clock {
+  position:absolute !important;
+  left:0 !important;
+  top:0 !important;
+  bottom:0 !important;
+  width:25% !important;
+  height:auto !important;
+  aspect-ratio:auto !important;
+  margin:0 !important;
+  padding:0 !important;
+  border-radius:0 !important;
+  border-left:0 !important;
+  border-top:0 !important;
+  border-bottom:0 !important;
+  font-size:clamp(16px,5.5vw,32px) !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  z-index:5 !important;
+  box-sizing:border-box !important;
+}
+.gfs-topbar .gfs-right, .gfs-bottombar .gfs-right { padding:12px 14px !important; box-sizing:border-box !important; }
+.gfs-bottombar .gfs-actions {
+  position:absolute !important;
+  left:calc(25% + 4px) !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  flex-direction:row !important;
+  gap:4px !important;
+  z-index:6 !important;
+  } 
 </style>
 </head>
 <body>
