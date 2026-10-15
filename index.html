@@ -3306,6 +3306,7 @@ async function clickSquare(s){
       var color = fsPlayerColor;
       var type = game.get(s).type;
       var myHandicapField = (onlineGame && onlineGame.white_id === currentUser.id) ? "white_handicap" : "black_handicap";
+      humilSelecting = false;
       applyHandicapToGame(color, type, s);
       var upd = {}; 
       upd[myHandicapField] = type;
@@ -3317,7 +3318,6 @@ async function clickSquare(s){
       }
       onlineGame = Object.assign({}, onlineGame, upd);
       humilApplied = true;
-      humilSelecting = false;
       playWindSound();
       updateHumilBadge();
     } else {
