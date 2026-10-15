@@ -1681,7 +1681,6 @@ async function submitOnlineMove(m){
   onlineGame.white_time_left=upd.white_time_left;
   onlineGame.black_time_left=upd.black_time_left;
   lastClockAt=Date.now();
-  if(status==="completed")await finalizeOnlineGame(winnerId);
 }
 function tickClock(){
   if(computerMode||!game||game.game_over()||clockExpired){paintClocks();return}
