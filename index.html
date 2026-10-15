@@ -2356,6 +2356,33 @@ async function handleOnlineTimeout(loserColor){
   try{ setQuickState("5-minute game · Match by wins"); }catch(e){}
   try{ setRouletteState("Random opening · 3 moves each auto-played"); }catch(e){}
   }
+  var autoJoinChecked = false;
+async function checkActiveGameAndJoin(){
+  if(!sb || !currentUser) return;
+  if(onlineGameId) return;
+  if(computerMode) return;
+  if(autoJoinChecked) return;
+  autoJoinChecked = true;
+  try{
+    var res = await sb.from("kf_games")
+      .select("*")
+      .eq("status","active")
+      .or("white_id.eq."+currentUser.id+",black_id.eq."+currentUser.id)
+      .order("created_at",{ascending:false})
+      .limit(1)
+      .maybeSingle();
+    if(res.error || !res.data) return;
+    var data = res.data;
+    if(data.is_tournament && data.tournament_match_id){
+      var mres = await sb.from("kf_tournament_matches").select("*").eq("id", data.tournament_match_id).maybeSingle();
+      if(!mres.error && mres.data) tournActiveMatch = mres.data;
+      await joinTournamentGame(data.id);
+    } else {
+      currentGameIsRoulette = !!data.is_roulette;
+      await loadOnlineGame(data.id);
+    }
+  }catch(e){ console.warn("Auto-rejoin error:", e); }
+}
  function enterFullscreenGame(row){
   document.body.classList.add("game-focus");
   fsPlayerColor = (row.white_id === currentUser.id) ? "w" : "b";
