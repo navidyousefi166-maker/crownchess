@@ -2351,6 +2351,11 @@ async function handleOnlineTimeout(loserColor){
   onlineGame = Object.assign({}, onlineGame, upd);
 }
   function isValidHcp(v){ return v === "n" || v === "b" || v === "r" || v === "q"; }
+  function resetQueueUI(){
+  try{ stopQueuePoll(); }catch(e){}
+  try{ setQuickState("5-minute game · Match by wins"); }catch(e){}
+  try{ setRouletteState("Random opening · 3 moves each auto-played"); }catch(e){}
+  }
  function enterFullscreenGame(row){
   document.body.classList.add("game-focus");
   fsPlayerColor = (row.white_id === currentUser.id) ? "w" : "b";
