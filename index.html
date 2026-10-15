@@ -766,6 +766,37 @@ body.game-focus .game-fullscreen{display:flex}
   .piece{width:91%;height:91%}
   .side #history{height:115px}
 }
+  /* ==== عرض ساعت = دقیقاً ۲ خونه (a و b) ==== */
+.gfs-topbar,
+.gfs-bottombar{
+  position:relative;
+}
+.gfs-topbar .gfs-left,
+.gfs-bottombar .gfs-left{
+  flex:0 0 calc(25% + 7px);
+  width:calc(25% + 7px);
+  margin-left:-14px;   /* لغو پدینگ چپ نوار تا به لبه‌ی بورد برسه */
+  gap:0;
+}
+.gfs-topbar .gfs-clock,
+.gfs-bottombar .gfs-clock{
+  width:100%;
+  margin:0;
+  aspect-ratio:auto;
+  height:54px;
+  font-size:clamp(15px,4.8vw,30px);
+  border-radius:8px;
+}
+/* دکمه‌های تساوی/استعفا در نوار پایین، بعد از ساعت */
+.gfs-bottombar .gfs-actions{
+  position:absolute;
+  left:calc(25% + 6px);
+  top:50%;
+  transform:translateY(-50%);
+  z-index:3;
+  flex-direction:row;
+  gap:4px;
+}
 </style>
 </head>
 <body>
