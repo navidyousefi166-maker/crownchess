@@ -3516,6 +3516,8 @@ async function handleQuickPlayEnd(row){
   } else bonus = 0;
   var oldWins = currentWins - bonus;
   var newWins = currentWins;
+  $("celebRematch").hidden = false;
+updateRematchButton();
   showCelebration({
     outcome: outcome,
     user: currentUser,
