@@ -1637,7 +1637,7 @@ function paintClocks(){
     }
     if(botEl){
       botEl.textContent=fmtClock(botVal);
-      var botActive = game && !game.game_over() && !clockExpired && ((game.turn()==="w")===(fsPlayerColor==="white"));
+     var botActive = game && !game.game_over() && !clockExpired && ((game.turn()==="w")===(fsPlayerColor==="w"));
       botEl.classList.toggle("active",botActive);
     }
   }
