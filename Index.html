@@ -2642,7 +2642,7 @@ async function applyHumilFromDialog(){
   if(res.error){$("humilMsg").textContent="Error: "+res.error.message;return}
   onlineGame = Object.assign({}, onlineGame, upd);
   humilApplied = true;
-  humilSelecting = false;
+  
   applyHandicapToGame(fsPlayerColor, humilChosenType);
   playWindSound();
   $("humilDialog").close();
