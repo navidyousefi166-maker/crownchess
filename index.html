@@ -2151,7 +2151,8 @@ async function handleOnlineTimeout(loserColor){
   await finalizeOnlineGame(winnerId);
   onlineGame = Object.assign({}, onlineGame, upd);
 }
-function enterFullscreenGame(row){
+  function isValidHcp(v){ return v === "n" || v === "b" || v === "r" || v === "q"; }
+ function enterFullscreenGame(row){
   document.body.classList.add("game-focus");
   fsPlayerColor = (row.white_id === currentUser.id) ? "w" : "b";
   flipped = (fsPlayerColor === "b");
