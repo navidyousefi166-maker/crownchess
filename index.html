@@ -2891,3 +2891,528 @@ function applyHandicapToGame(color, type){
     }
   }
 }
+/* ===== Sounds ===== */
+function playWindSound(){
+  try{
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var bufferSize = ctx.sampleRate * 0.8;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+    var src = ctx.createBufferSource(); src.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = "bandpass"; filter.frequency.value = 2000; filter.Q.value = 1.2;
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+    src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    src.start();
+  }catch(e){}
+}
+function playVictorySound(){
+  try{
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var notes = [523.25, 659.25, 783.99, 1046.5];
+    var t = ctx.currentTime;
+    notes.forEach(function(freq, i){
+      var osc = ctx.createOscillator();
+      osc.type = "triangle"; osc.frequency.value = freq;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0, t + i*0.15);
+      g.gain.linearRampToValueAtTime(0.35, t + i*0.15 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i*0.15 + 0.4);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t + i*0.15); osc.stop(t + i*0.15 + 0.5);
+    });
+  }catch(e){}
+}
+function playDefeatSound(){
+  try{
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var t = ctx.currentTime;
+    var bufferSize = ctx.sampleRate * 1.2;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1) * Math.max(0,1 - i/bufferSize*1.5);
+    var src = ctx.createBufferSource(); src.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = "lowpass"; filter.frequency.setValueAtTime(4000, t); filter.frequency.exponentialRampToValueAtTime(200, t+0.9);
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t+1.0);
+    src.connect(filter); filter.connect(g); g.connect(ctx.destination); src.start(t);
+    var osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.setValueAtTime(120, t+0.7); osc.frequency.exponentialRampToValueAtTime(40, t+1.4);
+    var g2 = ctx.createGain(); g2.gain.setValueAtTime(0, t+0.7); g2.gain.linearRampToValueAtTime(0.5, t+0.75); g2.gain.exponentialRampToValueAtTime(0.001, t+1.5);
+    osc.connect(g2); g2.connect(ctx.destination); osc.start(t+0.7); osc.stop(t+1.5);
+  }catch(e){}
+}
+
+/* ===== Celebration ===== */
+function showCelebration(opts){
+  var screen = $("celebrationScreen");
+  screen.className = "celebration show " + opts.outcome;
+  var text = "";
+  if (opts.outcome === "win" && opts.hasHumiliation) text = "The Crown Is Yours, Brave King";
+  else if (opts.outcome === "win") text = "The Crown Is Yours, My King";
+  else if (opts.outcome === "loss") text = "The King Has Fallen";
+  else text = "A Draw in the Battle";
+  $("celebText").textContent = text;
+  $("celebAvatar").src = opts.user && opts.user.user_metadata && opts.user.user_metadata.avatar_url ? opts.user.user_metadata.avatar_url : defaultAvatar();
+  var uname = opts.user && opts.user.user_metadata && opts.user.user_metadata.username ? opts.user.user_metadata.username : "Player";
+  $("celebName").textContent = uname;
+  $("celebWinsOld").textContent = "";
+  $("celebPlus").textContent = "";
+  $("celebWinsNew").textContent = "";
+  $("celebHumilTag").hidden = !(opts.hasHumiliation && opts.outcome === "win");
+  if (opts.outcome === "win") setTimeout(playVictorySound, 300);
+  else if (opts.outcome === "loss") setTimeout(playDefeatSound, 300);
+  if (opts.outcome === "win") launchConfetti();
+  var oldW = opts.oldWins || 0;
+  var newW = opts.newWins || oldW;
+  setTimeout(function(){$("celebWinsOld").textContent = oldW}, 900);
+  setTimeout(function(){$("celebPlus").textContent = (newW - oldW > 0) ? "+" + (newW - oldW) : ""}, 1400);
+  setTimeout(function(){$("celebWinsNew").textContent = "→ " + newW}, 1500);
+  var dur = opts.isTournament ? 3000 : 5000;
+  $("celebAuto").textContent = "Closing in " + Math.ceil(dur/1000) + "s…";
+  if (celebTimer) clearTimeout(celebTimer);
+  if (celebInterval) clearInterval(celebInterval);
+  var startTime = Date.now();
+  celebInterval = setInterval(function(){
+    var remain = Math.max(0, dur - (Date.now() - startTime));
+    $("celebAuto").textContent = "Closing in " + Math.ceil(remain/1000) + "s…";
+    if (remain <= 0) clearInterval(celebInterval);
+  }, 250);
+  celebTimer = setTimeout(function(){
+    clearInterval(celebInterval);
+    hideCelebration();
+    if (opts.onDone) opts.onDone();
+  }, dur);
+}
+function hideCelebration(){
+  if (celebTimer) { clearTimeout(celebTimer); celebTimer = null; }
+  if (celebInterval) { clearInterval(celebInterval); celebInterval = null; }
+  $("celebrationScreen").classList.remove("show","win","loss","draw");
+}
+$("celebExit").onclick = function(){
+  if(celebTimer){clearTimeout(celebTimer);celebTimer=null}
+  if(celebInterval){clearInterval(celebInterval);celebInterval=null}
+  hideCelebration();
+  onlineGameId=null;onlineGame=null;
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+  exitFullscreenGame();
+  document.body.classList.remove("online","computer-mode","game-focus");
+  $("new").disabled=false;
+  setTimeout(loadHistory,300);
+  setTimeout(refreshTournLive,500);
+};
+$("celebAnalyze").onclick = function(){
+  if(celebTimer){clearTimeout(celebTimer);celebTimer=null}
+  if(celebInterval){clearInterval(celebInterval);celebInterval=null}
+  hideCelebration();
+  exitFullscreenGame();
+  setTimeout(openAnalysis,200);
+};
+async function handleQuickPlayEnd(row){
+  var iWon = row.winner_id === currentUser.id;
+  var isDraw = row.result === "1/2-1/2" || (!row.winner_id && !row.result);
+  var outcome = isDraw ? "draw" : (iWon ? "win" : "loss");
+  var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id",currentUser.id).maybeSingle();
+  var currentWins = statsRes.data ? (statsRes.data.wins||0) : 0;
+  var bonus = 1;
+  if (iWon) {
+    var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+    if (hcp === "n" || hcp === "b") bonus = 2;
+    else if (hcp === "r") bonus = 3;
+    else if (hcp === "q") bonus = 5;
+  } else bonus = 0;
+  var oldWins = currentWins - bonus;
+  var newWins = currentWins;
+  showCelebration({
+    outcome: outcome,
+    user: currentUser,
+    oldWins: oldWins,
+    newWins: newWins,
+    hasHumiliation: !!(row.white_handicap || row.black_handicap),
+    isTournament: false,
+    onDone: function(){
+      onlineGameId=null;onlineGame=null;
+      if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+      exitFullscreenGame();
+      document.body.classList.remove("online","computer-mode","game-focus");
+      $("new").disabled=false;
+      setTimeout(loadHistory,300);
+    }
+  });
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+}
+async function handleTournamentEnd(row){
+  var iWon = row.winner_id === currentUser.id;
+  if (!iWon) {
+    onlineGameId=null;onlineGame=null;tournActiveMatch=null;
+    if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+    exitFullscreenGame();
+    document.body.classList.remove("online","computer-mode","game-focus");
+    $("new").disabled=false;
+    say("Tournament match lost. Better luck next time.");
+    setTimeout(refreshTournLive,500);
+    setTimeout(loadHistory,500);
+    return;
+  }
+  var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id",currentUser.id).maybeSingle();
+  var currentWins = statsRes.data ? (statsRes.data.wins||0) : 0;
+  var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+  var bonus = 1;
+  if (hcp === "n" || hcp === "b") bonus = 2;
+  else if (hcp === "r") bonus = 3;
+  else if (hcp === "q") bonus = 5;
+  var oldWins = currentWins - bonus;
+  var newWins = currentWins;
+  showCelebration({
+    outcome: "win",
+    user: currentUser,
+    oldWins: oldWins,
+    newWins: newWins,
+    hasHumiliation: !!hcp,
+    isTournament: true,
+    onDone: function(){
+      onlineGameId=null;onlineGame=null;tournActiveMatch=null;
+      if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+      exitFullscreenGame();
+      document.body.classList.remove("online","computer-mode","game-focus");
+      $("new").disabled=false;
+      setTimeout(refreshTournLive,300);
+      setTimeout(loadHistory,300);
+    }
+  });
+  if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
+}
+async function loadHistory(){
+  var section=$("historySection");
+  if(!sb||!currentUser){section.classList.remove("show");return}
+  var res=await sb.rpc("kf_get_my_history",{p_limit:5});
+  if(res.error){console.warn("History error:",res.error);section.classList.remove("show");return}
+  historyData=res.data||[];
+  renderHistory();
+  section.classList.add("show");
+}
+function renderHistory(){
+  var list=$("historyList");list.innerHTML="";
+  if(!historyData.length){list.innerHTML='<div class="history-empty">No finished games yet. Play a match to see your history!</div>';return}
+  for(var i=0;i<historyData.length;i++){
+    (function(g){
+      var row=document.createElement("div");row.className="hist-row";
+      var outcomeIcon = g.my_outcome==="win"?"🟢":g.my_outcome==="loss"?"🔴":"🟡";
+      var outcomeEl=document.createElement("span");outcomeEl.className="hist-outcome";outcomeEl.textContent=outcomeIcon;
+      var img=document.createElement("img");img.className="hist-avatar";img.src=g.opponent_avatar||defaultAvatar();img.alt="";
+      var info=document.createElement("div");info.className="hist-info";
+      var nm=document.createElement("div");nm.className="hist-name";nm.textContent="vs "+(g.opponent_username||"Opponent");
+      var meta=document.createElement("div");meta.className="hist-meta";
+      var tagClass = g.is_tournament ? "tourn" : (g.is_roulette ? "roulette" : "quick");
+      var tagText = g.is_tournament ? "🏆 Tournament" : (g.is_roulette ? "🎰 Roulette" : "⚡ Quick Play");
+      var tag=document.createElement("span");tag.className="hist-tag "+tagClass;
+      tag.textContent=tagText;
+      var when=document.createElement("span");when.textContent=fmtTimeLocal(g.completed_at);
+      var color=document.createElement("span");color.textContent=g.my_color==="w"?"Played White":"Played Black";
+      meta.appendChild(tag);meta.appendChild(when);meta.appendChild(color);
+      info.appendChild(nm);info.appendChild(meta);
+      var badge=document.createElement("span");badge.className="hist-result-badge "+g.my_outcome;
+      badge.textContent=g.my_outcome==="win"?"WIN":g.my_outcome==="loss"?"LOSS":"DRAW";
+      var ana=document.createElement("button");ana.className="hist-analyze";ana.type="button";ana.textContent="Analyze";
+      ana.onclick=function(e){e.stopPropagation();startAnalysisFromHistory(g)};
+      row.appendChild(outcomeEl);row.appendChild(img);row.appendChild(info);
+      row.appendChild(badge);row.appendChild(ana);
+      row.onclick=function(){startAnalysisFromHistory(g)};
+      list.appendChild(row);
+    })(historyData[i]);
+  }
+}
+function startAnalysisFromHistory(g){
+  if(!g.pgn){say("This game has no replay data.");return}
+  try{
+    var tempGame=new Chess();
+    tempGame.load_pgn(g.pgn);
+    if(!tempGame.history().length){say("Could not load this game.");return}
+    pendingAnalysisGame=game;
+    game=tempGame;
+    draw();
+    openAnalysis();
+  }catch(e){say("Could not load this game: "+e.message)}
+}
+
+/* ===== SVG pieces (with cache) ===== */
+var _svgCache = {};
+function svg(p){
+  var key = p.color + p.type;
+  if (_svgCache[key]) return _svgCache[key];
+  var w=p.color==="w";
+  var glyphMap={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
+  var glyph=glyphMap[p.type];
+  var fill=w?"#fffdf7":"#20100d";
+  var stroke=w?"#2a1810":"#f0d8a8";
+  var strokeW=w?"2.6":"1.4";
+  var fontSizes={k:112,q:100,r:100,b:106,n:108,p:106};
+  var fontSize=fontSizes[p.type]||100;
+  var yPos=88;
+  var label=(w?"White ":"Black ")+names[p.type];
+  var result = '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg">'
+    +'<text x="50" y="'+yPos+'" text-anchor="middle" '
+    +'font-family="DejaVu Sans,Arial Unicode MS,Segoe UI Symbol,serif" '
+    +'font-size="'+fontSize+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+strokeW+'" '
+    +'paint-order="stroke fill" filter="drop-shadow(0 2px 2px #0008)">'+glyph+'</text></svg>';
+  _svgCache[key] = result;
+  return result;
+}
+function sq(r,c){return files[c]+(8-r)}
+
+/* ===== Board build & draw ===== */
+function buildBoardOnce(){
+  boardEl.innerHTML = "";
+  _sqEls = {};
+  for(var vr=0;vr<8;vr++){
+    for(var vc=0;vc<8;vc++){
+      var r=flipped?7-vr:vr, c=flipped?7-vc:vc, s=sq(r,c);
+      var b=document.createElement("button");
+      b.type="button";
+      b.className="square "+((r+c)%2===0?"light":"dark");
+      b.dataset.sq = s;
+      b.onclick = (function(square){return function(){clickSquare(square)}})(s);
+      boardEl.appendChild(b);
+      _sqEls[s] = b;
+    }
+  }
+  _boardBuilt = true;
+  _boardFlipped = flipped;
+}
+function start(){
+  resetClocks();
+  if(!window.Chess){
+    $("status").textContent="Chess library unavailable";
+    say("Could not load chess.js. Check your connection and refresh.");
+    return;
+  }
+  game=new Chess();selected=null;targets=[];last=null;say("");
+  _boardBuilt=false;
+  draw();
+}
+function draw(){
+  if(!game) return;
+  paintClocks();
+  if(!_boardBuilt || _boardFlipped !== flipped){
+    buildBoardOnce();
+  }
+  var targetsSet = {};
+  for(var k=0;k<targets.length;k++) targetsSet[targets[k].to] = true;
+  for(var vr=0;vr<8;vr++){
+    for(var vc=0;vc<8;vc++){
+      var r = flipped?7-vr:vr;
+      var c = flipped?7-vc:vc;
+      var s = sq(r,c);
+      var p = game.get(s);
+      var b = _sqEls[s];
+      if(!b) continue;
+      b.innerHTML = "";
+      b.classList.toggle("selected", selected===s);
+      b.classList.remove("humil-dim","humil-target");
+      b.style.backgroundImage = "";
+      if(humilSelecting){
+        if(isHumilEligiblePiece(s)){
+          b.classList.add("humil-target");
+        } else {
+          b.classList.add("humil-dim");
+        }
+      }
+      if(last && (last.from===s || last.to===s) && !humilSelecting){
+        b.style.backgroundImage = "linear-gradient(#e5bd6545,#e5bd6545)";
+      }
+      var aria = s + (p ? ", " + (p.color==="w"?"white":"black") + " " + names[p.type] : "");
+      b.setAttribute("aria-label", aria);
+      if(p) b.innerHTML = svg(p);
+      if(targetsSet[s] && !humilSelecting){
+        var mark = document.createElement("span");
+        mark.className = p ? "ring" : "dot";
+        b.appendChild(mark);
+      }
+      if((flipped?r===7:r===0) || c===(flipped?7:0)){
+        var co = document.createElement("span");
+        co.className = "coords";
+        co.textContent = (c===(flipped?7:0) ? 8-r : files[c]);
+        b.appendChild(co);
+      }
+    }
+  }
+  var turn = game.turn()==="w" ? "White" : "Black";
+  var statusText;
+  if(game.in_checkmate()) statusText = "Checkmate — " + (turn==="White"?"Black":"White") + " wins";
+  else if(game.in_draw()) statusText = "Draw";
+  else statusText = turn + " to move" + (game.in_check() ? " · Check" : "");
+  $("status").textContent = statusText;
+  $("top").textContent = flipped ? "White pieces" : "Black pieces";
+  $("bottom").textContent = flipped ? "Black pieces" : "White pieces";
+  if(!onlineGameId && !computerMode) $("undo").disabled = !game.history().length;
+  updateHistory();
+}
+function updateHistory(){
+  var h=game.history();
+  if(!h.length){historyEl.textContent="No moves yet.";return}
+  historyEl.innerHTML="";
+  for(var i=0;i<h.length;i+=2){
+    var row=document.createElement("div");row.className="move";
+    var cells=[""+(i/2+1)+".",h[i]||"",h[i+1]||""];
+    for(var j=0;j<cells.length;j++){
+      var span=document.createElement("span");span.textContent=cells[j];row.appendChild(span);
+    }
+    historyEl.appendChild(row);
+  }
+  historyEl.scrollTop=historyEl.scrollHeight;
+}
+function askPromotion(color){
+  return new Promise(function(resolve){
+    var dlg=$("promotionDialog"),grid=$("promoGrid");
+    grid.innerHTML="";
+    var pieces=["q","r","b","n"];
+    for(var i=0;i<pieces.length;i++){
+      (function(type){
+        var btn=document.createElement("button");
+        btn.type="button";btn.className="promo-btn";btn.title=names[type];
+        btn.innerHTML=svg({color:color,type:type});
+        btn.onclick=function(){dlg.close();resolve(type)};
+        grid.appendChild(btn);
+      })(pieces[i]);
+    }
+    dlg.oncancel=function(e){e.preventDefault();dlg.close();resolve("q")};
+    dlg.showModal();
+  });
+}
+async function clickSquare(s){
+  if(!game)return;
+  if(humilSelecting){
+    if(isHumilEligiblePiece(s)){
+      var pName = names[game.get(s).type];
+      var ok = confirm("Are you sure you want to sacrifice your " + pName + "?");
+      if(ok){
+        var color = fsPlayerColor;
+        var type = game.get(s).type;
+        var myHandicapField = (onlineGame && onlineGame.white_id === currentUser.id) ? "white_handicap" : "black_handicap";
+        var upd = {}; upd[myHandicapField] = type;
+        var res = await sb.from("kf_games").update(upd).eq("id", onlineGameId);
+        if(res.error){
+          say("Error: " + res.error.message);
+          return;
+        }
+        onlineGame = Object.assign({}, onlineGame, upd);
+        humilApplied = true;
+        humilSelecting = false;
+        applyHandicapToGame(color, type);
+        playWindSound();
+        updateHumilBadge();
+      } else {
+        exitHumilSelection();
+      }
+    } else {
+      exitHumilSelection();
+    }
+    return;
+  }
+  if(game.game_over()||clockExpired)return;
+  if(computerMode){
+    var compColor = (computerUserColor === "w") ? "b" : "w";
+    if(game.turn() === compColor || computerBusy){say("The computer is thinking…");return}
+  }
+  if(onlineGameId){
+    if(submittingMove)return;
+    var myColor=null;
+    if(onlineGame&&currentUser){
+      if(onlineGame.white_id===currentUser.id)myColor="w";
+      else if(onlineGame.black_id===currentUser.id)myColor="b";
+    }
+    if(!myColor||game.turn()!==myColor){say("It's your opponent's turn.");return}
+  }
+  var p=game.get(s);
+  if(selected&&targets.some(function(m){return m.to===s})){
+    var piece=game.get(selected);
+    var promotion="q";
+    if(piece&&piece.type==="p"&&(s.charAt(1)==="8"||s.charAt(1)==="1")){
+      promotion=await askPromotion(piece.color);
+    }
+    var m=game.move({from:selected,to:s,promotion:promotion});
+    if(m){
+      last={from:m.from,to:m.to};selected=null;targets=[];
+      if(onlineGameId)lastClockAt=Date.now();
+      say(m.san);draw();
+      if(firstMoveTimer&&game.history().length>0){clearTimeout(firstMoveTimer);firstMoveTimer=null}
+      if(humilApplied||game.history().length>0){hideHumilBanner();updateHumilBadge()}
+      if(onlineGameId){
+        submittingMove=true;
+        await submitOnlineMove(m);
+        submittingMove=false;
+      }
+      else if(computerMode&&!game.game_over()){
+        lastClockAt=Date.now();
+        var compColor2 = (computerUserColor === "w") ? "b" : "w";
+        if(game.turn() === compColor2) computerTimer=setTimeout(makeComputerMove,180);
+      }
+      return;
+    }
+  }
+  if(p&&p.color===game.turn()){
+    selected=s;targets=game.moves({square:s,verbose:true});say("");draw();
+  }else{selected=null;targets=[];draw()}
+}
+$("new").onclick=function(){
+  if(onlineGameId){say("You cannot reset an online or tournament game.");return}
+  if(computerMode){
+    if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+    clockExpired=false;lastClockAt=Date.now();
+    game=new Chess();selected=null;targets=[];last=null;computerBusy=false;
+    _boardBuilt=false;
+    draw();say("New computer game started.");return;
+  }
+  if(confirm("Start a new local game?"))start();
+};
+$("flip").onclick=function(){flipped=!flipped;draw()};
+$("undo").onclick=function(){
+  if(onlineGameId){say("Undo is unavailable during online games.");return}
+  if(computerMode){
+    if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
+    computerBusy=false;
+    if(!game.history().length){say("Nothing to undo.");return}
+    var count=game.turn()==="w"?2:1;
+    for(var i=0;i<count&&game.history().length;i++)game.undo();
+    selected=null;targets=[];last=null;draw();say("Move undone.");return;
+  }
+  if(game.undo()){selected=null;targets=[];last=null;say("Last move undone.");draw()}
+};
+$("fen").onclick=async function(){
+  try{await navigator.clipboard.writeText(game.fen());say("Position copied as FEN.")}
+  catch(e){prompt("Copy this FEN position:",game.fen())}
+};
+
+/* ============ INIT ============ */
+if(sb){
+  sb.auth.onAuthStateChange(function(){
+    updateAuth();
+    checkMyTournamentEntry().then(function(){
+      if($("tournDialog").open)renderTournDialog();
+      updateTournButton();
+    });
+    loadHistory();
+  });
+  updateAuth().then(function(){
+    getCurrentProfile().then(function(){
+      loadTournamentState();
+      loadChampion();
+      loadHistory();
+    }).catch(function(){});
+  });
+}else{
+  say("Supabase client failed to load.");
+}
+
+renderPlayers(null);
+start();
+startTournTick();
+startTournMatchWatcher();
+setInterval(loadChampion, 60000);
+
+})();
+</script>
+</body>
+</html>
