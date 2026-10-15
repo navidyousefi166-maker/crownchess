@@ -3539,6 +3539,7 @@ updateRematchButton();
 }
 async function handleTournamentEnd(row){
   var iWon = row.winner_id === currentUser.id;
+  $("celebRematch").hidden = true;
   if (!iWon) {
     onlineGameId=null;onlineGame=null;tournActiveMatch=null;
     if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
