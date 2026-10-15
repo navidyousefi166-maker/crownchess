@@ -213,6 +213,14 @@ body.computer-mode .board-label span:first-child{color:var(--muted)}
   .mobile-players .clock{font-size:22px;min-width:0;padding:5px}
 }
 .layout{display:grid;grid-template-columns:minmax(160px,.78fr) minmax(320px,2fr) minmax(210px,.85fr);gap:16px;align-items:stretch}
+  @media(min-width:901px){
+  body:not(.online):not(.computer-mode) .layout{
+    grid-template-columns:minmax(0,2.2fr) minmax(280px,1fr);
+  }
+  body:not(.online):not(.computer-mode) #board{max-width:none}
+  body:not(.online):not(.computer-mode) .board-panel{padding:20px}
+  body:not(.online):not(.computer-mode) .side{min-height:100%}
+  }
 .board-panel,.side{
   padding:12px;border:1px solid var(--line2);border-radius:12px;
   background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2));
