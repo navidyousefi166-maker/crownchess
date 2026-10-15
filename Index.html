@@ -2688,19 +2688,7 @@ document.querySelectorAll(".humil-piece").forEach(function(el){
     $("humilMsg").textContent = "Selected: "+names[humilChosenType]+" (+"+el.dataset.reward+" wins)";
   };
 });
-$("humilConfirm").onclick = async function(){
-  if(!humilChosenType || !onlineGameId || !onlineGame) return;
-  var myHandicapField = (onlineGame.white_id === currentUser.id) ? "white_handicap" : "black_handicap";
-  var upd = {};upd[myHandicapField] = humilChosenType;
-  var res = await sb.from("kf_games").update(upd).eq("id",onlineGameId);
-  if(res.error){$("humilMsg").textContent="Error: "+res.error.message;return}
-  onlineGame = Object.assign({}, onlineGame, upd);
-  humilApplied = true;
-  applyHandicapToGame(fsPlayerColor, humilChosenType);
-  playWindSound();
-  $("humilDialog").close();
-  hideHumilBanner();
-};
+$("humilConfirm").onclick = applyHumilFromDialog;
 function applyHandicapToGame(color, type){
   if(!game)return;
   var board = game.board();
