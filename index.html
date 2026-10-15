@@ -198,6 +198,7 @@ main{padding:16px 0 24px}
 .players-stack .clock{width:100%;font-size:clamp(25px,2.8vw,36px);margin-top:3px}
 .clock.active{border-color:var(--gold);box-shadow:inset 0 0 0 1px rgba(237,197,107,.3)}
 body.computer-mode .clock{display:none!important}
+  body:not(.online):not(.computer-mode) .players-stack{display:none!important}
 body.computer-mode .board-label span:first-child+span{display:none}
 body.computer-mode .board-label span:first-child{color:var(--muted)}
 @media(max-width:900px){
