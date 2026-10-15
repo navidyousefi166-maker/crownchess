@@ -2619,8 +2619,7 @@ function showHumilBanner(){
   banner.innerHTML = '<span class="hb-icon"><span class="humil-mask-icon"></span></span><div class="hb-text"><div class="hb-title">Sacrifice a piece?</div><div class="hb-sub">Tap to sacrifice · Bonus wins</div></div>';
   banner.onclick = function(){
     if(!onlineGame || !game || game.history().length > 0 || humilApplied) return;
-    if(humilSelecting){ exitHumilSelection(); return; }
-    enterHumilSelection();
+    openHumilDialog();
   };
   document.body.appendChild(banner);
 }
