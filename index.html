@@ -2162,7 +2162,6 @@ async function startTournamentGame(match){
   tournActiveMatch = match;
   say("🏆 Tournament match starting — entering game!");
   var myColor=(match.player1_id===currentUser.id)?"w":"b";
-  var myColor=(match.player1_id===currentUser.id)?"w":"b";
   var opponentId=myColor==="w"?match.player2_id:match.player1_id;
   var opponentName=myColor==="w"?match.player2_username:match.player1_username;
   var opponentAvatar=myColor==="w"?match.player2_avatar:match.player1_avatar;
