@@ -1916,7 +1916,7 @@ function startTournTick(){
     updateTournButton();
   if(tournCurrent){
   if($("tournDialog").open) updateTournBigTimer();
-      updateTournBigTimer();
+    
       if(tournCurrent.status==="registration"){
         var now=Date.now();
         var start=new Date(tournCurrent.scheduled_at).getTime();
