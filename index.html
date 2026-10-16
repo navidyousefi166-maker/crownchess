@@ -2418,6 +2418,16 @@ $("gfsTopHumil").hidden = !oppHadHcp;
   if(row.black_time_left!=null) clockBlack=row.black_time_left;
   lastClockAt=Date.now();
   paintClocks();renderPlayers(row);
+  // 🔔 اگه حریف join کرد، بنر رو ببند
+if(row.is_tournament && row.white_joined_at && row.black_joined_at && onlineGame.clock_started_at){
+  if(joinTimerBanner) joinTimerBanner.style.display = "none";
+  if(joinTimerInterval){ clearInterval(joinTimerInterval); joinTimerInterval = null; }
+  // ⏱ ساعت رو از لحظه شروع واقعی محاسبه کن
+  if(!window._kfClockSyncedAt){
+    window._kfClockSyncedAt = true;
+    lastClockAt = Date.now();
+  }
+}
   if(prevHumil !== row.white_handicap || prevHumilB !== row.black_handicap){
     if (!humilApplied && (row.white_handicap || row.black_handicap)) {
       var oppH = (row.white_id === currentUser.id) ? row.black_handicap : row.white_handicap;
