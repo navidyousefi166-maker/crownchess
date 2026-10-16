@@ -4155,6 +4155,13 @@ window.addEventListener("online", function(){
     reloadGameState(onlineGameId);
   }
 });
+  // 👁️ وقتی تب از معلق برمی‌گرده به foreground، بازی رو sync کن
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "visible" && onlineGameId && navigator.onLine){
+    console.log("Tab visible, syncing game...");
+    reloadGameState(onlineGameId);
+  }
+});
 
 // 🌐 وقتی نت قطع شد، فقط یه پیام
 window.addEventListener("offline", function(){
