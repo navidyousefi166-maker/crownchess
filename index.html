@@ -3598,33 +3598,25 @@ updateRematchButton();
 async function handleTournamentEnd(row){
   var iWon = row.winner_id === currentUser.id;
   $("celebRematch").hidden = true;
-  if (!iWon) {
-    onlineGameId=null;onlineGame=null;tournActiveMatch=null;
-    if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
-    exitFullscreenGame();
-    document.body.classList.remove("online","computer-mode","game-focus");
-    $("new").disabled=false;
-    resetQueueUI();
-say("Tournament match lost. Better luck next time.");
-    setTimeout(refreshTournLive,500);
-    setTimeout(loadHistory,500);
-    return;
-  }
+
   var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id",currentUser.id).maybeSingle();
   var currentWins = statsRes.data ? (statsRes.data.wins||0) : 0;
   var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
-  var bonus = 1;
-  if (hcp === "n" || hcp === "b") bonus = 2;
-  else if (hcp === "r") bonus = 3;
-  else if (hcp === "q") bonus = 5;
+  var bonus = iWon ? 1 : 0;
+  if (iWon && hcp) {
+    if (hcp === "n" || hcp === "b") bonus = 2;
+    else if (hcp === "r") bonus = 3;
+    else if (hcp === "q") bonus = 5;
+  }
   var oldWins = currentWins - bonus;
   var newWins = currentWins;
+
   showCelebration({
-    outcome: "win",
+    outcome: iWon ? "win" : "loss",
     user: currentUser,
     oldWins: oldWins,
     newWins: newWins,
-    hasHumiliation: !!hcp,
+    hasHumiliation: iWon && !!hcp,
     isTournament: true,
     onDone: function(){
       onlineGameId=null;onlineGame=null;tournActiveMatch=null;
@@ -3637,7 +3629,6 @@ say("Tournament match lost. Better luck next time.");
       setTimeout(loadHistory,300);
     }
   });
-  
 }
 async function loadHistory(){
   var section=$("historySection");
