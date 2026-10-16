@@ -1914,7 +1914,8 @@ function startTournTick(){
   if(tournTickTimer)clearInterval(tournTickTimer);
   tournTickTimer=setInterval(function(){
     updateTournButton();
-    if($("tournDialog").open&&tournCurrent){
+  if(tournCurrent){
+  if($("tournDialog").open) updateTournBigTimer();
       updateTournBigTimer();
       if(tournCurrent.status==="registration"){
         var now=Date.now();
