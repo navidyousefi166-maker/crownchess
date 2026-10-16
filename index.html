@@ -2166,29 +2166,12 @@ async function startTournamentGame(match){
   var opponentId=myColor==="w"?match.player2_id:match.player1_id;
   var opponentName=myColor==="w"?match.player2_username:match.player1_username;
   var opponentAvatar=myColor==="w"?match.player2_avatar:match.player1_avatar;
-  if(match.game_id){await joinTournamentGame(match.game_id);return}
-  await new Promise(function(r){setTimeout(r,500)});
-  var recheck=await sb.from("kf_tournament_matches").select("game_id").eq("id",match.id).maybeSingle();
-  if(recheck.data && recheck.data.game_id){await joinTournamentGame(recheck.data.game_id);return}
-  var uname=(currentUser.user_metadata&&currentUser.user_metadata.username)||"You";
-  var avatar=(currentUser.user_metadata&&currentUser.user_metadata.avatar_url)||null;
-  var whiteId=myColor==="w"?currentUser.id:opponentId;
-  var whiteName=myColor==="w"?uname:opponentName;
-  var whiteAvatar=myColor==="w"?avatar:opponentAvatar;
-  var blackId=myColor==="b"?currentUser.id:opponentId;
-  var blackName=myColor==="b"?uname:opponentName;
-  var blackAvatar=myColor==="b"?avatar:opponentAvatar;
-  var insert=await sb.from("kf_games").insert({
-    white_id:whiteId,black_id:blackId,
-    white_username:whiteName,black_username:blackName,
-    white_avatar:whiteAvatar,black_avatar:blackAvatar,
-    fen:new Chess().fen(),pgn:"",turn:"w",status:"active",
-    is_tournament:true,tournament_match_id:match.id
-  }).select().maybeSingle();
-  if(insert.error){say("Could not create tournament game: "+insert.error.message);return}
-  await sb.from("kf_tournament_matches").update({game_id:insert.data.id,status:"active"}).eq("id",match.id);
-  await joinTournamentGame(insert.data.id);
+  var ensureRes = await sb.rpc("kf_ensure_match_game", { p_match_id: match.id });
+if(ensureRes.error || !ensureRes.data){
+  say("Could not create tournament game: " + (ensureRes.error ? ensureRes.error.message : "unknown"));
+  return;
 }
+await joinTournamentGame(ensureRes.data.id);
 async function joinTournamentGame(gameId){
   if(!sb||!currentUser)return;
   var res=await sb.from("kf_games").select("*").eq("id",gameId).maybeSingle();
