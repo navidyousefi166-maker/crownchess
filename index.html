@@ -2170,8 +2170,8 @@ async function startTournamentGame(match){
   await new Promise(function(r){setTimeout(r,500)});
   var recheck=await sb.from("kf_tournament_matches").select("game_id").eq("id",match.id).maybeSingle();
   if(recheck.data && recheck.data.game_id){await joinTournamentGame(recheck.data.game_id);return}
-  var uname=(currentUser.user_metadata&&currentUser.user_metadata.username)||"You";
-  var avatar=(currentUser.user_metadata&&currentUser.user_metadata.avatar_url)||null;
+  var uname = myColor==="w" ? match.player1_username : match.player2_username;
+var avatar = myColor==="w" ? match.player1_avatar : match.player2_avatar;
   var whiteId=myColor==="w"?currentUser.id:opponentId;
   var whiteName=myColor==="w"?uname:opponentName;
   var whiteAvatar=myColor==="w"?avatar:opponentAvatar;
