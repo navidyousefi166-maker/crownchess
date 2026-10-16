@@ -2314,7 +2314,9 @@ if(data.is_tournament){
       }, 2000);
     }
   });
-  async function reloadGameState(gameId){
+}
+
+async function reloadGameState(gameId){
   if(!sb || onlineGameId !== gameId) return;
   try{
     // ۱. دیتابیس رو دوباره بخون
