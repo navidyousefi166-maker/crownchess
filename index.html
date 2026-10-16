@@ -2201,6 +2201,7 @@ async function joinTournamentGame(gameId){
 }
 var firstMoveTimer=null;
 function startFirstMoveTimer(gameRow){
+  return; // 🔇 موقتاً غیرفعال — بعداً فعال می‌کنیم
   if(firstMoveTimer){clearTimeout(firstMoveTimer);firstMoveTimer=null}
   if(game.history().length>0)return;
   firstMoveTimer=setTimeout(async function(){
