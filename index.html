@@ -2301,9 +2301,50 @@ if(data.is_tournament){
   });
 }
   gameChannel=sb.channel("kf-game-"+gameId)
-    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+gameId},function(payload){applyOnlineGame(payload.new)})
-    .subscribe();
-}
+  .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+gameId},function(payload){applyOnlineGame(payload.new)})
+  .subscribe(function(status){
+    if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
+      console.warn("Game channel issue:", status);
+      // تلاش برای reconnect
+      setTimeout(function(){
+        if(onlineGameId === gameId){
+          console.log("Reconnecting game channel...");
+          reloadGameState(gameId);
+        }
+      }, 2000);
+    }
+  });
+  async function reloadGameState(gameId){
+  if(!sb || onlineGameId !== gameId) return;
+  try{
+    // ۱. دیتابیس رو دوباره بخون
+    var res = await sb.from("kf_games").select("*").eq("id", gameId).maybeSingle();
+    if(res.error || !res.data) return;
+    
+    // ۲. state رو آپدیت کن
+    applyOnlineGame(res.data);
+    
+    // ۳. Channel رو دوباره وصل کن
+    if(gameChannel && sb){ 
+      try { sb.removeChannel(gameChannel); } catch(e){}
+      gameChannel = null;
+    }
+    gameChannel = sb.channel("kf-game-"+gameId)
+      .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+gameId},function(payload){applyOnlineGame(payload.new)})
+      .subscribe(function(status){
+        if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
+          console.warn("Game channel issue:", status);
+          setTimeout(function(){
+            if(onlineGameId === gameId) reloadGameState(gameId);
+          }, 2000);
+        }
+      });
+    
+    console.log("Game state reloaded successfully");
+  }catch(e){ 
+    console.warn("reloadGameState error:", e); 
+  }
+  }
 
 async function handleTournamentTimeout(loserColor){
   if(!onlineGameId||!tournActiveMatch)return;
