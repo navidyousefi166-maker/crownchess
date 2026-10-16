@@ -2103,8 +2103,65 @@ async function checkTournMatchStatus(){
 }
 async function startTournamentGame(match){
   if(!sb)return;
-  tournActiveMatch=match;
-  say("🏆 Tournament match starting…");
+  
+  // ✅ شرط: کاربر باید توی این تورنمنت ثبت‌نام کرده باشه
+  if(!tournMyEntry){
+    try { await checkMyTournamentEntry(); } catch(e){}
+  }
+  if(!tournMyEntry){
+    return; // ثبت‌نام نکرده → هیچ کاری نکن
+  }
+  
+  // اگه همین الان توی همین match هستیم، رد شو
+  if(onlineGameId && onlineGame && onlineGame.status === "active" 
+     && onlineGame.is_tournament && onlineGame.tournament_match_id === match.id) {
+    tournActiveMatch = match;
+    return;
+  }
+  
+  // اگه Celebration بازه، صبر کن تموم شه (watcher بعدی می‌گیره)
+  if(celebTimer) return;
+  
+  // ===== پاکسازی اجباری همه‌چیز =====
+  if(computerTimer){ clearTimeout(computerTimer); computerTimer = null; }
+  computerMode = false;
+  computerBusy = false;
+  document.body.classList.remove("computer-mode");
+  
+  try { await stopQueuePoll(); } catch(e){}
+  try { setQuickState("5-minute game · Match by wins"); } catch(e){}
+  try { setRouletteState("Random opening · 3 moves each auto-played"); } catch(e){}
+  
+  if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+  
+  // اگه وسط یه بازی غیرتورنمنت بود، ببازش
+  if(onlineGameId && onlineGame && !onlineGame.is_tournament && onlineGame.status === "active"){
+    var fWinner = (onlineGame.white_id === currentUser.id) ? onlineGame.black_id : onlineGame.white_id;
+    var fResult = (onlineGame.white_id === currentUser.id) ? "0-1" : "1-0";
+    try {
+      await sb.from("kf_games").update({
+        status: "completed",
+        winner_id: fWinner,
+        result: fResult,
+        completed_at: new Date().toISOString()
+      }).eq("id", onlineGameId);
+    } catch(e){ console.warn("Forfeit failed:", e); }
+  }
+  
+  onlineGameId = null;
+  onlineGame = null;
+  submittingMove = false;
+  
+  // بستن همه‌ی دیالوگ‌های باز
+  hideCelebration();
+  if($("drawOfferDialog").open) $("drawOfferDialog").close();
+  if($("rematchDialog").open) $("rematchDialog").close();
+  if($("tournDialog").open) $("tournDialog").close();
+  
+  // ===== حالا شروع بازی تورنمنت =====
+  tournActiveMatch = match;
+  say("🏆 Tournament match starting — entering game!");
+  var myColor=(match.player1_id===currentUser.id)?"w":"b";
   var myColor=(match.player1_id===currentUser.id)?"w":"b";
   var opponentId=myColor==="w"?match.player2_id:match.player1_id;
   var opponentName=myColor==="w"?match.player2_username:match.player1_username;
