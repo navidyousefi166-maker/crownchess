@@ -3972,7 +3972,6 @@ var ok = await new Promise(function(resolve){
       last={from:m.from,to:m.to};selected=null;targets=[];
       if(onlineGameId)lastClockAt=Date.now();
       say(m.san);draw();
-      if(firstMoveTimer&&game.history().length>0){clearTimeout(firstMoveTimer);firstMoveTimer=null}
       if(humilApplied||game.history().length>0){hideHumilBanner();updateHumilBadge()}
       if(onlineGameId){
         submittingMove=true;
