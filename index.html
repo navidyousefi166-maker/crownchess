@@ -1690,6 +1690,77 @@ function paintClocks(){
     }
   }
 }
+  /* ===== JOIN TIMER (20s) ===== */
+var joinTimerInterval=null;
+var joinTimerBanner=null;
+
+function ensureJoinBanner(){
+  if(joinTimerBanner)return joinTimerBanner;
+  var el=document.createElement("div");
+  el.id="joinTimerBanner";
+  el.style.cssText="position:fixed;top:120px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(74,42,6,.95),rgba(42,20,3,.95));border:1px solid var(--gold);border-radius:12px;padding:10px 18px;z-index:9998;color:var(--gold2);font-weight:800;font-size:14px;letter-spacing:.5px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;text-align:center;max-width:calc(100% - 40px);";
+  document.body.appendChild(el);
+  joinTimerBanner=el;
+  return el;
+}
+
+function updateJoinTimerUI(){
+  if(!onlineGame||!onlineGame.is_tournament){
+    if(joinTimerBanner)joinTimerBanner.style.display="none";
+    if(joinTimerInterval){clearInterval(joinTimerInterval);joinTimerInterval=null}
+    return;
+  }
+  if(joinTimerInterval){clearInterval(joinTimerInterval);joinTimerInterval=null}
+  
+  var banner=ensureJoinBanner();
+  
+  function render(){
+    if(!onlineGame||onlineGame.status!=="active"){banner.style.display="none";clearInterval(joinTimerInterval);joinTimerInterval=null;return}
+    
+    var myIsWhite=(onlineGame.white_id===currentUser.id);
+    var myJoined=myIsWhite?onlineGame.white_joined_at:onlineGame.black_joined_at;
+    var oppJoined=myIsWhite?onlineGame.black_joined_at:onlineGame.white_joined_at;
+    var bothJoined=onlineGame.white_joined_at&&onlineGame.black_joined_at;
+    
+    if(bothJoined){
+      banner.style.display="none";
+      clearInterval(joinTimerInterval);joinTimerInterval=null;
+      return;
+    }
+    
+    if(!myJoined){
+      // خودم هنوز وارد نشدم (نباید بشه چون این تابع بعد از join صدا زده می‌شه)
+      banner.style.display="none";
+      return;
+    }
+    
+    // من وارد شدم، منتظر حریفم
+    var created=new Date(onlineGame.created_at).getTime();
+    var elapsed=(Date.now()-created)/1000;
+    var remain=Math.max(0,20-elapsed);
+    
+    if(remain<=0){
+      banner.innerHTML='<span class="humil-mask-icon" style="margin-right:6px"></span>حریف نیامد — شما برنده شدید';
+      banner.style.display="block";
+      clearInterval(joinTimerInterval);joinTimerInterval=null;
+      // به دیتابیس اطلاع بده که حریف باخت
+      if(!onlineGame._resignReported){
+        onlineGame._resignReported=true;
+        sb.rpc("kf_resign_absent_player",{p_game_id:onlineGameId}).then(function(r){
+          if(r.error)console.warn("resign rpc:",r.error);
+        });
+      }
+      return;
+    }
+    
+    banner.innerHTML='<span class="humil-mask-icon" style="margin-right:6px"></span>منتظر حریف... '+Math.ceil(remain)+' ثانیه';
+    banner.style.display="block";
+  }
+  
+  render();
+  joinTimerInterval=setInterval(render,250);
+}
+/* ===== END JOIN TIMER ===== */
 function resetClocks(){
   clockWhite=300;clockBlack=300;lastClockAt=Date.now();clockExpired=false;
   if(onlineGame){
