@@ -1808,6 +1808,7 @@ black_time_left:Math.floor(newBlackTime)
   var res=await sb.from("kf_games").update(upd).eq("id",onlineGameId);
   if(res.error){game.undo();selected=null;targets=[];draw();say("Move could not be saved: "+res.error.message);return}
   onlineGame.turn=upd.turn;
+  window._kfLastLocalMoveAt = new Date(upd.last_move_at).getTime();
   onlineGame.white_time_left=upd.white_time_left;
   onlineGame.black_time_left=upd.black_time_left;
   lastClockAt=Date.now();
