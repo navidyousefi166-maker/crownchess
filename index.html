@@ -4031,14 +4031,16 @@ $("fen").onclick=async function(){
 
 /* ============ INIT ============ */
 if(sb){
-  sb.auth.onAuthStateChange(function(){
-    updateAuth();
+sb.auth.onAuthStateChange(function(){
+  updateAuth();
+  getCurrentProfile().then(function(){
     checkMyTournamentEntry().then(function(){
       if($("tournDialog").open)renderTournDialog();
       updateTournButton();
     });
-      loadHistory();
-  setTimeout(checkActiveGameAndJoin, 800);
+    loadHistory();
+    setTimeout(checkActiveGameAndJoin, 800);
+  });
 });
   updateAuth().then(function(){
     getCurrentProfile().then(function(){
