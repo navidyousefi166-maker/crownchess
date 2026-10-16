@@ -2421,7 +2421,6 @@ if(row.is_tournament && row.white_joined_at && row.black_joined_at && onlineGame
   if(game&&row.fen&&game.fen()!==row.fen){
     try{
       game.load(row.fen);last=row.last_move||null;selected=null;targets=[];draw();
-      if(firstMoveTimer&&game.history().length>0){clearTimeout(firstMoveTimer);firstMoveTimer=null}
     }catch(e){say("Received an invalid game position.")}
   }
   if(row.draw_offer_by && row.draw_offer_by !== currentUser.id && row.draw_offer_status==="pending" && !$("drawOfferDialog").open){
