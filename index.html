@@ -2448,11 +2448,22 @@ function applyOnlineGame(row){
   if(!row||row.id!==onlineGameId)return;
   var prevHumil = onlineGame ? onlineGame.white_handicap : null;
   var prevHumilB = onlineGame ? onlineGame.black_handicap : null;
+  var prevLastMove = onlineGame ? onlineGame.last_move : null;
   onlineGame=row;
   var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap)) || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
 $("gfsTopHumil").hidden = !oppHadHcp;
+// 🕒 ساعت‌ها رو فقط وقتی آپدیت کن که حرکت جدیدی زده شده
+
+var hasNewMove = false;
+if(row.last_move && (!prevLastMove || 
+   prevLastMove.from !== row.last_move.from || 
+   prevLastMove.to !== row.last_move.to)){
+  hasNewMove = true;
+}
+if(hasNewMove){
   if(row.white_time_left!=null) clockWhite=row.white_time_left;
   if(row.black_time_left!=null) clockBlack=row.black_time_left;
+}
   lastClockAt=Date.now();
   paintClocks();renderPlayers(row);
   // 🔔 اگه حریف join کرد، بنر رو ببند
