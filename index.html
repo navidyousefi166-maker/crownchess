@@ -2172,6 +2172,7 @@ if(ensureRes.error || !ensureRes.data){
   return;
 }
 await joinTournamentGame(ensureRes.data.id);
+}                                          ← ✨ این `}` اضافه شود
 async function joinTournamentGame(gameId){
   if(!sb||!currentUser)return;
   var res=await sb.from("kf_games").select("*").eq("id",gameId).maybeSingle();
