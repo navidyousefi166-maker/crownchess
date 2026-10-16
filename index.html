@@ -1803,6 +1803,13 @@ async function submitOnlineMove(m){
 }
 function tickClock(){
   if(computerMode||!game||game.game_over()||clockExpired){paintClocks();return}
+  // 🕒 ساعت تا وقتی هر دو بازیکن وارد نشدن، کم نشه
+if(onlineGame && onlineGame.is_tournament){
+  if(!onlineGame.white_joined_at || !onlineGame.black_joined_at){
+    paintClocks();
+    return;
+  }
+}
   if(!onlineGameId||!onlineGame){paintClocks();return}
   var now=Date.now();
   if(lastClockAt===null)lastClockAt=now;
