@@ -2522,10 +2522,20 @@ if(row.is_tournament && row.white_joined_at && row.black_joined_at && onlineGame
       if (oppH) applyHandicapToGame(row.white_id === currentUser.id ? "b" : "w", oppH);
     }
   }
-  if(game&&row.fen&&game.fen()!==row.fen){
+  if(game && row.fen && game.fen() !== row.fen){
+  var rowAt = row.last_move_at ? new Date(row.last_move_at).getTime() : 0;
+  var localAt = window._kfLastLocalMoveAt || 0;
+  if(rowAt >= localAt){
     try{
-      game.load(row.fen);last=row.last_move||null;selected=null;targets=[];draw();
-    }catch(e){say("Received an invalid game position.")}
+      game.load(row.fen);
+      last = row.last_move || null;
+      selected = null;
+      targets = [];
+      draw();
+    }catch(e){ say("Received an invalid game position."); }
+  } else {
+    console.log("Skipped old FEN");
+  }
   }
   if(row.draw_offer_by && row.draw_offer_by !== currentUser.id && row.draw_offer_status==="pending" && !$("drawOfferDialog").open){
     $("drawOfferDialog").showModal();
