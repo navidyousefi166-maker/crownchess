@@ -2678,6 +2678,10 @@ function exitFullscreenGame(){
   document.body.classList.remove("game-focus");
   _boardBuilt = false;
   hideHumilBanner();
+  // 🧹 پاک کردن بنر join timer
+if(joinTimerBanner) joinTimerBanner.style.display = "none";
+if(joinTimerInterval){ clearInterval(joinTimerInterval); joinTimerInterval = null; }
+window._kfClockSyncedAt = false;
   var panel = document.querySelector(".board-panel");
   if (panel && boardEl.parentNode !== panel) {
     var labels = panel.querySelectorAll(".board-label");
