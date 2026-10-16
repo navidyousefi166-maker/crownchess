@@ -4094,7 +4094,21 @@ sb.auth.onAuthStateChange(function(){
 }else{
   say("Supabase client failed to load.");
 }
+// 🌐 وقتی نت وصل شد، خودکار بازی رو refresh کن
+window.addEventListener("online", function(){
+  console.log("Network back online");
+  if(onlineGameId){
+    reloadGameState(onlineGameId);
+  }
+});
 
+// 🌐 وقتی نت قطع شد، فقط یه پیام
+window.addEventListener("offline", function(){
+  console.log("Network offline");
+  if(onlineGameId){
+    say("اتصال قطع شد. منتظر باشید...");
+  }
+});
 renderPlayers(null);
 start();
 startTournTick();
