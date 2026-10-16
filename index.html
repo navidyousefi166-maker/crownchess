@@ -1747,7 +1747,17 @@ function updateJoinTimerUI(){
       if(!onlineGame._resignReported){
         onlineGame._resignReported=true;
         sb.rpc("kf_resign_absent_player",{p_game_id:onlineGameId}).then(function(r){
-          if(r.error)console.warn("resign rpc:",r.error);
+          if(r.error){console.warn("resign rpc:", r.error);}
+else {
+  // ✅ بعد از RPC موفق، دیتابیس رو دوباره بخون
+  setTimeout(function(){
+    sb.from("kf_games").select("*").eq("id", onlineGameId).maybeSingle().then(function(gr){
+      if(!gr.error && gr.data){
+        applyOnlineGame(gr.data);
+      }
+    });
+  }, 500);
+}
         });
       }
       return;
