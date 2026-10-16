@@ -2642,8 +2642,8 @@ async function submitTournamentMove(m){
     status:status,
     result:result,
     winner_id:winnerId,
-    white_time_left:Math.round(newWhiteTime),
-    black_time_left:Math.round(newBlackTime)
+    white_time_left:Math.floor(newWhiteTime),
+black_time_left:Math.floor(newBlackTime)
   };
   if(status==="completed")upd.completed_at=new Date().toISOString();
   var res=await sb.from("kf_games").update(upd).eq("id",onlineGameId);
