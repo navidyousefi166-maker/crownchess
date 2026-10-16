@@ -1916,20 +1916,26 @@ function startTournTick(){
     updateTournButton();
     if($("tournDialog").open&&tournCurrent){
       updateTournBigTimer();
-      if(tournCurrent.status==="registration"){
-        var now=Date.now();
-        var start=new Date(tournCurrent.scheduled_at).getTime();
-        if(now>=start && !tournCurrent._startAttempted){
-          tournCurrent._startAttempted=true;
-          sb.rpc("kf_start_tournament",{p_tournament_id:tournCurrent.id}).then(function(r){
-            if(r.error)console.warn("Start error:",r.error);
-            else setTimeout(refreshTournLive,800);
-          });
-        }
+    }
+    // ✅ FIX: auto-start حتی وقتی پنجره تورنمنت بسته‌ست
+    if(tournCurrent && tournCurrent.status==="registration"){
+      var now=Date.now();
+      var start=new Date(tournCurrent.scheduled_at).getTime();
+      if(now>=start && !tournCurrent._startAttempted){
+        tournCurrent._startAttempted=true;
+        sb.rpc("kf_start_tournament",{p_tournament_id:tournCurrent.id}).then(function(r){
+          if(r.error)console.warn("Start error:",r.error);
+          else setTimeout(refreshTournLive,800);
+        });
       }
     }
+    // ✅ هر ۱۵ ثانیه تورنمنت جدید رو چک کن
+    if(!window._lastTournRefresh || Date.now()-window._lastTournRefresh > 15000){
+      window._lastTournRefresh = Date.now();
+      loadTournamentState();
+    }
   },1000);
-}
+  }
 function updateTournBigTimer(){
   if(!tournCurrent)return;
   var now=Date.now();
