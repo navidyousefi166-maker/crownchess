@@ -3976,6 +3976,27 @@ renderPlayers(null);
 start();
 startTournTick();
 startTournMatchWatcher();
+  /* ===== Tournament polling fallback (کاvر درست بشه حتی اگه realtime کار نکنه) ===== */
+setInterval(async function(){
+  if(!sb || !currentUser) return;
+  if(document.body.classList.contains("game-focus")) return;
+  if(onlineGameId) return;   // وسط یه بازی، skip
+  try {
+    var res = await sb.rpc("kf_get_next_tournament");
+    if(res.error || !res.data) return;
+    var fresh = res.data;
+    // اگه تورنمنت جدید شد یا status عوض شد
+    if(!tournCurrent || fresh.id !== tournCurrent.id || fresh.status !== tournCurrent.status){
+      tournCurrent = fresh;
+      await refreshTournLive();
+    } else {
+      // حتی اگه همونه، bracket رو refresh کن (شاید match جدید ساخته شده)
+      if(tournCurrent.status === "active"){
+        await refreshTournLive();
+      }
+    }
+  } catch(e){ console.warn("Tournament poll error:", e); }
+}, 3000);
 setInterval(loadChampion, 60000);
 
 })();
