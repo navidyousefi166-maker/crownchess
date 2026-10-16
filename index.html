@@ -2599,6 +2599,7 @@ async function submitTournamentMove(m){
     pgn:game.pgn(),
     turn:game.turn(),
     last_move:{from:m.from,to:m.to,san:m.san},
+    last_move_at:new Date().toISOString(),
     status:status,
     result:result,
     winner_id:winnerId,
