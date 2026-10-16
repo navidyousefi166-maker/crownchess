@@ -2339,7 +2339,6 @@ async function stopQueuePoll(){
 async function leaveOnlineState(){
   computerMode=false;computerBusy=false;
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
-  if(firstMoveTimer){clearTimeout(firstMoveTimer);firstMoveTimer=null}
   await stopQueuePoll();
   if(gameChannel&&sb){sb.removeChannel(gameChannel);gameChannel=null}
   onlineGameId=null;onlineGame=null;submittingMove=false;tournActiveMatch=null;
