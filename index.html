@@ -4149,20 +4149,36 @@ sb.auth.onAuthStateChange(function(){
   say("Supabase client failed to load.");
 }
 // 🌐 وقتی نت وصل شد، خودکار بازی رو refresh کن
+// 🔄 تابع retry برای sync کردن بازی
+function scheduleGameSync(gameId){
+  if(!gameId) return;
+  // ۴ تا تلاش در زمان‌های مختلف
+  var delays = [0, 800, 2000, 4000];
+  delays.forEach(function(d){
+    setTimeout(function(){
+      if(onlineGameId === gameId && navigator.onLine){
+        console.log("Syncing game (retry at "+d+"ms)");
+        reloadGameState(gameId);
+      }
+    }, d);
+  });
+}
+
+// 🌐 نت وصل شد → sync با retry
 window.addEventListener("online", function(){
   console.log("Network back online");
   if(onlineGameId){
-    reloadGameState(onlineGameId);
-  }
-});
-  // 👁️ وقتی تب از معلق برمی‌گرده به foreground، بازی رو sync کن
-document.addEventListener("visibilitychange", function(){
-  if(document.visibilityState === "visible" && onlineGameId && navigator.onLine){
-    console.log("Tab visible, syncing game...");
-    reloadGameState(onlineGameId);
+    scheduleGameSync(onlineGameId);
   }
 });
 
+// 👁️ تب برگشت به foreground → sync
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "visible" && onlineGameId){
+    console.log("Tab visible, syncing game...");
+    scheduleGameSync(onlineGameId);
+  }
+});
 // 🌐 وقتی نت قطع شد، فقط یه پیام
 window.addEventListener("offline", function(){
   console.log("Network offline");
