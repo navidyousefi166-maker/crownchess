@@ -2294,22 +2294,7 @@ if(data.is_tournament){
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+gameId},function(payload){applyOnlineGame(payload.new)})
     .subscribe();
 }
-var firstMoveTimer=null;
-function startFirstMoveTimer(gameRow){
-  return; // 🔇 موقتاً غیرفعال — بعداً فعال می‌کنیم
-  if(firstMoveTimer){clearTimeout(firstMoveTimer);firstMoveTimer=null}
-  if(game.history().length>0)return;
-  firstMoveTimer=setTimeout(async function(){
-    if(game.history().length>0)return;
-    if(!onlineGameId||!tournActiveMatch)return;
-    var gameRes=await sb.from("kf_games").select("turn").eq("id",onlineGameId).maybeSingle();
-    if(gameRes.data&&gameRes.data.turn==="w"){
-      var blackId=onlineGame.black_id;
-      say("⏱️ "+onlineGame.white_username+" didn't move in time. "+onlineGame.black_username+" advances.");
-      await finishTournamentMatch(blackId, true);
-    }
-  },30000);
-}
+
 async function handleTournamentTimeout(loserColor){
   if(!onlineGameId||!tournActiveMatch)return;
   var loserId=loserColor==="White"?onlineGame.white_id:onlineGame.black_id;
