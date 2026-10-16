@@ -2200,7 +2200,18 @@ async function joinTournamentGame(gameId){
   selected=null;targets=[];last=data.last_move||null;
   draw();
   updateHumilBadge();
-  startFirstMoveTimer(data);
+  // 🔔 به دیتابیس اطلاع بده که این بازیکن وارد شد
+if(data.is_tournament){
+  sb.rpc("kf_player_joined_game", { p_game_id: gameId }).then(function(r){
+    if(r.error){ console.warn("join error:", r.error); return; }
+    if(r.data){
+      onlineGame.white_joined_at = r.data.white_joined_at;
+      onlineGame.black_joined_at = r.data.black_joined_at;
+      onlineGame.clock_started_at = r.data.clock_started_at;
+      updateJoinTimerUI();
+    }
+  });
+}
   gameChannel=sb.channel("kf-game-"+gameId)
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_games",filter:"id=eq."+gameId},function(payload){applyOnlineGame(payload.new)})
     .subscribe();
