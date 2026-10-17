@@ -2432,7 +2432,7 @@ async function stopQueuePoll(){
 function forceFullSync(gameId, retries){
   if(!sb || !onlineGameId || onlineGameId !== gameId) return;
   if(retries === undefined) retries = 3;
-  
+  submittingMove = false;
   // اگه کاربر توی صفحه بازیه، کل صفحه بازی رو از دیتابیس دوباره لود کن (رفرش نرم)
   if(document.body.classList.contains("game-focus")){
     loadOnlineGame(gameId).then(function(){
