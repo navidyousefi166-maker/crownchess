@@ -2523,10 +2523,14 @@ if(row.is_tournament && row.white_joined_at && row.black_joined_at && onlineGame
       if (oppH) applyHandicapToGame(row.white_id === currentUser.id ? "b" : "w", oppH);
     }
   }
-  if(game && row.fen && game.fen() !== row.fen){
-  var rowAt = row.last_move_at ? new Date(row.last_move_at).getTime() : 0;
-  var localAt = window._kfLastLocalMoveAt || 0;
-  if(rowAt >= localAt){
+if(game && row.fen && game.fen() !== row.fen){
+  var localMoves = game.history().length;
+  var serverGame = new Chess();
+  if(row.pgn) { serverGame.load_pgn(row.pgn); }
+  var serverMoves = serverGame.history().length;
+  
+  // فقط اگه سرور حرکت جدیدی داره (تعداد حرکت‌های سرور بیشتره) بورد رو آپدیت کن
+  if (serverMoves > localMoves) {
     try{
       game.load(row.fen);
       last = row.last_move || null;
@@ -2535,7 +2539,7 @@ if(row.is_tournament && row.white_joined_at && row.black_joined_at && onlineGame
       draw();
     }catch(e){ say("Received an invalid game position."); }
   } else {
-    console.log("Skipped old FEN");
+     console.log("Skipped FEN update (localMoves: "+localMoves+", serverMoves: "+serverMoves+")");
   }
   }
   if(row.draw_offer_by && row.draw_offer_by !== currentUser.id && row.draw_offer_status==="pending" && !$("drawOfferDialog").open){
