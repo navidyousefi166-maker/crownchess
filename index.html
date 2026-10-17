@@ -4073,13 +4073,26 @@ var ok = await new Promise(function(resolve){
     if(game.turn() === compColor || computerBusy){say("The computer is thinking…");return}
   }
   if(onlineGameId){
-    if(submittingMove)return;
-    var myColor=null;
-    if(onlineGame&&currentUser){
-      if(onlineGame.white_id===currentUser.id)myColor="w";
-      else if(onlineGame.black_id===currentUser.id)myColor="b";
+  if(submittingMove)return;
+  var myColor=null;
+  if(onlineGame&&currentUser){
+    if(onlineGame.white_id===currentUser.id)myColor="w";
+    else if(onlineGame.black_id===currentUser.id)myColor="b";
+  }
+  if(!myColor)return;
+  
+  // 🛡️ سیستم ضد تقلب و ضد قفل شدن
+  if(game.turn()!==myColor){
+    var clickedPiece = game.get(s);
+    // اگه کاربر روی مهره خودش کلیک کرد ولی نوبتش نبود، یعنی نت قطع بوده و بازی قفل شده
+    if(clickedPiece && clickedPiece.color === myColor){
+      say("سینک کردن وضعیت بازی...");
+      forceFullSync(onlineGameId);
+    } else {
+      say("It's your opponent's turn.");
     }
-    if(!myColor||game.turn()!==myColor){say("It's your opponent's turn.");return}
+    return;
+  }
   }
   var p=game.get(s);
   if(selected&&targets.some(function(m){return m.to===s})){
