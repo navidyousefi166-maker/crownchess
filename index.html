@@ -2429,32 +2429,22 @@ async function stopQueuePoll(){
   if(queuePoll){clearInterval(queuePoll);queuePoll=null}
   if(queueTimeout){clearTimeout(queueTimeout);queueTimeout=null}
 }
-  async function forceFullSync(gameId, retries){
+function forceFullSync(gameId, retries){
   if(!sb || !onlineGameId || onlineGameId !== gameId) return;
-  if(retries === undefined) retries = 3; // ۳ بار تلاش می‌کنیم
-
-  try {
-    var res = await sb.from("kf_games").select("*").eq("id", gameId).maybeSingle();
-    
-    if(res.error) throw res.error;
-    if(!res.data) return;
-    
-    submittingMove = false;
-    selected = null;
-    targets = [];
-    
-    applyOnlineGame(res.data);
-    console.log("Force full sync successful");
-  } catch(e) {
-    console.warn("Sync error (retries left: " + retries + "):", e);
-    // اگه خطا داد (مثلا نت هنوز کامل وصل نشده)، ۱ ثانیه بعد دوباره تلاش کن
-    if(retries > 0){
-      setTimeout(function(){
-        forceFullSync(gameId, retries - 1);
-      }, 1000);
-    }
+  if(retries === undefined) retries = 3;
+  
+  // اگه کاربر توی صفحه بازیه، کل صفحه بازی رو از دیتابیس دوباره لود کن (رفرش نرم)
+  if(document.body.classList.contains("game-focus")){
+    loadOnlineGame(gameId).then(function(){
+      console.log("Soft reload successful");
+    }).catch(function(e){
+      console.warn("Soft reload error:", e);
+      if(retries > 0){
+        setTimeout(function(){ forceFullSync(gameId, retries - 1); }, 1000);
+      }
+    });
   }
-  }
+}
 async function leaveOnlineState(){
   computerMode=false;computerBusy=false;
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
