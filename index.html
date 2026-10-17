@@ -2547,15 +2547,16 @@ function applyOnlineGame(row){
     }
   }
 
-  /* FIX: handicap double-removal — the FEN already reflects the sacrificed piece.
-     Do NOT call applyHandicapToGame here. Just mark as applied. */
-  if(prevHumilW !== row.white_handicap || prevHumilB !== row.black_handicap){
-    if(!humilApplied && (row.white_handicap || row.black_handicap)){
-      humilApplied = true;
-      humilSelecting = false;
-      updateHumilBadge();
-    }
+  /* CORRECTION 2 — فقط handicap خودم باعث فعال شدن badge میشه. (FEN از سمت حریف خودش مهره رو حذف کرده) */
+if(prevHumilW !== row.white_handicap || prevHumilB !== row.black_handicap){
+  var myHcp = (fsPlayerColor === "w" && isValidHcp(row.white_handicap))
+           || (fsPlayerColor === "b" && isValidHcp(row.black_handicap));
+  if(myHcp && !humilApplied){
+    humilApplied = true;
+    humilSelecting = false;
+    updateHumilBadge();
   }
+}
 
   /* Load FEN (this already has the sacrificed piece removed) */
   if(game && row.fen && game.fen() !== row.fen){
