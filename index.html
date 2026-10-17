@@ -3904,9 +3904,11 @@ async function runFullAnalysis(){
   if(!stockfishReady){ $("anProgress").textContent = "Engine did not load. Try again later."; return; }
 
   var history = game.history({verbose: true});
-  var chess = new Chess();
-  var positions = [chess.fen()];
-  for(var i=0;i<history.length;i++){
+var header = game.header ? game.header() : {};
+var startFen = (header && header.FEN) ? header.FEN : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+var chess = new Chess(startFen);
+var positions = [chess.fen()];
+for(var i=0;i<history.length;i++){
     chess.move(history[i]);
     positions.push(chess.fen());
   }
