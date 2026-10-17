@@ -2429,23 +2429,30 @@ async function stopQueuePoll(){
   if(queuePoll){clearInterval(queuePoll);queuePoll=null}
   if(queueTimeout){clearTimeout(queueTimeout);queueTimeout=null}
 }
-  async function forceFullSync(gameId){
+  async function forceFullSync(gameId, retries){
   if(!sb || !onlineGameId || onlineGameId !== gameId) return;
+  if(retries === undefined) retries = 3; // ۳ بار تلاش می‌کنیم
+
   try {
-    // گرفتن دیتای ۱۰۰٪ تازه مستقیم از دیتابیس
     var res = await sb.from("kf_games").select("*").eq("id", gameId).maybeSingle();
-    if(res.error || !res.data) return;
     
-    // باز کردن قفل‌های احتمالی که موقع قطعی نت پیش اومده
+    if(res.error) throw res.error;
+    if(!res.data) return;
+    
     submittingMove = false;
     selected = null;
     targets = [];
     
-    // آپدیت کردن بازی با دیتای جدید
     applyOnlineGame(res.data);
     console.log("Force full sync successful");
   } catch(e) {
-    console.warn("Sync error:", e);
+    console.warn("Sync error (retries left: " + retries + "):", e);
+    // اگه خطا داد (مثلا نت هنوز کامل وصل نشده)، ۱ ثانیه بعد دوباره تلاش کن
+    if(retries > 0){
+      setTimeout(function(){
+        forceFullSync(gameId, retries - 1);
+      }, 1000);
+    }
   }
   }
 async function leaveOnlineState(){
