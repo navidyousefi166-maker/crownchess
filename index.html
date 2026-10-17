@@ -4163,34 +4163,58 @@ sb.auth.onAuthStateChange(function(){
   say("Supabase client failed to load.");
 }
 // 🌐 وقتی نت وصل شد، خودکار بازی رو refresh کن
-// 🔄 تابع retry برای sync کردن بازی
-function scheduleGameSync(gameId){
+// 🔄 سیستم سینک موقت (Bounded Polling)
+var syncPollTimer = null;
+var syncAttempts = 0;
+
+function startBoundedSync(gameId){
   if(!gameId) return;
-  // ۴ تا تلاش در زمان‌های مختلف
-  var delays = [0, 800, 2000, 4000];
-  delays.forEach(function(d){
-    setTimeout(function(){
-      if(onlineGameId === gameId && navigator.onLine){
-        console.log("Syncing game (retry at "+d+"ms)");
-        reloadGameState(gameId);
-      }
-    }, d);
-  });
+  
+  if(syncPollTimer) {
+    clearInterval(syncPollTimer);
+    syncPollTimer = null;
+  }
+  syncAttempts = 0;
+
+  // تلاش اولیه فوری
+  if (navigator.onLine) {
+    reloadGameState(gameId);
+    syncAttempts++;
+  }
+
+  // هر ۲ ثانیه چک کن، حداکثر ۲۰ بار (۴۰ ثانیه)
+  syncPollTimer = setInterval(function(){
+    if (!onlineGameId || onlineGameId !== gameId) {
+      clearInterval(syncPollTimer);
+      return;
+    }
+    
+    if (navigator.onLine) {
+      console.log("Bounded sync attempt " + syncAttempts);
+      reloadGameState(gameId);
+      syncAttempts++;
+    }
+
+    if (syncAttempts >= 20) {
+      clearInterval(syncPollTimer);
+      syncPollTimer = null;
+    }
+  }, 2000);
 }
 
-// 🌐 نت وصل شد → sync با retry
+// 🌐 نت وصل شد
 window.addEventListener("online", function(){
   console.log("Network back online");
   if(onlineGameId){
-    scheduleGameSync(onlineGameId);
+    startBoundedSync(onlineGameId);
   }
 });
 
-// 👁️ تب برگشت به foreground → sync
+// 👁️ تب برگشت
 document.addEventListener("visibilitychange", function(){
   if(document.visibilityState === "visible" && onlineGameId){
-    console.log("Tab visible, syncing game...");
-    scheduleGameSync(onlineGameId);
+    console.log("Tab visible, syncing...");
+    startBoundedSync(onlineGameId);
   }
 });
 // 🌐 وقتی نت قطع شد، فقط یه پیام
