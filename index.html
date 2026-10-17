@@ -2430,6 +2430,7 @@ async function stopQueuePoll(){
   if(queueTimeout){clearTimeout(queueTimeout);queueTimeout=null}
 }
 async function leaveOnlineState(){
+  if(syncPollTimer){clearInterval(syncPollTimer);syncPollTimer=null;}
   computerMode=false;computerBusy=false;
   if(computerTimer){clearTimeout(computerTimer);computerTimer=null}
   await stopQueuePoll();
