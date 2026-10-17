@@ -4056,14 +4056,21 @@ var ok = await new Promise(function(resolve){
     var compColor = (computerUserColor === "w") ? "b" : "w";
     if(game.turn() === compColor || computerBusy){say("The computer is thinking…");return}
   }
-  if(onlineGameId){
-    var myColor=null;
-    if(onlineGame&&currentUser){
-      if(onlineGame.white_id===currentUser.id)myColor="w";
-      else if(onlineGame.black_id===currentUser.id)myColor="b";
-    }
-    if(!myColor||game.turn()!==myColor){say("It's your opponent's turn.");return}
+if(onlineGameId){
+  if(submittingMove) return;
+  var myColor=null;
+  if(onlineGame&&currentUser){
+    if(onlineGame.white_id===currentUser.id)myColor="w";
+    else if(onlineGame.black_id===currentUser.id)myColor="b";
   }
+  if(!myColor) return;
+
+  if(game.turn()!==myColor){
+    location.reload();
+    return;
+  }
+}
+var p=game.get(s);
   var p=game.get(s);
   if(selected&&targets.some(function(m){return m.to===s})){
     var piece=game.get(selected);
