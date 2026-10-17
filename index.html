@@ -2474,7 +2474,39 @@ async function leaveOnlineState(){
     await loadOnlineGame(data.game_id);
   }
 }
+/* ===== VS ANIMATION ===== */
+function showVsAnimation(myName, myAvatar, oppName, oppAvatar) {
+  return new Promise(function(resolve) {
+    var overlay = $("vsOverlay");
+    var leftP = overlay.querySelector(".vs-player.left");
+    var rightP = overlay.querySelector(".vs-player.right");
 
+    // تنظیم عکس و اسم‌ها
+    $("vsAvatarMe").src = myAvatar || defaultAvatar();
+    $("vsNameMe").textContent = myName || "You";
+    $("vsAvatarOpp").src = oppAvatar || defaultAvatar();
+    $("vsNameOpp").textContent = oppName || "Opponent";
+
+    // ریست کردن انیمیشن
+    leftP.classList.remove("active");
+    rightP.classList.remove("active");
+    
+    // نمایش صفحه
+    overlay.classList.add("show");
+
+    // شروع انیمیشن (بعد از 100 میلی‌ثانیه)
+    setTimeout(function() {
+      leftP.classList.add("active");
+      rightP.classList.add("active");
+    }, 100);
+
+    // پایان انیمیشن و بستن صفحه (بعد از 2.5 ثانیه)
+    setTimeout(function() {
+      overlay.classList.remove("show");
+      setTimeout(resolve, 400); // 400 میلی‌ثانیه صبر میکنیم تا محو بشه، بعد بازی شروع بشه
+    }, 2500);
+  });
+  }
 async function loadOnlineGame(id){
   if(!sb) return;
   var res = await sb.from("kf_games").select("*").eq("id", id).maybeSingle();
