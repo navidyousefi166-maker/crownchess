@@ -2523,19 +2523,21 @@ function applyOnlineGame(row){
   $("gfsTopHumil").hidden = !oppHadHcp;
 
   /* Clock update: only when new move arrives */
-  var hasNewMove = false;
-  if(row.last_move && (!prevLastMove ||
-     prevLastMove.from !== row.last_move.from ||
-     prevLastMove.to !== row.last_move.to)){
-    hasNewMove = true;
-  }
-  if(hasNewMove){
-    if(row.white_time_left != null) clockWhite = row.white_time_left;
-    if(row.black_time_left != null) clockBlack = row.black_time_left;
-  }
-  lastClockAt = Date.now();
-  paintClocks();
-  renderPlayers(row);
+var hasNewMove = false;
+if(row.last_move && (!prevLastMove ||
+   prevLastMove.from !== row.last_move.from ||
+   prevLastMove.to !== row.last_move.to)){
+  hasNewMove = true;
+}
+
+if(hasNewMove){
+  // وقتی حریف حرکت می‌کنه، زمانِ جدید رو از سرور می‌گیریم
+  if(row.white_time_left != null) clockWhite = row.white_time_left;
+  if(row.black_time_left != null) clockBlack = row.black_time_left;
+  lastClockAt = Date.now(); 
+}
+paintClocks();
+renderPlayers(row);
 
   /* Close join timer if both joined */
   if(row.is_tournament && row.white_joined_at && row.black_joined_at && row.clock_started_at){
