@@ -4131,12 +4131,16 @@ async function submitMove(m){
     });
     
     if(res.error){
-      game.undo();
-      selected = null;
-      targets = [];
-      draw();
-      say("Move could not be saved: " + res.error.message, {error: true});
-      return;
+  game.undo();
+  selected = null;
+  targets = [];
+  draw();
+  say("Move could not be saved: " + res.error.message, {error: true});
+  
+  // 🟢 این خط اضافه شد: وقتی نت قطع و وصل میشه، صفحه رو با سرور سینک میکنه
+  setTimeout(function(){ reloadGameState(onlineGameId); }, 300);
+  
+  return;
     }
 
     // ✅ سرور زمان دقیق رو برگردوند، ما هم همون رو ذخیره می‌کنیم
