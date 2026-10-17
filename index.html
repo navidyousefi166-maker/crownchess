@@ -1837,13 +1837,19 @@ function paintClocks(){
 }
 
 function resetClocks(){
-  clockWhite = 300; clockBlack = 300; lastClockAt = Date.now(); clockExpired = false;
+  clockExpired = false;
+  lastClockAt = Date.now();
+  
   if(onlineGame){
-    if(onlineGame.white_time_left != null) clockWhite = onlineGame.white_time_left;
-    if(onlineGame.black_time_left != null) clockBlack = onlineGame.black_time_left;
+    // زمان‌ها رو مستقیم از دیتابیس می‌خونیم (سرور قبلاً محاسبه کرده)
+    clockWhite = onlineGame.white_time_left != null ? onlineGame.white_time_left : 300;
+    clockBlack = onlineGame.black_time_left != null ? onlineGame.black_time_left : 300;
+  } else {
+    clockWhite = 300;
+    clockBlack = 300;
   }
   paintClocks();
-}
+  }
 
 /* ===== renderPlayers ===== */
 function renderPlayers(row){
