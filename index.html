@@ -2400,31 +2400,13 @@ async function handleTournamentTimeout(loserColor){
 }
 
 /* FIX: اضافه کردن tournament_wins + جلوگیری از دوبار win، با یک flag */
-async function finishTournamentMatch(winnerId, opponentEliminated){
+/* CORRECTION 1 — مدیریت wins به SQL سپرده شد تا race و دوبار اضافه شدن win رخ نده */
+async function finishTournamentMatch(winnerId){
   if(!sb || !onlineGameId || !tournActiveMatch) return;
   try{
     await sb.rpc("kf_report_match_result", {p_match_id: tournActiveMatch.id, p_winner_id: winnerId});
-
-    if(winnerId === currentUser.id){
-      var bonus = 1;
-      var hcp = (onlineGame.white_id === currentUser.id) ? onlineGame.white_handicap : onlineGame.black_handicap;
-      if(hcp === "n" || hcp === "b") bonus = 2;
-      else if(hcp === "r") bonus = 3;
-      else if(hcp === "q") bonus = 5;
-
-      if(!window._kfTournWinApplied) window._kfTournWinApplied = {};
-      if(!window._kfTournWinApplied[onlineGameId]){
-        window._kfTournWinApplied[onlineGameId] = true;
-        await sb.rpc("kf_add_wins", {p_user_id: currentUser.id, p_amount: bonus});
-        if(hcp){
-          var oppId = onlineGame.white_id === currentUser.id ? onlineGame.black_id : onlineGame.white_id;
-          await sb.rpc("kf_increment_humiliation_loss", {p_user_id: oppId});
-        }
-      }
-    }
-  } catch(e){ console.warn(e); }
+  } catch(e){ console.warn("finishTournamentMatch error:", e); }
 }
-
 async function getCurrentProfile(){
   if(!sb) return null;
   var res = await sb.auth.getUser();
