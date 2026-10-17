@@ -3988,13 +3988,22 @@ function openAnalysis(){
 }
 
 async function runFullAnalysis(){
-  if(!stockfishWorker){ $("anProgress").textContent = "Engine not available."; return; }
-  var waited = 0;
-  while(!stockfishReady && waited < 10000){
-    await new Promise(function(r){ setTimeout(r, 200); });
-    waited += 200;
-  }
-  if(!stockfishReady){ $("anProgress").textContent = "Engine did not load. Try again later."; return; }
+// 🟢 FIX: صبر کردن برای دانلود انجین (تا 10 ثانیه)
+if(!stockfishWorker){ initStockfish(); }
+var waitWorker = 0;
+while(!stockfishWorker && waitWorker < 10000){
+  await new Promise(function(r){ setTimeout(r, 200); });
+  waitWorker += 200;
+}
+
+if(!stockfishWorker){ $("anProgress").textContent = "Engine not available. Check stockfish.js"; return; }
+
+var waited = 0;
+while(!stockfishReady && waited < 10000){
+  await new Promise(function(r){ setTimeout(r, 200); });
+  waited += 200;
+}
+if(!stockfishReady){ $("anProgress").textContent = "Engine did not load. Try again later."; return; }
 
   var history = game.history({verbose: true});
 var header = game.header ? game.header() : {};
