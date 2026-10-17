@@ -4079,7 +4079,23 @@ var ok = await new Promise(function(resolve){
     if(onlineGame.white_id===currentUser.id)myColor="w";
     else if(onlineGame.black_id===currentUser.id)myColor="b";
   }
-  if(!myColor)return;
+  if(!myColor) return;
+
+if(game.turn()!==myColor){
+  // شاید بازی قفل شده باشه. بیا از دیتابیس بپرسیم!
+  say("سینک کردن...");
+  var dbCheck = await sb.from("kf_games").select("*").eq("id", onlineGameId).maybeSingle();
+  if(dbCheck.data && dbCheck.data.status === "active"){
+    applyOnlineGame(dbCheck.data); // دیتای جدید رو اعمال میکنیم
+  }
+  
+  // حالا دوباره چک می‌کنیم ببینیم نوبتمون شده یا نه
+  if(game.turn()!==myColor){
+    say("It's your opponent's turn."); // یعنی واقعا نوبت حریف بوده
+    return;
+  }
+  // اگه از اینجا رد شد، یعنی بازی قفل بوده و الان باز شد!
+}
   
   // 🛡️ سیستم ضد تقلب و ضد قفل شدن
   if(game.turn()!==myColor){
