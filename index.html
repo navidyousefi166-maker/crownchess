@@ -2632,6 +2632,7 @@ if(prevHumilW !== row.white_handicap || prevHumilB !== row.black_handicap){
   }
   function tickClock(){
   if(computerMode || !game || game.game_over() || clockExpired){ paintClocks(); return; }
+  
   if(onlineGame && onlineGame.is_tournament){
     if(!onlineGame.white_joined_at || !onlineGame.black_joined_at){
       paintClocks();
@@ -2640,53 +2641,19 @@ if(prevHumilW !== row.white_handicap || prevHumilB !== row.black_handicap){
   }
   if(!onlineGameId || !onlineGame){ paintClocks(); return; }
 
-  /* Reference from DB (for sync between browsers) */
-  var refTime = null;
-  var refWhiteTime = 300;
-  var refBlackTime = 300;
-
-  /* FIX: prefer last_move_at but fall back to updated_at (column may not exist) */
-  var refIso = onlineGame.last_move_at || onlineGame.updated_at;
-  if(refIso){
-    refTime = new Date(refIso).getTime();
-    refWhiteTime = onlineGame.white_time_left != null ? onlineGame.white_time_left : 300;
-    refBlackTime = onlineGame.black_time_left != null ? onlineGame.black_time_left : 300;
-  } else if(onlineGame.clock_started_at){
-    refTime = new Date(onlineGame.clock_started_at).getTime();
-  }
-
-  if(refTime !== null){
-    var nowRef = Date.now();
-    var elapsedRef = (nowRef - refTime) / 1000;
-    if(elapsedRef < 0) elapsedRef = 0;
-    var turnRef = onlineGame.turn || "w";
-    if(turnRef === "w"){
-      clockWhite = Math.max(0, refWhiteTime - elapsedRef);
-      clockBlack = refBlackTime;
-    } else {
-      clockBlack = Math.max(0, refBlackTime - elapsedRef);
-      clockWhite = refWhiteTime;
-    }
-    if(clockWhite <= 0 || clockBlack <= 0){
-      clockExpired = true;
-      var loserRef = clockWhite <= 0 ? "White" : "Black";
-      var winnerRef = loserRef === "White" ? "Black" : "White";
-      say(loserRef + " ran out of time. " + winnerRef + " wins on time.");
-      if(onlineGameId && tournActiveMatch){ handleTournamentTimeout(loserRef); }
-      else if(onlineGameId){ handleOnlineTimeout(loserRef); }
-    }
-    paintClocks();
-    return;
-  }
-
   var now = Date.now();
   if(lastClockAt === null) lastClockAt = now;
   var elapsed = (now - lastClockAt) / 1000;
-  if(elapsed > 2) elapsed = 2;
+  
+  // جلوگیری از پرش‌های بزرگ اگه مرورگر مینیمایز شد یا نت قطع شد
+  if(elapsed > 2) elapsed = 2; 
   lastClockAt = now;
+  
+  // فقط از بازیکنی که نوبتشه زمان کم میشه
   var turn = onlineGame.turn || "w";
   if(turn === "w") clockWhite = Math.max(0, clockWhite - elapsed);
   else clockBlack = Math.max(0, clockBlack - elapsed);
+
   if(clockWhite <= 0 || clockBlack <= 0){
     clockExpired = true;
     var loser = clockWhite <= 0 ? "White" : "Black";
@@ -2696,7 +2663,8 @@ if(prevHumilW !== row.white_handicap || prevHumilB !== row.black_handicap){
     else if(onlineGameId){ handleOnlineTimeout(loser); }
   }
   paintClocks();
-}
+  }
+
 setInterval(tickClock, 250);
 
 /* ===== JOIN TIMER (20s) ===== */
