@@ -4057,7 +4057,6 @@ var ok = await new Promise(function(resolve){
     if(game.turn() === compColor || computerBusy){say("The computer is thinking…");return}
   }
   if(onlineGameId){
-    if(submittingMove)return;
     var myColor=null;
     if(onlineGame&&currentUser){
       if(onlineGame.white_id===currentUser.id)myColor="w";
