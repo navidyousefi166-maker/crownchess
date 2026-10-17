@@ -4164,7 +4164,6 @@ sb.auth.onAuthStateChange(function(){
   say("Supabase client failed to load.");
 }
 // 🌐 وقتی نت وصل شد، خودکار بازی رو refresh کن
-// 🔄 سیستم سینک موقت (Bounded Polling)
 var syncPollTimer = null;
 var syncAttempts = 0;
 
@@ -4177,9 +4176,19 @@ function startBoundedSync(gameId){
   }
   syncAttempts = 0;
 
+  // تابع سبک برای گرفتن دیتا بدون دست زدن به کانال
+  function fetchAndApply(){
+    if (!onlineGameId || onlineGameId !== gameId) return;
+    sb.from("kf_games").select("*").eq("id", gameId).maybeSingle().then(function(res){
+      if(!res.error && res.data){
+        applyOnlineGame(res.data);
+      }
+    });
+  }
+
   // تلاش اولیه فوری
   if (navigator.onLine) {
-    reloadGameState(gameId);
+    fetchAndApply();
     syncAttempts++;
   }
 
@@ -4187,12 +4196,13 @@ function startBoundedSync(gameId){
   syncPollTimer = setInterval(function(){
     if (!onlineGameId || onlineGameId !== gameId) {
       clearInterval(syncPollTimer);
+      syncPollTimer = null;
       return;
     }
     
     if (navigator.onLine) {
       console.log("Bounded sync attempt " + syncAttempts);
-      reloadGameState(gameId);
+      fetchAndApply();
       syncAttempts++;
     }
 
