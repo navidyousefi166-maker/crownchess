@@ -4142,19 +4142,20 @@ async function submitMove(m){
       await finishTournamentMatch(winnerId);
     }
 
+    var nowIso = new Date().toISOString();
     var upd = {
       fen: game.fen(),
       pgn: game.pgn(),
       turn: game.turn(),
       last_move: {from: m.from, to: m.to, san: m.san},
-      last_move_at: new Date().toISOString(),
+      last_move_at: nowIso,
       status: status,
       result: result,
       winner_id: winnerId,
       white_time_left: Math.floor(clockWhite),
       black_time_left: Math.floor(clockBlack)
     };
-    if(status === "completed") upd.completed_at = new Date().toISOString();
+    if(status === "completed") upd.completed_at = nowIso;
 
     var res = await sb.from("kf_games").update(upd).eq("id", onlineGameId);
     if(res.error){
@@ -4169,6 +4170,8 @@ async function submitMove(m){
     onlineGame.turn = upd.turn;
     onlineGame.white_time_left = upd.white_time_left;
     onlineGame.black_time_left = upd.black_time_left;
+    onlineGame.last_move_at = nowIso;   // 👈 این خط اضافه شد (باگ فلیکر ساعت رو حل میکنه)
+    onlineGame.updated_at = nowIso;     // 👈 این خط هم برای اطمینان
     lastClockAt = Date.now();
   } finally {
     submittingMove = false;
