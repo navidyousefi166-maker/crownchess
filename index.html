@@ -2567,17 +2567,24 @@ if(prevHumilW !== row.white_handicap || prevHumilB !== row.black_handicap){
 }
 
   /* Load FEN (this already has the sacrificed piece removed) */
-  if(game && row.fen && game.fen() !== row.fen){
-    try{
-      game.load(row.fen);
-      last = row.last_move || null;
-      selected = null;
-      targets = [];
-      draw();
-    } catch(e){
-      say("Received an invalid game position.", {error: true});
+/* Load PGN first to keep history, fallback to FEN if PGN fails */
+if(game && row.fen && game.fen() !== row.fen){
+  try{
+    var loaded = false;
+    if(row.pgn && row.pgn.length > 0) {
+      loaded = game.load_pgn(row.pgn);
     }
+    if(!loaded || game.fen() !== row.fen) {
+      game.load(row.fen);
+    }
+    last = row.last_move || null;
+    selected = null;
+    targets = [];
+    draw();
+  } catch(e){
+    say("Received an invalid game position.", {error: true});
   }
+}
 
   /* Draw offer */
   if(row.draw_offer_by && row.draw_offer_by !== currentUser.id && row.draw_offer_status === "pending" && !$("drawOfferDialog").open){
