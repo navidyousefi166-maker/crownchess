@@ -4073,7 +4073,7 @@ var ok = await new Promise(function(resolve){
     if(game.turn() === compColor || computerBusy){say("The computer is thinking…");return}
   }
   if(onlineGameId){
-  if(submittingMove)return;
+  if(submittingMove) return;
   var myColor=null;
   if(onlineGame&&currentUser){
     if(onlineGame.white_id===currentUser.id)myColor="w";
@@ -4081,33 +4081,20 @@ var ok = await new Promise(function(resolve){
   }
   if(!myColor) return;
 
-if(game.turn()!==myColor){
-  // شاید بازی قفل شده باشه. بیا از دیتابیس بپرسیم!
-  say("سینک کردن...");
-  var dbCheck = await sb.from("kf_games").select("*").eq("id", onlineGameId).maybeSingle();
-  if(dbCheck.data && dbCheck.data.status === "active"){
-    applyOnlineGame(dbCheck.data); // دیتای جدید رو اعمال میکنیم
-  }
-  
-  // حالا دوباره چک می‌کنیم ببینیم نوبتمون شده یا نه
   if(game.turn()!==myColor){
-    say("It's your opponent's turn."); // یعنی واقعا نوبت حریف بوده
-    return;
-  }
-  // اگه از اینجا رد شد، یعنی بازی قفل بوده و الان باز شد!
-}
-  
-  // 🛡️ سیستم ضد تقلب و ضد قفل شدن
-  if(game.turn()!==myColor){
-    var clickedPiece = game.get(s);
-    // اگه کاربر روی مهره خودش کلیک کرد ولی نوبتش نبود، یعنی نت قطع بوده و بازی قفل شده
-    if(clickedPiece && clickedPiece.color === myColor){
-      say("سینک کردن وضعیت بازی...");
-      forceFullSync(onlineGameId);
-    } else {
-      say("It's your opponent's turn.");
+    // 🛡️ شاید بازی قفل شده باشه. قفل رو باز میکنیم و از دیتابیس میپرسیم
+    say("سینک کردن...");
+    submittingMove = false; // 🔑 آزاد کردن قفل گیرکرده
+    
+    var dbCheck = await sb.from("kf_games").select("*").eq("id", onlineGameId).maybeSingle();
+    if(dbCheck.data && dbCheck.data.status === "active"){
+      applyOnlineGame(dbCheck.data);
     }
-    return;
+    
+    if(game.turn()!==myColor){
+      say("It's your opponent's turn.");
+      return;
+    }
   }
   }
   var p=game.get(s);
