@@ -3246,6 +3246,20 @@ $("celebAnalyze").onclick = function(){
   if(celebInterval){ clearInterval(celebInterval); celebInterval = null; }
   hideCelebration();
   exitFullscreenGame();
+
+  // 🟢 FIX: لود کردن تاریخچه بازی آنلاین قبل از آنالیز
+  if(onlineGame && onlineGame.pgn){
+    try {
+      var tempGame = new Chess();
+      tempGame.load_pgn(onlineGame.pgn);
+      if(tempGame.history().length > 0) {
+        pendingAnalysisGame = game;
+        game = tempGame;
+        draw();
+      }
+    } catch(e) { console.warn("PGN load error for analysis:", e); }
+  }
+
   setTimeout(openAnalysis, 200);
 };
 
