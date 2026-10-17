@@ -4105,9 +4105,17 @@ var ok = await new Promise(function(resolve){
       say(m.san);draw();
       if(humilApplied||game.history().length>0){hideHumilBanner();updateHumilBadge()}
       if(onlineGameId){
-        submittingMove=true;
-        await submitOnlineMove(m);
-        submittingMove=false;
+  submittingMove=true;
+  try {
+    await submitOnlineMove(m);
+  } catch(e) {
+    console.warn("Network error during move:", e);
+    game.undo(); // اگه نت قطع بود، حرکت رو برمی‌گردونیم
+    selected=null; targets=[]; draw();
+    say("اتصال قطع شد. حرکت انجام نشد.");
+  } finally {
+    submittingMove=false; // این خط در هر شرایطی (حتی خطا) اجرا میشه
+  }
       }
       else if(computerMode&&!game.game_over()){
         lastClockAt=Date.now();
