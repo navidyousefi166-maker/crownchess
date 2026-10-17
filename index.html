@@ -4142,22 +4142,18 @@ async function submitMove(m){
       await finishTournamentMatch(winnerId);
     }
 
-    var nowIso = new Date().toISOString();
-    var upd = {
-      fen: game.fen(),
-      pgn: game.pgn(),
-      turn: game.turn(),
-      last_move: {from: m.from, to: m.to, san: m.san},
-      last_move_at: nowIso,
-      status: status,
-      result: result,
-      winner_id: winnerId,
-      white_time_left: Math.floor(clockWhite),
-      black_time_left: Math.floor(clockBlack)
-    };
-    if(status === "completed") upd.completed_at = nowIso;
-
-    var res = await sb.from("kf_games").update(upd).eq("id", onlineGameId);
+        // ✅ حالا حرکت و ساعت رو به سرور می‌فرستیم
+    var res = await sb.rpc("kf_submit_move", {
+      p_game_id: onlineGameId,
+      p_fen: game.fen(),
+      p_pgn: game.pgn(),
+      p_turn: game.turn(),
+      p_last_move: {from: m.from, to: m.to, san: m.san},
+      p_status: status,
+      p_result: result,
+      p_winner_id: winnerId
+    });
+    
     if(res.error){
       game.undo();
       selected = null;
@@ -4167,12 +4163,18 @@ async function submitMove(m){
       return;
     }
 
-    onlineGame.turn = upd.turn;
-    onlineGame.white_time_left = upd.white_time_left;
-    onlineGame.black_time_left = upd.black_time_left;
-    onlineGame.last_move_at = nowIso;   // 👈 این خط اضافه شد (باگ فلیکر ساعت رو حل میکنه)
-    onlineGame.updated_at = nowIso;     // 👈 این خط هم برای اطمینان
+    // ✅ سرور زمان دقیق رو برگردوند، ما هم همون رو ذخیره می‌کنیم
+    onlineGame.turn = game.turn();
+    onlineGame.white_time_left = res.data.white_time_left;
+    onlineGame.black_time_left = res.data.black_time_left;
+    onlineGame.last_move = {from: m.from, to: m.to, san: m.san};
+    onlineGame.last_move_at = new Date().toISOString(); 
+    
+    clockWhite = res.data.white_time_left;
+    clockBlack = res.data.black_time_left;
     lastClockAt = Date.now();
+    paintClocks();
+
   } finally {
     submittingMove = false;
   }
