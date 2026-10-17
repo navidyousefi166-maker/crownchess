@@ -4168,10 +4168,19 @@ sb.auth.onAuthStateChange(function(){
   say("Supabase client failed to load.");
 }
 // 🌐 وقتی نت وصل شد، خودکار بازی رو refresh کن
+// 🌐 وقتی نت وصل شد
 window.addEventListener("online", function(){
   console.log("Network back online");
   if(onlineGameId){
-    reloadGameState(onlineGameId);
+    forceFullSync(onlineGameId);
+  }
+});
+
+// 👁️ وقتی از تب دیگه برگشتی به بازی (حتی اگه نت قطع و وصل شده باشه)
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "visible" && onlineGameId){
+    console.log("Tab visible, syncing...");
+    forceFullSync(onlineGameId);
   }
 });
 
