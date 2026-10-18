@@ -4662,6 +4662,11 @@ function updateHistory(){
 /* ===== CLICK SQUARE ===== */
 async function clickSquare(s){
   if(!game) return;
+  // 🟢 بلاک کردن حرکت در 2 ثانیه اول
+if (gameStartDelay > 0 && Date.now() < gameStartDelay) {
+  say("Getting ready... Game will start in a moment!", {silentToast: true});
+  return;
+}
 
   /* Humiliation: sacrifice selection */
   if(humilSelecting){
