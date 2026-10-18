@@ -3347,7 +3347,18 @@ function showCelebration(opts){
   $("celebWinsOld").textContent = "";
   $("celebPlus").textContent = "";
   $("celebWinsNew").textContent = "";
-  $("celebHumilTag").hidden = !(opts.hasHumiliation && opts.outcome === "win");
+  var humilTag = $("celebHumilTag");
+humilTag.classList.remove("loss");
+if(opts.hasHumiliation && opts.outcome === "win"){
+  humilTag.hidden = false;
+  $("celebHumilText").textContent = "HUMILIATION VICTORY";
+} else if(opts.hasHumiliation && opts.outcome === "loss"){
+  humilTag.hidden = false;
+  humilTag.classList.add("loss");
+  $("celebHumilText").textContent = "HUMILIATION DEFEAT";
+} else {
+  humilTag.hidden = true;
+}
   if(opts.outcome === "win") setTimeout(playVictorySound, 300);
   else if(opts.outcome === "loss") setTimeout(playDefeatSound, 300);
   if(opts.outcome === "win") launchConfetti();
