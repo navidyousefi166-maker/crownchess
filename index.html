@@ -2772,6 +2772,15 @@ if(game && row.fen && game.fen() !== row.fen){
   }
   function tickClock(){
   if(computerMode || !game || game.game_over() || clockExpired){ paintClocks(); return; }
+    // 🟢 مکث 2 ثانیه‌ای ابتدای بازی
+if (gameStartDelay > 0 && Date.now() < gameStartDelay) {
+  lastClockAt = Date.now(); // زمان رو ذخیره میکنیم تا سوخت نشه
+  paintClocks();
+  return;
+} else if (gameStartDelay > 0) {
+  gameStartDelay = 0;
+  lastClockAt = Date.now();
+}
   
   if(onlineGame && onlineGame.is_tournament){
     if(!onlineGame.white_joined_at || !onlineGame.black_joined_at){
