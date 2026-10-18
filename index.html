@@ -2813,9 +2813,11 @@ function tickClock(){
       var baseBlack = onlineGame.black_time_left != null ? onlineGame.black_time_left : 300;
 
       clockWhite = Math.max(0, baseWhite - effectiveAge);
-      clockBlack = baseBlack; // نوبت سیاه هنوز شروع نشده
+clockBlack = baseBlack; // نوبت سیاه هنوز شروع نشده
 
-      if(clockWhite <= 0 && !clockExpired){
+lastClockAt = Date.now(); // 🟢 این خط اضافه شود تا دوبار کم نشود
+
+if(clockWhite <= 0 && !clockExpired){
         clockExpired = true;
         say("White ran out of time. Black wins on time.");
         if(onlineGameId && tournActiveMatch){ handleTournamentTimeout("White"); }
