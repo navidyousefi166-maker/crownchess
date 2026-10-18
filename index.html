@@ -2575,7 +2575,7 @@ function showVsAnimation(myName, myAvatar, oppName, oppAvatar) {
   onlineGamePolling = setInterval(function() {
     // فقط وقتی بازی فعاله و ما وسط ارسال حرکت نیستیم، چک میکنه
     if(onlineGameId && onlineGame && onlineGame.status === "active" && !submittingMove && !clockExpired) {
-       reloadGameState(onlineGameId);
+    syncGameState(onlineGameId);
     }
   }, 2000); // هر 2 ثانیه
 }
