@@ -4074,9 +4074,9 @@ for(var i=0;i<history.length;i++){
     var before = posAnalyses[j], after = posAnalyses[j+1];
     var playedUci = history[j].from + history[j].to + (((history[j].promotion || "q") + "").toLowerCase());
     var bestUci = before && before.best ? before.best : null;
-    var evalBefore = before && before.score != null ? before.score : 0;
-    var evalAfter = after && after.score != null ? -after.score : 0;
-    var loss = evalBefore - evalAfter;
+    var evalBefore = (before && before.score != null) ? before.score : null;
+var evalAfter = (after && after.score != null) ? -after.score : null;
+var loss = (evalBefore != null && evalAfter != null) ? (evalBefore - evalAfter) : 0;
     var quality;
     if(bestUci && playedUci === bestUci){
       if(history[j].captured || history[j].san.indexOf("+") !== -1 || history[j].san.indexOf("#") !== -1){
