@@ -2424,7 +2424,15 @@ async function startTournamentGame(match){
       }
     });
 }
-
+async function syncGameState(gameId) {
+  if(!sb || onlineGameId !== gameId || submittingMove) return;
+  try {
+    var res = await sb.from("kf_games").select("*").eq("id", gameId).maybeSingle();
+    if(!res.error && res.data) {
+      applyOnlineGame(res.data);
+    }
+  } catch(e){ console.warn("sync error:", e); }
+  }
 async function reloadGameState(gameId){
   if(!sb || onlineGameId !== gameId) return;
   try{
