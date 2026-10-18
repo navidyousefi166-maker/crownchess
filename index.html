@@ -2808,17 +2808,15 @@ function tickClock(){
     lastClockAt = now;
     clockWhite = Math.max(0, clockWhite - elapsed);
   } else {
-    var lastMoveTime = new Date(onlineGame.last_move_at).getTime();
-    var timeSinceLastMove = (now - lastMoveTime) / 1000;
-    if (timeSinceLastMove < 0) timeSinceLastMove = 0;
+    // 🟢 محاسبه کاملاً محلی (مانند کرنومتر) برای جلوگیری از پرش
+    if (lastClockAt === null) lastClockAt = now;
+    var elapsed = (now - lastClockAt) / 1000;
+    if (elapsed > 2) elapsed = 2;
+    lastClockAt = now;
+    
     var turn = onlineGame.turn || "w";
-    if (turn === "w") {
-      clockWhite = Math.max(0, (onlineGame.white_time_left || 300) - timeSinceLastMove);
-      clockBlack = onlineGame.black_time_left || 300;
-    } else {
-      clockBlack = Math.max(0, (onlineGame.black_time_left || 300) - timeSinceLastMove);
-      clockWhite = onlineGame.white_time_left || 300;
-    }
+    if (turn === "w") clockWhite = Math.max(0, clockWhite - elapsed);
+    else clockBlack = Math.max(0, clockBlack - elapsed);
   }
 
   if(clockWhite <= 0 || clockBlack <= 0){
@@ -2830,6 +2828,8 @@ function tickClock(){
     else if(onlineGameId){ handleOnlineTimeout(loser); }
   }
   paintClocks();
+}
+
                                                           }
 setInterval(tickClock, 250);
 
