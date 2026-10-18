@@ -3546,6 +3546,7 @@ async function handleQuickPlayEnd(row){
     hasHumiliation: !!(row.white_handicap || row.black_handicap),
     isTournament: false,
     onDone: function(){
+      stopGamePolling();
       onlineGameId = null; onlineGame = null;
       if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
       exitFullscreenGame();
