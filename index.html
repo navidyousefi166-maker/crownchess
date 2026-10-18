@@ -3629,7 +3629,12 @@ async function handleTournamentEnd(row){
     user: currentUser,
     oldWins: oldWins,
     newWins: newWins,
-    hasHumiliation: iWon && !!hcp,
+    hasHumiliation: (function(){
+  var myHcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+  var oppHcp = (row.white_id === currentUser.id) ? row.black_handicap : row.white_handicap;
+  if(iWon) return !!myHcp;
+  return !!oppHcp;
+})(),
     isTournament: true,
     onDone: function(){
       stopGamePolling();
