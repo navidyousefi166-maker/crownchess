@@ -2779,7 +2779,7 @@ if(game && row.fen && game.fen() !== row.fen){
     }
   }
   }
- function tickClock(){
+function tickClock(){
   if(computerMode || !game || game.game_over() || clockExpired){ paintClocks(); return; }
   
   if(onlineGame && onlineGame.is_tournament){
@@ -2792,34 +2792,25 @@ if(game && row.fen && game.fen() !== row.fen){
 
   var now = Date.now();
   
-  // 🟢 اگر حرکت اول زده نشده (بازی تازه شروع شده)
+  // اگر حرکت اول زده نشده (بازی تازه شروع شده)
   if (!onlineGame.last_move_at) {
-    // تا وقتی دیلی ۲ ثانیه‌ای فعاله، ساعت‌ها رو دست نزن
     if (gameStartDelay > 0 && Date.now() < gameStartDelay) {
       paintClocks();
       return;
     }
-    
-    // اگر دیلی تموم شد، تازه شروع به شمارش کن
     if (gameStartDelay > 0) {
       gameStartDelay = 0;
       lastClockAt = now;
     }
-    
     if (lastClockAt === null) lastClockAt = now;
     var elapsed = (now - lastClockAt) / 1000;
     if (elapsed > 2) elapsed = 2;
     lastClockAt = now;
-    
-    // فقط از سفید کم میشه چون حرکت اول با اونه
     clockWhite = Math.max(0, clockWhite - elapsed);
-  } 
-  else {
-    // 🟢 بعد از اولین حرکت، از زمان ثبت شده در سرور استفاده کن (دقیق و سینک)
+  } else {
     var lastMoveTime = new Date(onlineGame.last_move_at).getTime();
     var timeSinceLastMove = (now - lastMoveTime) / 1000;
     if (timeSinceLastMove < 0) timeSinceLastMove = 0;
-    
     var turn = onlineGame.turn || "w";
     if (turn === "w") {
       clockWhite = Math.max(0, (onlineGame.white_time_left || 300) - timeSinceLastMove);
@@ -2830,7 +2821,6 @@ if(game && row.fen && game.fen() !== row.fen){
     }
   }
 
-  // بررسی پایان زمان
   if(clockWhite <= 0 || clockBlack <= 0){
     clockExpired = true;
     var loser = clockWhite <= 0 ? "White" : "Black";
@@ -2840,7 +2830,7 @@ if(game && row.fen && game.fen() !== row.fen){
     else if(onlineGameId){ handleOnlineTimeout(loser); }
   }
   paintClocks();
- }
+                                                          }
 setInterval(tickClock, 250);
 
 /* ===== JOIN TIMER (20s) ===== */
