@@ -3583,7 +3583,19 @@ async function handleQuickPlayEnd(row){
     user: currentUser,
     oldWins: oldWins,
     newWins: newWins,
-    hasHumiliation: !!(row.white_handicap || row.black_handicap),
+    hasHumiliation: (function(){
+  var myHcp, oppHcp;
+  if(row.white_id === currentUser.id){
+    myHcp = row.white_handicap;
+    oppHcp = row.black_handicap;
+  } else {
+    myHcp = row.black_handicap;
+    oppHcp = row.white_handicap;
+  }
+  if(outcome === "win")  return !!myHcp;
+  if(outcome === "loss") return !!oppHcp;
+  return false;
+})(),
     isTournament: false,
     onDone: function(){
       stopGamePolling();
