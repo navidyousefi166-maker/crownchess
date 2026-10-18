@@ -3580,6 +3580,7 @@ async function handleTournamentEnd(row){
     hasHumiliation: iWon && !!hcp,
     isTournament: true,
     onDone: function(){
+      stopGamePolling();
       onlineGameId = null; onlineGame = null; tournActiveMatch = null;
       if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
       exitFullscreenGame();
