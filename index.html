@@ -2497,6 +2497,7 @@ async function leaveOnlineState(){
   computerBusy = false;
   if(computerTimer){ clearTimeout(computerTimer); computerTimer = null; }
   await stopQueuePoll();
+  stopGamePolling();
   if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   onlineGameId = null;
   onlineGame = null;
