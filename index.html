@@ -2778,18 +2778,18 @@ if(game && row.fen && game.fen() !== row.fen){
     }
   }
   }
-  function tickClock(){
+function tickClock(){
   if(computerMode || !game || game.game_over() || clockExpired){ paintClocks(); return; }
-    // 🟢 مکث 2 ثانیه‌ای ابتدای بازی
-if (gameStartDelay > 0 && Date.now() < gameStartDelay) {
-  lastClockAt = Date.now(); // زمان رو ذخیره میکنیم تا سوخت نشه
-  paintClocks();
-  return;
-} else if (gameStartDelay > 0) {
-  gameStartDelay = 0;
-  lastClockAt = Date.now();
-}
-  
+  // 🟢 مکث 2 ثانیه‌ای ابتدای بازی
+  if (gameStartDelay > 0 && Date.now() < gameStartDelay) {
+    lastClockAt = Date.now();
+    paintClocks();
+    return;
+  } else if (gameStartDelay > 0) {
+    gameStartDelay = 0;
+    lastClockAt = Date.now();
+  }
+
   if(onlineGame && onlineGame.is_tournament){
     if(!onlineGame.white_joined_at || !onlineGame.black_joined_at){
       paintClocks();
@@ -2798,14 +2798,44 @@ if (gameStartDelay > 0 && Date.now() < gameStartDelay) {
   }
   if(!onlineGameId || !onlineGame){ paintClocks(); return; }
 
+  // ===== 🟢 NEW: تا قبل از حرکت اول، ساعت رو از created_at حساب کن =====
+  var hasMoves = onlineGame.last_move && onlineGame.last_move.from;
+  if(!hasMoves && onlineGame.created_at){
+    var createdMs = new Date(onlineGame.created_at).getTime();
+    if(!isNaN(createdMs)){
+      var ageSec = (Date.now() - createdMs) / 1000;
+      // prepSec = زمان VS animation (~2.9s) + countdown (2s) + بافر (~0.1s)
+      var prepSec = 5;
+      var effectiveAge = Math.max(0, ageSec - prepSec);
+
+      var baseWhite = onlineGame.white_time_left != null ? onlineGame.white_time_left : 300;
+      var baseBlack = onlineGame.black_time_left != null ? onlineGame.black_time_left : 300;
+
+      clockWhite = Math.max(0, baseWhite - effectiveAge);
+      clockBlack = baseBlack; // نوبت سیاه هنوز شروع نشده
+
+      if(clockWhite <= 0 && !clockExpired){
+        clockExpired = true;
+        say("White ran out of time. Black wins on time.");
+        if(onlineGameId && tournActiveMatch){ handleTournamentTimeout("White"); }
+        else if(onlineGameId){ handleOnlineTimeout("White"); }
+      }
+
+      paintClocks();
+      return;
+    }
+  }
+  // ===== 🟢 END NEW =====
+
+  // منطق اصلی بعد از حرکت اول
   var now = Date.now();
   if(lastClockAt === null) lastClockAt = now;
   var elapsed = (now - lastClockAt) / 1000;
-  
+
   // جلوگیری از پرش‌های بزرگ اگه مرورگر مینیمایز شد یا نت قطع شد
-  if(elapsed > 2) elapsed = 2; 
+  if(elapsed > 2) elapsed = 2;
   lastClockAt = now;
-  
+
   // فقط از بازیکنی که نوبتشه زمان کم میشه
   var turn = onlineGame.turn || "w";
   if(turn === "w") clockWhite = Math.max(0, clockWhite - elapsed);
@@ -2820,7 +2850,7 @@ if (gameStartDelay > 0 && Date.now() < gameStartDelay) {
     else if(onlineGameId){ handleOnlineTimeout(loser); }
   }
   paintClocks();
-  }
+    }
 
 setInterval(tickClock, 250);
 
