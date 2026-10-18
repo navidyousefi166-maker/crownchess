@@ -3472,6 +3472,7 @@ async function respondRematch(accept){
   if(onlineGame.rematch_requested_by === currentUser.id) return;
   if(onlineGame.rematch_status !== "pending") return;
   if(!accept){
+    stopGamePolling();
     await sb.from("kf_games").update({rematch_status: "declined"}).eq("id", onlineGameId);
     $("rematchDialog").close();
     rematchDialogShown = false;
