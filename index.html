@@ -2382,6 +2382,7 @@ async function startTournamentGame(match){
   if(res.error || !res.data){ say("Could not load tournament game.", {error:true}); return; }
   var data = res.data;
   if($("tournDialog").open) $("tournDialog").close();
+    gameStartDelay = Date.now() + 2000; // 2 ثانیه فرصت آماده‌سازی
     startGamePolling();
   if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   onlineGameId = gameId;
