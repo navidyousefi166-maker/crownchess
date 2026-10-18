@@ -2669,13 +2669,16 @@ if(row.last_move && (!prevLastMove ||
    prevLastMove.to !== row.last_move.to)){
   hasNewMove = true;
 }
-
 if(hasNewMove){
-  // وقتی حریف حرکت می‌کنه، زمانِ جدید رو از سرور می‌گیریم
-  if(row.white_time_left != null) clockWhite = row.white_time_left;
-  if(row.black_time_left != null) clockBlack = row.black_time_left;
+  // 🟢 آپدیت ساعت فقط زمانی که حریف حرکت کرده باشد (نه خودمان)
+  var isMyMove = (row.turn === "b" && row.white_id === currentUser.id) || (row.turn === "w" && row.black_id === currentUser.id);
+  
+  if (!isMyMove) {
+    if(row.white_time_left != null) clockWhite = row.white_time_left;
+    if(row.black_time_left != null) clockBlack = row.black_time_left;
+  }
   lastClockAt = Date.now(); 
-}
+       }
 paintClocks();
 renderPlayers(row);
 
