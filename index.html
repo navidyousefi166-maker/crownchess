@@ -2597,6 +2597,7 @@ async function loadOnlineGame(id){
   }
   var data = res.data;
   await stopQueuePoll();
+  gameStartDelay = Date.now() + 2000; // 2 ثانیه فرصت آماده‌سازی
   startGamePolling();
   // 🟢 شروع انیمیشن VS
 var myIsWhite = (data.white_id === currentUser.id);
