@@ -4346,22 +4346,22 @@ async function submitMove(m, clientWhite, clientBlack){
       return;
     }
 
-    
-// ✅ سرور زمان دقیق رو برگردوند
+    // ✅ سرور زمان دقیق رو برگردوند
 onlineGame.turn = game.turn();
 onlineGame.last_move = {from: m.from, to: m.to, san: m.san};
 onlineGame.last_move_at = new Date().toISOString(); 
 
-// 🟢 فقط اگر اختلاف زمانی زیاد بود، عدد رو جایگزین کن (جلوگیری از پرش)
-if(Math.abs(clockWhite - res.data.white_time_left) > 1.5) clockWhite = res.data.white_time_left;
-if(Math.abs(clockBlack - res.data.black_time_left) > 1.5) clockBlack = res.data.black_time_left;
-
 onlineGame.white_time_left = res.data.white_time_left;
 onlineGame.black_time_left = res.data.black_time_left;
 
+// 🟢 فقط اگر اختلاف زمانی زیاد بود، عدد رو جایگزین کن (جلوگیری از پرش ناگهانی)
+if(Math.abs(clockWhite - res.data.white_time_left) > 1.5) clockWhite = res.data.white_time_left;
+if(Math.abs(clockBlack - res.data.black_time_left) > 1.5) clockBlack = res.data.black_time_left;
+
 lastClockAt = Date.now();
 paintClocks();
-  } finally {
+  }
+  finally {
     submittingMove = false;
   }
 }
