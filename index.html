@@ -3353,6 +3353,7 @@ $("celebExit").onclick = function(){
   if(celebTimer){ clearTimeout(celebTimer); celebTimer = null; }
   if(celebInterval){ clearInterval(celebInterval); celebInterval = null; }
   hideCelebration();
+  stopGamePolling();
   onlineGameId = null; onlineGame = null;
   if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   exitFullscreenGame();
