@@ -2586,6 +2586,7 @@ async function loadOnlineGame(id){
   }
   var data = res.data;
   await stopQueuePoll();
+  startGamePolling();
   // 🟢 شروع انیمیشن VS
 var myIsWhite = (data.white_id === currentUser.id);
 var myName = myIsWhite ? data.white_username : data.black_username;
