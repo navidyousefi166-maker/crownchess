@@ -4065,7 +4065,7 @@ for(var i=0;i<history.length;i++){
   for(var i=0;i<total;i++){
     if(!analysisRunning) return;
     $("anProgress").textContent = "Analyzing " + (i+1) + " / " + total + " ...";
-    var result = await analyzeFenPromise(positions[i], 10);
+    var result = await analyzeFenPromise(positions[i], 15);
     posAnalyses.push(result);
   }
 
