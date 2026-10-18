@@ -2381,6 +2381,7 @@ async function startTournamentGame(match){
   if(res.error || !res.data){ say("Could not load tournament game.", {error:true}); return; }
   var data = res.data;
   if($("tournDialog").open) $("tournDialog").close();
+    startGamePolling();
   if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   onlineGameId = gameId;
   onlineGame = data;
