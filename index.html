@@ -2779,7 +2779,7 @@ if(game && row.fen && game.fen() !== row.fen){
     }
   }
   }
-function tickClock(){
+ function tickClock(){
   if(computerMode || !game || game.game_over() || clockExpired){ paintClocks(); return; }
   
   if(onlineGame && onlineGame.is_tournament){
@@ -2794,22 +2794,25 @@ function tickClock(){
   
   // 🟢 اگر حرکت اول زده نشده (بازی تازه شروع شده)
   if (!onlineGame.last_move_at) {
-    // 🟢 اگر سرور هنوز اعلام نکرده که هر دو وارد شدن، ساعت رو کاملاً فریز کن
-    if (!onlineGame.clock_started_at) {
+    // تا وقتی دیلی ۲ ثانیه‌ای فعاله، ساعت‌ها رو دست نزن
+    if (gameStartDelay > 0 && Date.now() < gameStartDelay) {
       paintClocks();
       return;
     }
-
-    // 🟢 زمان شروع بازی رو از سرور بگیر تا هر دو گوشی دقیقاً یک عدد رو ببینن
-    var startTime = new Date(onlineGame.clock_started_at).getTime();
-    var elapsed = (now - startTime) / 1000;
-
-    // 🟢 اون 2 ثانیه فرصت آماده‌سازی رو از زمان سپری شده کم کن
-    var effectiveElapsed = Math.max(0, elapsed - 2);
-
-    // 🟢 فقط از سفید کم میشه چون حرکت اول با اونه
-    clockWhite = Math.max(0, 300 - effectiveElapsed);
-    clockBlack = 300;
+    
+    // اگر دیلی تموم شد، تازه شروع به شمارش کن
+    if (gameStartDelay > 0) {
+      gameStartDelay = 0;
+      lastClockAt = now;
+    }
+    
+    if (lastClockAt === null) lastClockAt = now;
+    var elapsed = (now - lastClockAt) / 1000;
+    if (elapsed > 2) elapsed = 2;
+    lastClockAt = now;
+    
+    // فقط از سفید کم میشه چون حرکت اول با اونه
+    clockWhite = Math.max(0, clockWhite - elapsed);
   } 
   else {
     // 🟢 بعد از اولین حرکت، از زمان ثبت شده در سرور استفاده کن (دقیق و سینک)
@@ -2837,8 +2840,7 @@ function tickClock(){
     else if(onlineGameId){ handleOnlineTimeout(loser); }
   }
   paintClocks();
-}
-
+ }
 setInterval(tickClock, 250);
 
 /* ===== JOIN TIMER (20s) ===== */
