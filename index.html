@@ -4329,38 +4329,51 @@ async function submitMove(m, clientWhite, clientBlack){
       setTimeout(function(){ reloadGameState(onlineGameId); }, 300);
       return;
     }
+if(res.error){
+  game.undo();
+  selected = null;
+  targets = [];
+  draw();
+  say("Move could not be saved: " + res.error.message, {error: true});
+  setTimeout(function(){ reloadGameState(onlineGameId); }, 300);
+  return;
+}
 
-    // 🟢 اگر سرور گفت بازی تموم شد (چون زمان تموم شده بود)
-    if(res.data.status === "completed"){
-      clockExpired = true;
-      clockWhite = res.data.white_time_left;
-      clockBlack = res.data.black_time_left;
-      
-      var winnerIdR = res.data.winner_id;
-      var loserIdR = (winnerIdR === onlineGame.white_id) ? onlineGame.black_id : onlineGame.white_id;
-      var loserColor = (loserIdR === onlineGame.white_id) ? "White" : "Black";
-      
-      say(loserColor + " ran out of time.", {silentToast: true});
-      if(onlineGame.is_tournament && tournActiveMatch) await finishTournamentMatch(winnerIdR);
-      await reloadGameState(onlineGameId);
-      return;
-    }
+// ✅ گارد کامل روی res.data
+var payload = res.data || {};
 
-    // ✅ سرور زمان دقیق رو برگردوند
+if(payload.status === "completed"){
+  clockExpired = true;
+  if(typeof payload.white_time_left === "number") clockWhite = payload.white_time_left;
+  if(typeof payload.black_time_left === "number") clockBlack = payload.black_time_left;
+
+  var winnerIdR = payload.winner_id;
+  if(winnerIdR && onlineGame){
+    var loserIdR = (winnerIdR === onlineGame.white_id) ? onlineGame.black_id : onlineGame.white_id;
+    var loserColor = (loserIdR === onlineGame.white_id) ? "White" : "Black";
+    say(loserColor + " ran out of time.", {silentToast: true});
+    if(onlineGame.is_tournament && tournActiveMatch) await finishTournamentMatch(winnerIdR);
+  }
+  await reloadGameState(onlineGameId);
+  return;
+}
+
+// ✅ فقط وقتی سرور عدد معتبر داد، ساعت رو سینک کن
 onlineGame.turn = game.turn();
 onlineGame.last_move = {from: m.from, to: m.to, san: m.san};
-onlineGame.last_move_at = new Date().toISOString(); 
+onlineGame.last_move_at = new Date().toISOString();
 
-onlineGame.white_time_left = res.data.white_time_left;
-onlineGame.black_time_left = res.data.black_time_left;
-
-// 🟢 فقط اگر اختلاف زمانی زیاد بود، عدد رو جایگزین کن (جلوگیری از پرش ناگهانی)
-if(Math.abs(clockWhite - res.data.white_time_left) > 1.5) clockWhite = res.data.white_time_left;
-if(Math.abs(clockBlack - res.data.black_time_left) > 1.5) clockBlack = res.data.black_time_left;
+if(typeof payload.white_time_left === "number" && isFinite(payload.white_time_left)){
+  if(Math.abs(clockWhite - payload.white_time_left) > 1.5) clockWhite = payload.white_time_left;
+  onlineGame.white_time_left = payload.white_time_left;
+}
+if(typeof payload.black_time_left === "number" && isFinite(payload.black_time_left)){
+  if(Math.abs(clockBlack - payload.black_time_left) > 1.5) clockBlack = payload.black_time_left;
+  onlineGame.black_time_left = payload.black_time_left;
+}
 
 lastClockAt = Date.now();
 paintClocks();
-  }
   finally {
     submittingMove = false;
   }
