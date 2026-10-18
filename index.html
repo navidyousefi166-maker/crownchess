@@ -2612,6 +2612,15 @@ await showVsAnimation(myName, myAvatar, oppName, oppAvatar);
   if(gameChannel) sb.removeChannel(gameChannel);
   onlineGameId = id;
   onlineGame = data;
+  // 🟢 به سرور اطلاع بده که این بازیکن وارد شده تا ساعت همزمان شروع بشه
+sb.rpc("kf_player_joined_game", { p_game_id: id }).then(function(r){
+  if(r.data){
+    onlineGame.white_joined_at = r.data.white_joined_at;
+    onlineGame.black_joined_at = r.data.black_joined_at;
+    onlineGame.clock_started_at = r.data.clock_started_at;
+    // اگر تابعی برای آپدیت UI داری، اینجا صدا بزن
+  }
+});
   resetClocks();
   lastClockAt = Date.now();
   humilApplied = false;
