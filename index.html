@@ -3622,8 +3622,8 @@ async function handleQuickPlayEnd(row){
     myHcp = row.black_handicap;
     oppHcp = row.white_handicap;
   }
-  if(outcome === "win")  return !!myHcp;
-  if(outcome === "loss") return !!oppHcp;
+  if(outcome === "win")  return isValidHcp(myHcp);
+  if(outcome === "loss") return isValidHcp(oppHcp);
   return false;
 })(),
     isTournament: false,
