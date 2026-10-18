@@ -1787,9 +1787,9 @@ function defaultAvatar(){
 /* ===== helpers ===== */
 function isValidHcp(v){ return v === "n" || v === "b" || v === "r" || v === "q"; }
 function fmtClock(sec){
-  sec = Math.max(0, Math.floor(sec));
+  sec = Math.max(0, Math.ceil(sec)); // 🟢 Math.floor به Math.ceil تغییر کرد
   return String(Math.floor(sec/60)).padStart(2,"0") + ":" + String(sec%60).padStart(2,"0");
-}
+  }
 function fmtCountdown(ms){
   if(ms < 0) ms = 0;
   var s = Math.floor(ms/1000);
