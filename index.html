@@ -2560,6 +2560,23 @@ function showVsAnimation(myName, myAvatar, oppName, oppAvatar) {
     }, 2500);
   });
   }
+  function startGamePolling() {
+  if(onlineGamePolling) clearInterval(onlineGamePolling);
+  onlineGamePolling = setInterval(function() {
+    // فقط وقتی بازی فعاله و ما وسط ارسال حرکت نیستیم، چک میکنه
+    if(onlineGameId && onlineGame && onlineGame.status === "active" && !submittingMove && !clockExpired) {
+       reloadGameState(onlineGameId);
+    }
+  }, 2000); // هر 2 ثانیه
+}
+
+function stopGamePolling() {
+  if(onlineGamePolling) { 
+    clearInterval(onlineGamePolling); 
+    onlineGamePolling = null; 
+  }
+}
+  
 async function loadOnlineGame(id){
   if(!sb) return;
   var res = await sb.from("kf_games").select("*").eq("id", id).maybeSingle();
