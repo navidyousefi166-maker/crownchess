@@ -4589,17 +4589,13 @@ async function submitMove(m, clientWhite, clientBlack){
       return;
     }
 
-    // ✅ سرور زمان دقیق رو برگردوند، ما هم همون رو ذخیره می‌کنیم
-    onlineGame.turn = game.turn();
-    onlineGame.white_time_left = res.data.white_time_left;
-    onlineGame.black_time_left = res.data.black_time_left;
-    onlineGame.last_move = {from: m.from, to: m.to, san: m.san};
-    onlineGame.last_move_at = new Date().toISOString(); 
-    
-    clockWhite = res.data.white_time_left;
-    clockBlack = res.data.black_time_left;
-    lastClockAt = Date.now();
-    paintClocks();
+    // Server returned exact times. Store them; computeClocks will derive display.
+onlineGame.turn = game.turn();
+onlineGame.white_time_left = res.data.white_time_left;
+onlineGame.black_time_left = res.data.black_time_left;
+onlineGame.last_move = {from: m.from, to: m.to, san: m.san};
+onlineGame.last_move_at = new Date().toISOString();
+paintClocks();
 
   } finally {
     submittingMove = false;
