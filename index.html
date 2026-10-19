@@ -1279,7 +1279,28 @@ body.game-focus .game-fullscreen{display:flex}
       </div>
     </section>
   </div>
-
+<div class="page" id="pageNews">
+  <div class="news-container">
+    <div class="news-toolbar">
+      <div class="nt-group">
+        <button class="nt-btn" id="newsFontSizeUp" title="Increase Font Size">A+</button>
+        <button class="nt-btn" id="newsFontSizeDown" title="Decrease Font Size">A-</button>
+      </div>
+      <div class="nt-group">
+        <label for="newsColorPicker" class="nt-color-label" title="Text Color">🎨 Color</label>
+        <input type="color" id="newsColorPicker" value="#f8edf0">
+      </div>
+      <div class="nt-group">
+        <button class="nt-btn" id="newsImageBtn" title="Insert Image">🖼️ Add Image</button>
+        <input type="file" id="newsImageUpload" accept="image/*" style="display:none">
+      </div>
+    </div>
+    <div id="newsEditor" contenteditable="true" class="news-editor">
+      <h1 style="color: var(--gold);">Kingsfall News</h1>
+      <p>Welcome to the official news page. You can type anything here, change the font size, color, and add images.</p>
+    </div>
+  </div>
+</div>
   <footer>
     <div class="foot-brand">♛ Kingsfall · Every King Can Fall.</div>
     <div class="foot-support">
