@@ -5265,12 +5265,10 @@ $("newsImageUpload").onchange = function(e) {
   restoreSelection(); 
 
   // 🟢 تغییر به span برای اینکه متن کنارش قرار بگیره
-  var wrapper = document.createElement("span");
-  wrapper.contentEditable = "false"; 
-  
-  // 🟢 اعمال float و فاصله‌ها مستقیماً در استایل اولیه
-wrapper.style.cssText = "float: right; margin: 0 0 15px 15px; display: inline-block; position: relative; border: 2px dashed var(--gold); width: 300px; max-width: 100%; vertical-align: top;";
-  
+// 🟢 تغییر به div و استفاده از float برای تراز شدن متن از بالا
+var wrapper = document.createElement("div");
+wrapper.contentEditable = "false"; 
+wrapper.style.cssText = "float: right; margin: 0 0 15px 15px; border: 2px dashed var(--gold); width: 300px; max-width: 100%; position: relative;";
   var img = document.createElement("img");
   img.src = event.target.result;
   img.style.cssText = "width: 100%; height: auto; display: block; pointer-events: none;";
