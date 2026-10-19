@@ -3693,10 +3693,7 @@ async function finalizeOnlineGame(winnerId){
     else if(hcp === "r") bonus = 3;
     else if(hcp === "q") bonus = 5;
     await sb.rpc("kf_add_wins", {p_user_id: currentUser.id, p_amount: bonus});
-    if(hcp){
-      var oppId = onlineGame.white_id === currentUser.id ? onlineGame.black_id : onlineGame.white_id;
-      await sb.rpc("kf_increment_humiliation_loss", {p_user_id: oppId});
-    }
+    
   }
 }
 
