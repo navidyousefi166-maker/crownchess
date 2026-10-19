@@ -5260,39 +5260,30 @@ $("newsImageUpload").onchange = function(e) {
   var file = e.target.files[0];
   if(!file) return;
   var reader = new FileReader();
-  reader.onload = function(event) {
-    
-    restoreSelection(); // برگرداندن نشانگر برای قرار دادن عکس در جای درست
-    
-    // ساخت یک کادر (div) که قابلیت تغییر سایز داشته باشه
-    var wrapper = document.createElement("div");
-    wrapper.contentEditable = "false"; 
-    wrapper.style.cssText = "display: inline-block; resize: both; overflow: hidden; border: 2px dashed var(--gold); min-width: 100px; width: 300px; max-width: 100%; margin: 10px 0; vertical-align: middle;";
-    
-    var img = document.createElement("img");
-    img.src = event.target.result;
-    img.style.cssText = "width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none;";
-    
-    wrapper.appendChild(img);
-    
-    var sel = window.getSelection();
-    if(sel.rangeCount) {
-  var range = sel.getRangeAt(0);
-  range.deleteContents();
+ reader.onload = function(event) {
   
-  // 🟢 ساخت دستگیره تغییر سایز مخصوص گوشی و کامپیوتر
+  restoreSelection(); 
+
+  // 🟢 تغییر به span برای اینکه متن کنارش قرار بگیره
+  var wrapper = document.createElement("span");
+  wrapper.contentEditable = "false"; 
+  
+  // 🟢 اعمال float و فاصله‌ها مستقیماً در استایل اولیه
+  wrapper.style.cssText = "float: right; margin: 0 0 15px 15px; display: inline-block; position: relative; border: 2px dashed var(--gold); width: 300px; max-width: 100%;";
+  
+  var img = document.createElement("img");
+  img.src = event.target.result;
+  img.style.cssText = "width: 100%; height: auto; display: block; pointer-events: none;";
+  
+  wrapper.appendChild(img);
+
+  // 🟢 ساخت دستگیره تغییر سایز
   var handle = document.createElement("div");
   handle.contentEditable = "false";
   handle.style.cssText = "position: absolute; bottom: -10px; right: -10px; width: 24px; height: 24px; background: var(--gold); border: 2px solid #2a0710; border-radius: 50%; cursor: nwse-resize; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); touch-action: none;";
   wrapper.appendChild(handle);
-  wrapper.style.position = "relative"; 
-  wrapper.style.resize = "none"; // خاموش کردن حالت پیش‌فرض مرورگر
-      // 🟢 تنظیمات برای قرارگیری متن کنار عکس
-wrapper.style.float = "right";
-wrapper.style.marginLeft = "15px";
-wrapper.style.marginBottom = "10px";
 
-  // کدهای مربوط به کشیدن دستگیره
+  // کدهای کشیدن دستگیره
   var isResizing = false;
   var startX, startWidth;
 
@@ -5307,7 +5298,7 @@ wrapper.style.marginBottom = "10px";
     if (!isResizing) return;
     var currentX = e.touches ? e.touches[0].clientX : e.clientX;
     var newWidth = startWidth + (currentX - startX);
-    if (newWidth > 50) { // حداقل سایز
+    if (newWidth > 50) { 
       wrapper.style.width = newWidth + "px";
     }
     e.preventDefault();
@@ -5324,25 +5315,22 @@ wrapper.style.marginBottom = "10px";
   window.addEventListener("touchmove", doResize, {passive: false});
   window.addEventListener("touchend", stopResize);
 
-  range.insertNode(wrapper);
-  
-  range.setStartAfter(wrapper);
-  range.setEndAfter(wrapper);
-  sel.removeAllRanges();
-  sel.addRange(range);
-  
-  savedRange = sel.getRangeAt(0).cloneRange();
-} else {
-  newsEditor.appendChild(wrapper);
-    }
-      
-      // آپدیت کردن موقعیت ذخیره شده بعد از قرار دادن عکس
-      savedRange = sel.getRangeAt(0).cloneRange();
-    } else {
-      newsEditor.appendChild(wrapper);
-      newsEditor.appendChild(document.createElement("br"));
-    }
-  };
+  var sel = window.getSelection();
+  if(sel.rangeCount) {
+    var range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(wrapper);
+    
+    range.setStartAfter(wrapper);
+    range.setEndAfter(wrapper);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    
+    savedRange = sel.getRangeAt(0).cloneRange();
+  } else {
+    newsEditor.appendChild(wrapper);
+  }
+};
   reader.readAsDataURL(file);
   this.value = ''; 
 };
