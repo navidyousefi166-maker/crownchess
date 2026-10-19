@@ -3149,8 +3149,15 @@ $("resignConfirmYes").onclick = async function(){
   /* ===== HUMILIATION ===== */
 function updateHumilBadge(){
   var badge = $("gfsBotHumil");
-  if(!badge || !game) return;
-  var canSacrifice = !!onlineGameId && game.history().length === 0 && !humilApplied;
+  if(!badge || !game || !onlineGameId || !onlineGame) return; 
+  
+  // چک میکنیم آیا خود بازیکن حرکت کرده یا نه (نه اینکه کلا حرکتی توی بازی شده باشه یا نه)
+  var myColor = fsPlayerColor;
+  var history = game.history({verbose: true});
+  var iHaveMoved = history.some(function(m) { return m.color === myColor; });
+
+  var canSacrifice = !humilApplied && !iHaveMoved;
+
   if(humilApplied){
     badge.hidden = false;
     badge.classList.remove("inactive", "selecting");
@@ -3161,7 +3168,7 @@ function updateHumilBadge(){
   } else {
     badge.hidden = true;
   }
-}
+    }
 
 function showHumilBanner(){ /* deprecated — nothing */ }
 function hideHumilBanner(){ var b = $("humilBanner"); if(b) b.remove(); }
