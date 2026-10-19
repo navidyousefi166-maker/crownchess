@@ -1846,7 +1846,9 @@ $("navTable").onclick = function(){ showPage("table"); };
     var current = document.querySelector(".page.active");
     if(!current) return;
     if(dx < 0 && current.id === "pageHome") showPage("table");
-    else if(dx > 0 && current.id === "pageTable") showPage("home");
+else if(dx < 0 && current.id === "pageTable") showPage("news");
+else if(dx > 0 && current.id === "pageNews") showPage("table");
+else if(dx > 0 && current.id === "pageTable") showPage("home");
   }, {passive:true});
 })();
   /* ===== GLOBAL STATE ===== */
