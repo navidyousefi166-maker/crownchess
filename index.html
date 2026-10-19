@@ -3704,16 +3704,7 @@ async function handleTournamentEnd(row){
 
 /* FIX: این تابع فقط برای QUICK PLAY استفاده می‌شود (تورنمنت skip می‌شود) */
 async function finalizeOnlineGame(winnerId){
-  if(!currentUser) return;
-  if(winnerId === currentUser.id){
-    var hcp = (onlineGame.white_id === currentUser.id) ? onlineGame.white_handicap : onlineGame.black_handicap;
-    var bonus = 1;
-    if(hcp === "n" || hcp === "b") bonus = 2;
-    else if(hcp === "r") bonus = 3;
-    else if(hcp === "q") bonus = 5;
-    await sb.rpc("kf_add_wins", {p_user_id: currentUser.id, p_amount: bonus});
-    
-  }
+  
 }
 
 async function handleOnlineTimeout(loserColor){
