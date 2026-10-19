@@ -1083,6 +1083,91 @@ body.game-focus .game-fullscreen{display:flex}
   .vs-player.left { transform: translateX(80px) scale(0.5); }
   .vs-player.right { transform: translateX(-80px) scale(0.5); }
 }
+  /* ===== NEWS PAGE ===== */
+.news-container {
+  width: min(900px, 100%);
+  margin: 20px auto;
+  background: var(--panel-bg1);
+  border: 1px solid var(--line2);
+  border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.news-toolbar {
+  background: var(--panel-bg2);
+  padding: 12px 16px;
+  display: flex;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.nt-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nt-btn {
+  background: var(--btn-bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 14px;
+  transition: 0.2s;
+}
+.nt-btn:hover {
+  background: var(--btn-hover);
+  border-color: var(--gold);
+}
+.nt-color-label {
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  color: var(--muted);
+}
+input[type="color"] {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+}
+.news-editor {
+  padding: 24px;
+  min-height: 500px;
+  outline: none;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  overflow-y: auto;
+}
+.news-editor:empty::before {
+  content: "Start typing your news here...";
+  color: var(--muted);
+  pointer-events: none;
+}
+/* تنظیم عکس‌ها داخل ادیتور برای اینکه از کادر بیرون نزنن */
+.news-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 10px 0;
+  border: 1px solid var(--line2);
+}
+@media(max-width: 600px) {
+  .news-toolbar { gap: 10px; justify-content: center; }
+  .news-editor { padding: 16px; min-height: 400px; }
+}
 </style>
 </head>
 <body>
