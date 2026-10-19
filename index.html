@@ -2908,14 +2908,10 @@ renderPlayers(row);
   updateHumilBadge();
 
   /* Close join timer if both joined */
-  if(row.is_tournament && row.white_joined_at && row.black_joined_at && row.clock_started_at){
-    if(joinTimerBanner) joinTimerBanner.style.display = "none";
-    if(joinTimerInterval){ clearInterval(joinTimerInterval); joinTimerInterval = null; }
-    if(!window._kfClockSyncedAt){
-      window._kfClockSyncedAt = true;
-      lastClockAt = Date.now();
+if(row.is_tournament && row.white_joined_at && row.black_joined_at && row.clock_started_at){
+  if(joinTimerBanner) joinTimerBanner.style.display = "none";
+  if(joinTimerInterval){ clearInterval(joinTimerInterval); joinTimerInterval = null; }
     }
-  }
 
   /* CORRECTION 2 — فقط handicap خودم باعث فعال شدن badge میشه. (FEN از سمت حریف خودش مهره رو حذف کرده) */
 if(prevHumilW !== row.white_handicap || prevHumilB !== row.black_handicap){
