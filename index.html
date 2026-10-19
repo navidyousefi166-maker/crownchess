@@ -5160,6 +5160,55 @@ async function loadChampion(){
 }
 
 /* Run! */
+  /* ===== NEWS PAGE ===== */
+$("navNews").onclick = function(){ showPage("news"); };
+
+// تغییر سایز فونت
+var currentFontSize = 4;
+$("newsFontSizeUp").onclick = function(){
+  document.execCommand("styleWithCSS", false, true);
+  currentFontSize = Math.min(currentFontSize + 1, 7);
+  document.execCommand("fontSize", false, currentFontSize);
+};
+$("newsFontSizeDown").onclick = function(){
+  document.execCommand("styleWithCSS", false, true);
+  currentFontSize = Math.max(currentFontSize - 1, 1);
+  document.execCommand("fontSize", false, currentFontSize);
+};
+
+// تغییر رنگ فونت
+$("newsColorPicker").oninput = function() {
+  document.execCommand("styleWithCSS", false, true);
+  document.execCommand("foreColor", false, this.value);
+};
+
+// اضافه کردن عکس
+$("newsImageBtn").onclick = function(){ $("newsImageUpload").click(); };
+$("newsImageUpload").onchange = function(e) {
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(event) {
+    var img = document.createElement("img");
+    img.src = event.target.result;
+    
+    // قرار دادن عکس در جایی که نشانگر (Cursor) هست
+    var sel = window.getSelection();
+    if(sel.rangeCount) {
+      var range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(img);
+      range.setStartAfter(img);
+      range.setEndAfter(img);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      $("newsEditor").appendChild(img);
+    }
+  };
+  reader.readAsDataURL(file);
+  this.value = ''; // پاک کردن فایل بعد از آپلود
+};
 initApp();
 
 })();
