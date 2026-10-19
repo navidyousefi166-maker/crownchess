@@ -4925,9 +4925,9 @@ function updateHistory(){
 /* ===== CLICK SQUARE ===== */
 async function clickSquare(s){
   if(!game) return;
-  // 🟢 بلاک کردن حرکت در 2 ثانیه اول
-if (gameStartDelay > 0 && Date.now() < gameStartDelay) {
-say("Get ready... Game starts in a moment!", {silentToast: false});
+  // Block moves during client-side prep (VS animation / countdown)
+if(_clientPrepEnd && Date.now() < _clientPrepEnd){
+  say("Get ready... Game starts in a moment!", {silentToast: true});
   return;
 }
 
