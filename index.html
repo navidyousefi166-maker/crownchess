@@ -1902,12 +1902,17 @@ var queuePoll = null;
 var queueTimeout = null;
 var gameChannel = null;
 var onlineGamePolling = null;
-  var gameStartDelay = 0;
 var submittingMove = false;
 var clockWhite = 300;
 var clockBlack = 300;
-var lastClockAt = null;
 var clockExpired = false;
+
+/* ============================================================
+   CLOCK SYSTEM - server-authoritative, chess.com-like
+   ============================================================ */
+var CLOCK_TICK_MS = 100;      // 10 fps like chess.com
+var PREP_GRACE_SEC = 6;       // must match server: created_at - 6
+var _clientPrepEnd = 0;       // client-side prep end (ms). 0 = no prep
 var computerMode = false;
 var computerBusy = false;
 var computerRating = 1400;
