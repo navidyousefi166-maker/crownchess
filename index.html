@@ -5277,14 +5277,64 @@ $("newsImageUpload").onchange = function(e) {
     
     var sel = window.getSelection();
     if(sel.rangeCount) {
-      var range = sel.getRangeAt(0);
-      range.deleteContents();
-      range.insertNode(wrapper);
-      
-      range.setStartAfter(wrapper);
-range.setEndAfter(wrapper);
-sel.removeAllRanges();
-sel.addRange(range);
+  var range = sel.getRangeAt(0);
+  range.deleteContents();
+  
+  // 🟢 ساخت دستگیره تغییر سایز مخصوص گوشی و کامپیوتر
+  var handle = document.createElement("div");
+  handle.contentEditable = "false";
+  handle.style.cssText = "position: absolute; bottom: -10px; right: -10px; width: 24px; height: 24px; background: var(--gold); border: 2px solid #2a0710; border-radius: 50%; cursor: nwse-resize; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); touch-action: none;";
+  wrapper.appendChild(handle);
+  wrapper.style.position = "relative"; 
+  wrapper.style.resize = "none"; // خاموش کردن حالت پیش‌فرض مرورگر
+      // 🟢 تنظیمات برای قرارگیری متن کنار عکس
+wrapper.style.float = "right";
+wrapper.style.marginLeft = "15px";
+wrapper.style.marginBottom = "10px";
+
+  // کدهای مربوط به کشیدن دستگیره
+  var isResizing = false;
+  var startX, startWidth;
+
+  function startResize(e) {
+    isResizing = true;
+    startX = e.touches ? e.touches[0].clientX : e.clientX;
+    startWidth = parseInt(document.defaultView.getComputedStyle(wrapper).width, 10);
+    e.preventDefault();
+  }
+
+  function doResize(e) {
+    if (!isResizing) return;
+    var currentX = e.touches ? e.touches[0].clientX : e.clientX;
+    var newWidth = startWidth + (currentX - startX);
+    if (newWidth > 50) { // حداقل سایز
+      wrapper.style.width = newWidth + "px";
+    }
+    e.preventDefault();
+  }
+
+  function stopResize() {
+    isResizing = false;
+  }
+
+  handle.addEventListener("mousedown", startResize);
+  window.addEventListener("mousemove", doResize);
+  window.addEventListener("mouseup", stopResize);
+  handle.addEventListener("touchstart", startResize, {passive: false});
+  window.addEventListener("touchmove", doResize, {passive: false});
+  window.addEventListener("touchend", stopResize);
+
+  range.insertNode(wrapper);
+  
+  range.setStartAfter(wrapper);
+  range.setEndAfter(wrapper);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  
+  savedRange = sel.getRangeAt(0).cloneRange();
+} else {
+  newsEditor.appendChild(wrapper);
+    }
       
       // آپدیت کردن موقعیت ذخیره شده بعد از قرار دادن عکس
       savedRange = sel.getRangeAt(0).cloneRange();
