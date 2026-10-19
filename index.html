@@ -2678,6 +2678,7 @@ if(hasNewMove){
 }
 paintClocks();
 renderPlayers(row);
+  updateHumilBadge();
 
   /* Close join timer if both joined */
   if(row.is_tournament && row.white_joined_at && row.black_joined_at && row.clock_started_at){
