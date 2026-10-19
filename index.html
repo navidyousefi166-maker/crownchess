@@ -5269,7 +5269,7 @@ $("newsImageUpload").onchange = function(e) {
   wrapper.contentEditable = "false"; 
   
   // 🟢 اعمال float و فاصله‌ها مستقیماً در استایل اولیه
-  wrapper.style.cssText = "float: right; margin: 0 0 15px 15px; display: inline-block; position: relative; border: 2px dashed var(--gold); width: 300px; max-width: 100%;";
+wrapper.style.cssText = "float: right; margin: 0 0 15px 15px; display: inline-block; position: relative; border: 2px dashed var(--gold); width: 300px; max-width: 100%; vertical-align: top;";
   
   var img = document.createElement("img");
   img.src = event.target.result;
