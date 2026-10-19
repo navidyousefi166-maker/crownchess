@@ -2856,7 +2856,11 @@ var oppAvatar = myIsWhite ? data.black_avatar : data.white_avatar;
 
 await showVsAnimation(myName, myAvatar, oppName, oppAvatar);
 // 🟢 پایان انیمیشن VS
-  gameStartDelay = Date.now() + 2000; // 2
+if(data.last_move_at){
+  _clientPrepEnd = 0;               // rejoining mid-game: no prep
+} else {
+  _clientPrepEnd = Date.now() + 3200; // VS animation (2.9s) + buffer
+}
   if(gameChannel) sb.removeChannel(gameChannel);
   onlineGameId = id;
   onlineGame = data;
