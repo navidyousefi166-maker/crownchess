@@ -2652,15 +2652,23 @@ startGamePolling();
   updateHumilBadge();
 
   if(data.is_tournament){
-    sb.rpc("kf_player_joined_game", {p_game_id: gameId}).then(function(r){
+  // Delay the join RPC until after client prep ends,
+  // so clock_started_at doesn't include the countdown.
+  var _gid = gameId;
+  var _delay = Math.max(0, _clientPrepEnd - Date.now());
+  setTimeout(function(){
+    if(onlineGameId !== _gid) return; // game changed meanwhile
+    sb.rpc("kf_player_joined_game", {p_game_id: _gid}).then(function(r){
       if(r.error){ console.warn("join error:", r.error); return; }
-      if(r.data){
+      if(r.data && onlineGameId === _gid){
         onlineGame.white_joined_at = r.data.white_joined_at;
         onlineGame.black_joined_at = r.data.black_joined_at;
         onlineGame.clock_started_at = r.data.clock_started_at;
         updateJoinTimerUI();
+        paintClocks();
       }
     });
+  }, _delay);
   }
 
   gameChannel = sb.channel("kf-game-" + gameId)
