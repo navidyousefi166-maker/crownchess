@@ -5263,15 +5263,16 @@ $("newsImageUpload").onchange = function(e) {
  reader.onload = function(event) {
   
   restoreSelection(); 
-
-  // 🟢 تغییر به span برای اینکه متن کنارش قرار بگیره
 // 🟢 تغییر به div و استفاده از float برای تراز شدن متن از بالا
 var wrapper = document.createElement("div");
 wrapper.contentEditable = "false"; 
-wrapper.style.cssText = "float: right; margin: 0 0 15px 15px; border: 2px dashed var(--gold); width: 300px; max-width: 100%; position: relative;";
-  var img = document.createElement("img");
-  img.src = event.target.result;
-  img.style.cssText = "width: 100%; height: auto; display: block; pointer-events: none;";
+// margin: 0 0 0 15px (فقط فاصله از چپ)
+wrapper.style.cssText = "float: right; margin: 0 0 0 15px; border: 2px dashed var(--gold); width: 300px; max-width: 100%; position: relative; box-sizing: border-box;";
+
+var img = document.createElement("img");
+img.src = event.target.result;
+// margin: 0 (حذف فاصله پیش‌فرض عکس)
+img.style.cssText = "width: 100%; height: auto; display: block; pointer-events: none; margin: 0; border: none; border-radius: 0;";
   
   wrapper.appendChild(img);
 
