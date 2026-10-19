@@ -5254,76 +5254,86 @@ $("newsImageUpload").onchange = function(e) {
   var file = e.target.files[0];
   if(!file) return;
   var reader = new FileReader();
- reader.onload = function(event) {
   
-  restoreSelection(); 
-// 🟢 تغییر به div و استفاده از float برای تراز شدن متن از بالا
-var wrapper = document.createElement("div");
-wrapper.contentEditable = "false"; 
-// margin: 0 0 0 15px (فقط فاصله از چپ)
-wrapper.style.cssText = "float: right; margin: 0 0 0 15px; border: 2px dashed var(--gold); width: 300px; max-width: 100%; position: relative; box-sizing: border-box;";
+  reader.onload = function(event) {
+    restoreSelection(); 
 
-var img = document.createElement("img");
-img.src = event.target.result;
-// margin: 0 (حذف فاصله پیش‌فرض عکس)
-img.style.cssText = "width: 100%; height: auto; display: block; pointer-events: none; margin: 0; border: none; border-radius: 0;";
-  
-  wrapper.appendChild(img);
+    // ساخت کادر عکس
+    var wrapper = document.createElement("div");
+    wrapper.contentEditable = "false"; 
+    wrapper.style.cssText = "float: right; margin: 0 0 10px 15px; border: 2px dashed var(--gold); width: 300px; max-width: 100%; position: relative; box-sizing: border-box;";
+    
+    // ساخت عکس بدون هیچ فاصله و تراز اضافی
+    var img = document.createElement("img");
+    img.src = event.target.result;
+    img.style.cssText = "width: 100%; height: auto; display: block; pointer-events: none; margin: 0; padding: 0; border: none; border-radius: 0; vertical-align: top;";
+    
+    wrapper.appendChild(img);
 
-  // 🟢 ساخت دستگیره تغییر سایز
-  var handle = document.createElement("div");
-  handle.contentEditable = "false";
-  handle.style.cssText = "position: absolute; bottom: -10px; right: -10px; width: 24px; height: 24px; background: var(--gold); border: 2px solid #2a0710; border-radius: 50%; cursor: nwse-resize; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); touch-action: none;";
-  wrapper.appendChild(handle);
+    // دستگیره تغییر سایز
+    var handle = document.createElement("div");
+    handle.contentEditable = "false";
+    handle.style.cssText = "position: absolute; bottom: -10px; right: -10px; width: 24px; height: 24px; background: var(--gold); border: 2px solid #2a0710; border-radius: 50%; cursor: nwse-resize; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); touch-action: none;";
+    wrapper.appendChild(handle);
 
-  // کدهای کشیدن دستگیره
-  var isResizing = false;
-  var startX, startWidth;
+    // منطق تغییر سایز
+    var isResizing = false;
+    var startX, startWidth;
 
-  function startResize(e) {
-    isResizing = true;
-    startX = e.touches ? e.touches[0].clientX : e.clientX;
-    startWidth = parseInt(document.defaultView.getComputedStyle(wrapper).width, 10);
-    e.preventDefault();
-  }
-
-  function doResize(e) {
-    if (!isResizing) return;
-    var currentX = e.touches ? e.touches[0].clientX : e.clientX;
-    var newWidth = startWidth + (currentX - startX);
-    if (newWidth > 50) { 
-      wrapper.style.width = newWidth + "px";
+    function startResize(e) {
+      isResizing = true;
+      startX = e.touches ? e.touches[0].clientX : e.clientX;
+      startWidth = parseInt(document.defaultView.getComputedStyle(wrapper).width, 10);
+      e.preventDefault();
     }
-    e.preventDefault();
-  }
 
-  function stopResize() {
-    isResizing = false;
-  }
+    function doResize(e) {
+      if (!isResizing) return;
+      var currentX = e.touches ? e.touches[0].clientX : e.clientX;
+      var newWidth = startWidth + (currentX - startX);
+      if (newWidth > 50) { 
+        wrapper.style.width = newWidth + "px";
+      }
+      e.preventDefault();
+    }
 
-  handle.addEventListener("mousedown", startResize);
-  window.addEventListener("mousemove", doResize);
-  window.addEventListener("mouseup", stopResize);
-  handle.addEventListener("touchstart", startResize, {passive: false});
-  window.addEventListener("touchmove", doResize, {passive: false});
-  window.addEventListener("touchend", stopResize);
+    function stopResize() {
+      isResizing = false;
+    }
 
-  var sel = window.getSelection();
-  if(sel.rangeCount) {
-    var range = sel.getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(wrapper);
-    
-    range.setStartAfter(wrapper);
-    range.setEndAfter(wrapper);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    
-    savedRange = sel.getRangeAt(0).cloneRange();
-  } else {
-    newsEditor.appendChild(wrapper);
-  }
+    handle.addEventListener("mousedown", startResize);
+    window.addEventListener("mousemove", doResize);
+    window.addEventListener("mouseup", stopResize);
+    handle.addEventListener("touchstart", startResize, {passive: false});
+    window.addEventListener("touchmove", doResize, {passive: false});
+    window.addEventListener("touchend", stopResize);
+
+    // قرار دادن عکس و تنظیم نشانگر برای شروع تایپ از بالا سمت چپ
+    var sel = window.getSelection();
+    if(sel.rangeCount) {
+      var range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(wrapper);
+      
+      // ایجاد نشانگر (Cursor) دقیقاً در بالاترین نقطه سمت چپ عکس
+      var textNode = document.createTextNode("\u200B");
+      wrapper.parentNode.insertBefore(textNode, wrapper);
+      
+      range.setStart(textNode, 1);
+      range.setEnd(textNode, 1);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      
+      savedRange = sel.getRangeAt(0).cloneRange();
+    } else {
+      newsEditor.appendChild(wrapper);
+    }
+  };
+  
+  reader.readAsDataURL(file);
+  this.value = ''; 
 };
+  
   reader.readAsDataURL(file);
   this.value = ''; 
 };
