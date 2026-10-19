@@ -1491,21 +1491,17 @@ body.game-focus .game-fullscreen{display:flex}
     </div>
   </div>
 </dialog>
-  <dialog id="drawOfferDialog">
-  <div class="modal">
-    <div class="modal-head">
-      <div>
-        <div class="kicker">DRAW OFFER</div>
-        <h2>Opponent offers a draw</h2>
-      </div>
+ <dialog id="drawOfferDialog">
+  <div class="modal" style="padding:0 !important;">
+    <div class="modal-head" style="justify-content:center; margin-bottom:12px;">
+      <h2 style="font-size:15px; margin:0; color:var(--gold);">Draw Offer?</h2>
     </div>
-    <p style="color:var(--muted);font-size:13px;margin:12px 0 0">Your opponent suggests to end this game as a draw. Do you accept?</p>
-    <div style="display:flex;gap:8px;margin-top:18px">
-      <button class="btn" id="drawDeclineBtn" type="button" style="flex:1">Decline</button>
-      <button class="btn gold" id="drawAcceptBtn" type="button" style="flex:1">Accept Draw</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" id="drawDeclineBtn" type="button" style="flex:1; padding:8px; font-size:12px;">Decline</button>
+      <button class="btn gold" id="drawAcceptBtn" type="button" style="flex:1; padding:8px; font-size:12px;">Accept</button>
     </div>
   </div>
-</dialog>
+ </dialog>
 <dialog id="drawConfirmDialog">
   <div class="modal">
     <div class="modal-head">
