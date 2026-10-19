@@ -3174,7 +3174,12 @@ function showHumilBanner(){ /* deprecated — nothing */ }
 function hideHumilBanner(){ var b = $("humilBanner"); if(b) b.remove(); }
 
 $("gfsBotHumil").onclick = function(){
-  if(!onlineGameId || !game || humilApplied || game.history().length > 0) return;
+  if(!onlineGameId || !game || humilApplied) return;
+  
+  var myColor = fsPlayerColor;
+  var iHaveMoved = game.history({verbose: true}).some(function(m) { return m.color === myColor; });
+  if(iHaveMoved) return; // فقط اگه خودم حرکت نکرده باشم اجازه بده
+
   if(humilSelecting) exitHumilSelection();
   else enterHumilSelection();
 };
