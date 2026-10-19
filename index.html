@@ -2759,25 +2759,32 @@ async function stopQueuePoll(){
 }
 
 async function leaveOnlineState(){
+  _clientPrepEnd = 0; // ریست کردن تایمر شروع
   computerMode = false;
   computerBusy = false;
   if(computerTimer){ clearTimeout(computerTimer); computerTimer = null; }
+  
   await stopQueuePoll();
   stopGamePolling();
+  
   if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+  
   onlineGameId = null;
   onlineGame = null;
   submittingMove = false;
   tournActiveMatch = null;
+  
   document.body.classList.remove("online", "computer-mode", "game-focus");
   hideCelebration();
   exitFullscreenGame();
+  
   $("gameClockLabel").textContent = "KINGSFALL · 5 MIN";
   $("new").disabled = false;
   $("undo").disabled = !(game && game.history().length);
+  
   setQuickState("5-minute game · Match by wins");
   renderPlayers(null);
-}
+    }
   async function pollQueue(){
   if(!sb || !currentUser) return;
   var res = await sb.from("kf_match_queue")
