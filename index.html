@@ -5281,13 +5281,10 @@ $("newsImageUpload").onchange = function(e) {
       range.deleteContents();
       range.insertNode(wrapper);
       
-      var br = document.createElement("br");
       range.setStartAfter(wrapper);
-      range.insertNode(br);
-      range.setStartAfter(br);
-      range.setEndAfter(br);
-      sel.removeAllRanges();
-      sel.addRange(range);
+range.setEndAfter(wrapper);
+sel.removeAllRanges();
+sel.addRange(range);
       
       // آپدیت کردن موقعیت ذخیره شده بعد از قرار دادن عکس
       savedRange = sel.getRangeAt(0).cloneRange();
