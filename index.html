@@ -3199,7 +3199,13 @@ function isHumilEligiblePiece(sq){
 }
 
 function enterHumilSelection(){
-  if(!game || game.history().length > 0 || humilApplied) return;
+  if(!game || humilApplied) return;
+  
+  var myColor = fsPlayerColor;
+  var history = game.history({verbose: true});
+  // اگه خودم حرکت کرده باشم، اجازه فدا کردن نمیده
+  if (history.some(function(m) { return m.color === myColor; })) return; 
+
   humilSelecting = true;
   updateHumilBadge();
   draw();
