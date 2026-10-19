@@ -5197,23 +5197,47 @@ async function loadChampion(){
   /* ===== NEWS PAGE ===== */
 $("navNews").onclick = function(){ showPage("news"); };
 
-// 🟢 جلوگیری از پریدن فوکوس (نشانگر) وقتی روی دکمه‌های ابزار کلیک می‌کنیم (هم برای کامپیوتر و هم گوشی)
+// 🟢 جلوگیری از پریدن فوکوس (نشانگر) در کامپیوتر و موبایل
 document.querySelectorAll('.news-toolbar *').forEach(function(el){
   ['mousedown', 'touchstart'].forEach(function(evt){
     el.addEventListener(evt, function(e){
-      e.preventDefault(); // این خط باعث میشه کادر متن فوکوسش رو از دست نده
+      e.preventDefault(); 
     });
   });
 });
 
+// 🟢 ذخیره کردن آخرین موقعیت نشانگر برای جلوگیری از باگ‌های مرورگر
+var savedRange = null;
+var newsEditor = $("newsEditor");
+
+document.addEventListener("selectionchange", function() {
+  var sel = window.getSelection();
+  if (sel.rangeCount > 0) {
+    var range = sel.getRangeAt(0);
+    if (newsEditor.contains(range.commonAncestorContainer)) {
+      savedRange = range.cloneRange();
+    }
+  }
+});
+
+function restoreSelection() {
+  if (savedRange) {
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+}
+
 // تغییر سایز فونت
 var currentFontSize = 4;
 $("newsFontSizeUp").onclick = function(){
+  restoreSelection(); // برگرداندن نشانگر به آخرین موقعیت
   document.execCommand("styleWithCSS", false, true);
   currentFontSize = Math.min(currentFontSize + 1, 7);
   document.execCommand("fontSize", false, currentFontSize);
 };
 $("newsFontSizeDown").onclick = function(){
+  restoreSelection(); // برگرداندن نشانگر به آخرین موقعیت
   document.execCommand("styleWithCSS", false, true);
   currentFontSize = Math.max(currentFontSize - 1, 1);
   document.execCommand("fontSize", false, currentFontSize);
@@ -5221,22 +5245,28 @@ $("newsFontSizeDown").onclick = function(){
 
 // تغییر رنگ فونت
 $("newsColorPicker").oninput = function() {
+  restoreSelection(); // برگرداندن نشانگر به آخرین موقعیت
   document.execCommand("styleWithCSS", false, true);
   document.execCommand("foreColor", false, this.value);
 };
 
 // اضافه کردن عکس با قابلیت تغییر سایز و جابه‌جایی
-$("newsImageBtn").onclick = function(){ $("newsImageUpload").click(); };
+$("newsImageBtn").onclick = function(){ 
+  restoreSelection(); // برگرداندن نشانگر قبل از باز کردن پنجره انتخاب عکس
+  $("newsImageUpload").click(); 
+};
+
 $("newsImageUpload").onchange = function(e) {
   var file = e.target.files[0];
   if(!file) return;
   var reader = new FileReader();
   reader.onload = function(event) {
     
-    // ساخت یک کادر (div) که قابلیت تغییر سایز داشته باشه (گوشه پایین سمت راستش)
+    restoreSelection(); // برگرداندن نشانگر برای قرار دادن عکس در جای درست
+    
+    // ساخت یک کادر (div) که قابلیت تغییر سایز داشته باشه
     var wrapper = document.createElement("div");
-    wrapper.contentEditable = "false"; // داخل خود عکس تایپ نشه
-    // تنظیمات ظاهری کادر: یک حاشیه طلایی نقطه‌چین می‌دیم که بفهمی میتونی سایزش رو تغییر بدی
+    wrapper.contentEditable = "false"; 
     wrapper.style.cssText = "display: inline-block; resize: both; overflow: hidden; border: 2px dashed var(--gold); min-width: 100px; width: 300px; max-width: 100%; margin: 10px 0; vertical-align: middle;";
     
     var img = document.createElement("img");
@@ -5245,14 +5275,12 @@ $("newsImageUpload").onchange = function(e) {
     
     wrapper.appendChild(img);
     
-    // قرار دادن عکس در جایی که نشانگر (Cursor) هست
     var sel = window.getSelection();
     if(sel.rangeCount) {
       var range = sel.getRangeAt(0);
       range.deleteContents();
       range.insertNode(wrapper);
       
-      // یک خط جدید بعد از عکس ایجاد میکنیم که بتونی زیرش تایپ کنی
       var br = document.createElement("br");
       range.setStartAfter(wrapper);
       range.insertNode(br);
@@ -5260,13 +5288,16 @@ $("newsImageUpload").onchange = function(e) {
       range.setEndAfter(br);
       sel.removeAllRanges();
       sel.addRange(range);
+      
+      // آپدیت کردن موقعیت ذخیره شده بعد از قرار دادن عکس
+      savedRange = sel.getRangeAt(0).cloneRange();
     } else {
-      $("newsEditor").appendChild(wrapper);
-      $("newsEditor").appendChild(document.createElement("br"));
+      newsEditor.appendChild(wrapper);
+      newsEditor.appendChild(document.createElement("br"));
     }
   };
   reader.readAsDataURL(file);
-  this.value = ''; // پاک کردن فایل بعد از آپلود
+  this.value = ''; 
 };
 initApp();
 
