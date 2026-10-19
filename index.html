@@ -2632,7 +2632,6 @@ async function startTournamentGame(match){
   if($("tournDialog").open) $("tournDialog").close();
   _clientPrepEnd = Date.now() + 2500; // short countdown before clock starts
 startGamePolling();
-    startGamePolling();
   if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   onlineGameId = gameId;
   onlineGame = data;
