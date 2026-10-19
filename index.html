@@ -2722,13 +2722,21 @@ if(game && row.fen && game.fen() !== row.fen){
 }
 
   /* Draw offer */
-  if(row.draw_offer_by && row.draw_offer_by !== currentUser.id && row.draw_offer_status === "pending" && !$("drawOfferDialog").open){
-    $("drawOfferDialog").showModal();
-  }
-  if(row.draw_offer_status === "declined" && onlineGame && onlineGame.draw_offer_by === currentUser.id){
-    say("Your draw offer was declined.", {silentToast: true});
-  }
-  $("gfsDrawBtn").disabled = !!(row.draw_offer_by && row.draw_offer_by === currentUser.id);
+if(row.draw_offer_by && row.draw_offer_by !== currentUser.id && row.draw_offer_status === "pending" && !$("drawOfferDialog").open){
+  $("drawOfferDialog").showModal();
+}
+
+// اگر پیشنهاد مساوی باطل شد (مثلا حریف حرکت کرد)، پنجره باز شده بسته شود
+if(!row.draw_offer_by && $("drawOfferDialog").open){
+  $("drawOfferDialog").close();
+}
+
+if(row.draw_offer_status === "declined" && onlineGame && onlineGame.draw_offer_by === currentUser.id){
+  say("Your draw offer was declined.", {silentToast: true});
+}
+
+// دکمه مساوی تا زمانی که یک پیشنهاد باز وجود دارد، غیرفعال است
+$("gfsDrawBtn").disabled = !!row.draw_offer_by;
 
   /* Rematch — FIX: check expires_at and auto-close expired dialogs */
   if(row.rematch_status === "pending" && row.rematch_requested_by && row.rematch_requested_by !== currentUser.id){
