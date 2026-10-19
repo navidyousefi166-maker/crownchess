@@ -3261,6 +3261,7 @@ async function renderFullscreenStats(){
 
 function exitFullscreenGame(){
   document.body.classList.remove("game-focus");
+  _clientPrepEnd = 0;
   _boardBuilt = false;
   hideHumilBanner();
   if(joinTimerBanner) joinTimerBanner.style.display = "none";
