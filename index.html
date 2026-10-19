@@ -2052,6 +2052,18 @@ function setPlayer(color, player){
 
 /* ===== clocks ===== */
 function paintClocks(){
+  // 1) Derive from server state
+  if(onlineGameId && onlineGame){
+    var c = computeClocks();
+    clockWhite = c.w;
+    clockBlack = c.b;
+  }
+
+  var activeTurn = null;
+  if(onlineGameId && onlineGame && onlineGame.status === 'active'){
+    activeTurn = onlineGame.turn || (game ? game.turn() : 'w');
+  }
+
   var colors = ["white", "black"];
   for(var i=0;i<colors.length;i++){
     var color = colors[i];
@@ -2062,14 +2074,14 @@ function paintClocks(){
       if(!el) continue;
       el.textContent = fmtClock(val);
       var active = false;
-      if(game && !game.game_over() && !clockExpired && !computerMode){
-        var turnIsWhite = game.turn() === "w";
-        var thisIsWhite = color === "white";
-        if(turnIsWhite === thisIsWhite) active = true;
+      if(activeTurn && !clockExpired){
+        active = (activeTurn === 'w') === (color === 'white');
       }
       el.classList.toggle("active", active);
+      el.classList.toggle("low-time", active && val > 0 && val <= 20);
     }
   }
+
   if(document.body.classList.contains("game-focus")){
     var topColor = fsPlayerColor === "w" ? "black" : "white";
     var topVal = topColor === "white" ? clockWhite : clockBlack;
@@ -2077,16 +2089,18 @@ function paintClocks(){
     var topEl = $("gfsTopClock"), botEl = $("gfsBotClock");
     if(topEl){
       topEl.textContent = fmtClock(topVal);
-      var topActive = game && !game.game_over() && !clockExpired && ((game.turn()==="w")===(topColor==="white"));
+      var topActive = !clockExpired && activeTurn && ((activeTurn === 'w') === (topColor === 'white'));
       topEl.classList.toggle("active", topActive);
+      topEl.classList.toggle("low-time", topActive && topVal > 0 && topVal <= 20);
     }
     if(botEl){
       botEl.textContent = fmtClock(botVal);
-      var botActive = game && !game.game_over() && !clockExpired && ((game.turn()==="w")===(fsPlayerColor==="w"));
+      var botActive = !clockExpired && activeTurn && ((activeTurn === 'w') === (fsPlayerColor === 'w'));
       botEl.classList.toggle("active", botActive);
+      botEl.classList.toggle("low-time", botActive && botVal > 0 && botVal <= 20);
     }
   }
-}
+  }
 
 function resetClocks(){
   clockExpired = false;
