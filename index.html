@@ -1812,6 +1812,7 @@ function showPage(name){
   if(tabEl) tabEl.classList.add("active");
   var navTabsEl = document.querySelector(".nav-tabs");
   if(navTabsEl) navTabsEl.classList.toggle("table-active", name === "table");
+  if(navTabsEl) navTabsEl.classList.toggle("news-active", name === "news");
   if(name === "table") loadLeaderboard();
 }
 $("navHome").onclick = function(){ showPage("home"); };
