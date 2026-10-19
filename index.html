@@ -3092,9 +3092,22 @@ $("drawConfirmNo").onclick = function(){ $("drawConfirmDialog").close(); };
 $("drawConfirmYes").onclick = async function(){
   $("drawConfirmDialog").close();
   if(!sb || !onlineGameId || !onlineGame || !currentUser) return;
-  var upd = {draw_offer_by: currentUser.id, draw_offer_status: "pending"};
-  var res = await sb.from("kf_games").update(upd).eq("id", onlineGameId);
+  
+  // استفاده از تابع جدید دیتابیس برای کول‌داون
+  var res = await sb.rpc("kf_offer_draw", { p_game_id: onlineGameId });
+  
   if(res.error){ say("Could not send draw offer: " + res.error.message, {error: true}); return; }
+  
+  if(res.data.status === "cooldown"){
+    say("Please wait " + Math.ceil(res.data.remaining) + " seconds before offering a draw again.", {silentToast: true});
+    return;
+  }
+  if(res.data.status === "already_offered"){
+    say("You already offered a draw.", {silentToast: true});
+    return;
+  }
+  
+  var upd = {draw_offer_by: currentUser.id, draw_offer_status: "pending"};
   onlineGame = Object.assign({}, onlineGame, upd);
   say("Draw offer sent. Waiting for opponent…", {silentToast: true});
 };
