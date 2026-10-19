@@ -736,6 +736,45 @@ body.game-focus .game-fullscreen{display:flex}
 .humil-banner .hb-sub{font-size:11px;color:var(--muted)}
 #humilDialog{width:min(500px,calc(100% - 20px));padding:0;border-radius:14px}
 #humilConfirmDialog{width:min(320px,calc(100% - 24px))}
+  /* استایل جدید برای کادر پیشنهاد مساوی */
+#drawOfferDialog {
+  top: 90px !important; 
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  margin: 0 !important;
+  position: fixed !important;
+  width: min(320px, calc(100% - 20px)) !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(237,197,107,0.3) !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  z-index: 9999 !important;
+}
+
+/* حذف پس زمینه تاریک که روی تخته میفتاد */
+#drawOfferDialog::backdrop {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+#drawOfferDialog .modal {
+  padding: 12px 15px !important;
+  margin: 0 !important;
+}
+#drawOfferDialog .modal h2 {
+  font-size: 16px !important;
+}
+#drawOfferDialog p {
+  font-size: 12px !important;
+  margin-top: 8px !important;
+}
+#drawOfferDialog .modal > div {
+  margin-top: 12px !important;
+}
+#drawOfferDialog button {
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+}
   .sacr-modal{padding:22px 20px;text-align:center}
 .sacr-title{
   color:#fa412d;
