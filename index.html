@@ -2090,17 +2090,53 @@ function paintClocks(){
 
 function resetClocks(){
   clockExpired = false;
-  lastClockAt = Date.now();
-  
   if(onlineGame){
-    // زمان‌ها رو مستقیم از دیتابیس می‌خونیم (سرور قبلاً محاسبه کرده)
-    clockWhite = onlineGame.white_time_left != null ? onlineGame.white_time_left : 300;
-    clockBlack = onlineGame.black_time_left != null ? onlineGame.black_time_left : 300;
+    clockWhite = (onlineGame.white_time_left != null) ? Number(onlineGame.white_time_left) : 300;
+    clockBlack = (onlineGame.black_time_left != null) ? Number(onlineGame.black_time_left) : 300;
   } else {
     clockWhite = 300;
     clockBlack = 300;
   }
   paintClocks();
+}
+
+/* Derive display clocks from server state ONLY. No local decrement. */
+function computeClocks(){
+  if(!onlineGame || onlineGame.status !== 'active'){
+    return { w: clockWhite, b: clockBlack, running: false };
+  }
+  var baseW = (onlineGame.white_time_left != null) ? Number(onlineGame.white_time_left) : 300;
+  var baseB = (onlineGame.black_time_left != null) ? Number(onlineGame.black_time_left) : 300;
+  var turn  = onlineGame.turn || 'w';
+  var now   = Date.now();
+
+  // During client-side prep (VS animation / countdown), freeze display
+  if(_clientPrepEnd && now < _clientPrepEnd){
+    return { w: baseW, b: baseB, running: false };
+  }
+
+  // Determine anchor for current turn
+  var anchor = null;
+  if(onlineGame.last_move_at){
+    anchor = new Date(onlineGame.last_move_at).getTime();
+  } else if(_clientPrepEnd){
+    anchor = _clientPrepEnd;
+  } else if(onlineGame.clock_started_at){
+    anchor = new Date(onlineGame.clock_started_at).getTime();
+  } else if(onlineGame.created_at){
+    anchor = new Date(onlineGame.created_at).getTime() + PREP_GRACE_SEC * 1000;
+  }
+  if(!Number.isFinite(anchor)) return { w: baseW, b: baseB, running: false };
+
+  var elapsed = Math.max(0, (now - anchor) / 1000);
+  // Safety cap: prevents absurd jumps from client clock skew
+  elapsed = Math.min(elapsed, baseW + baseB + 60);
+
+  var w = baseW, b = baseB;
+  if(turn === 'w') w = Math.max(0, baseW - elapsed);
+  else             b = Math.max(0, baseB - elapsed);
+
+  return { w: w, b: b, running: true };
   }
 
 /* ===== renderPlayers ===== */
