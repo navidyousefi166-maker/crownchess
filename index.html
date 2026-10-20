@@ -1802,7 +1802,7 @@ var sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_K
 
 function $(id){ return document.getElementById(id); }
 
-/* ===== TOAST SYSTEM (NEW) ===== */
+/* ===== TOAST SYSTEM ===== */
 var _toastWrap = null;
 function ensureToastWrap(){
   if(_toastWrap) return _toastWrap;
@@ -1828,7 +1828,6 @@ function toast(msg, kind, duration){
     setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 320);
   }, dur);
 }
-/* say() اکنون هم داخل #message می‌نویسد و هم toast می‌دهد تا در fullscreen هم دیده شود */
 function say(msg, opts){
   opts = opts || {};
   var m = $("message");
@@ -1902,7 +1901,8 @@ else if(dx > 0 && current.id === "pageNews") showPage("table");
 else if(dx > 0 && current.id === "pageTable") showPage("home");
   }, {passive:true});
 })();
-  /* ===== GLOBAL STATE ===== */
+
+/* ===== GLOBAL STATE ===== */
 var boardEl = $("board");
 var historyEl = $("history");
 var game = null;
@@ -1922,14 +1922,14 @@ var submittingMove = false;
 var clockWhite = 300;
 var clockBlack = 300;
 var clockExpired = false;
-var lastClockAt = null; // 👈 این خط را اینجا اضافه کنید
+var lastClockAt = null; 
 
 /* ============================================================
    CLOCK SYSTEM - server-authoritative, chess.com-like
    ============================================================ */
-var CLOCK_TICK_MS = 100;      // 10 fps like chess.com
-var PREP_GRACE_SEC = 6;       // must match server: created_at - 6
-var _clientPrepEnd = 0;       // client-side prep end (ms). 0 = no prep
+var CLOCK_TICK_MS = 100;      
+var PREP_GRACE_SEC = 6;       
+var _clientPrepEnd = 0;       
 var computerMode = false;
 var computerBusy = false;
 var computerRating = 1400;
@@ -2022,7 +2022,8 @@ function fmtTimeLocal(iso){
   } catch(e){ return iso; }
 }
 function sq(r,c){ return files[c] + (8-r); }
-  /* ===== SVG pieces (with cache) ===== */
+
+/* ===== SVG pieces (with cache) ===== */
 var _svgCache = {};
 function svg(p){
   var key = p.color + p.type;
@@ -2069,7 +2070,6 @@ function setPlayer(color, player){
 
 /* ===== clocks ===== */
 function paintClocks(){
-  // 1) Derive from server state
   if(onlineGameId && onlineGame){
     var c = computeClocks();
     clockWhite = c.w;
@@ -2113,7 +2113,7 @@ function paintClocks(){
     if(botEl){
       botEl.textContent = fmtClock(botVal);
       var botActive = !clockExpired && activeTurn && ((activeTurn === 'w') === (fsPlayerColor === 'w'));
-            botEl.classList.toggle("active", botActive);
+      botEl.classList.toggle("active", botActive);
       botEl.classList.toggle("low-time", botActive && botVal > 0 && botVal <= 20);
     }
   }
@@ -2131,7 +2131,6 @@ function resetClocks(){
   paintClocks();
 }
 
-/* Derive display clocks from server state ONLY. No local decrement. */
 function computeClocks(){
   if(!onlineGame || onlineGame.status !== 'active'){
     return { w: clockWhite, b: clockBlack, running: false };
@@ -2141,12 +2140,10 @@ function computeClocks(){
   var turn  = onlineGame.turn || 'w';
   var now   = Date.now();
 
-  // During client-side prep (VS animation / countdown), freeze display
   if(_clientPrepEnd && now < _clientPrepEnd){
     return { w: baseW, b: baseB, running: false };
   }
 
-  // Determine anchor for current turn
   var anchor = null;
   if(onlineGame.last_move_at){
     anchor = new Date(onlineGame.last_move_at).getTime();
@@ -2160,7 +2157,6 @@ function computeClocks(){
   if(!Number.isFinite(anchor)) return { w: baseW, b: baseB, running: false };
 
   var elapsed = Math.max(0, (now - anchor) / 1000);
-  // Safety cap: prevents absurd jumps from client clock skew
   elapsed = Math.min(elapsed, baseW + baseB + 60);
 
   var w = baseW, b = baseB;
@@ -2168,14 +2164,16 @@ function computeClocks(){
   else             b = Math.max(0, baseB - elapsed);
 
   return { w: w, b: b, running: true };
-  }
+}
 
 /* ===== renderPlayers ===== */
 function renderPlayers(row){
   if(!row){ setPlayer("Black", null); setPlayer("White", null); return; }
   setPlayer("White", {username: row.white_username, wins: row.white_wins, avatar_url: row.white_avatar});
-  setPlayer("Black", {username: row.black_username, wins: row.black_wins, avatar_url: row.black_avatar});
-}
+  setPlayer("Black", {username: row.black_username, wins: row.black_wins, avatar_url: row.black_avatar
+    }
+
+  
 
 /* ===== quick/roulette state ===== */
 function setQuickState(text, opts){
