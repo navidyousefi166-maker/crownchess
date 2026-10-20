@@ -5088,17 +5088,28 @@ if(m){
   selected = null;
   targets = [];
 
-  // 🟢 متوقف کردن فوری ساعت و محاسبه دقیق زمان در لحظه رها کردن مهره
-  if(onlineGameId) {
-    var nowM = Date.now();
-    var elM = (nowM - lastClockAt) / 1000;
-    var myColor = (onlineGame.white_id === currentUser.id) ? "w" : "b";
-    
-    if(myColor === "w") clockWhite = Math.max(0, clockWhite - elM);
-    else clockBlack = Math.max(0, clockBlack - elM);
-    
-    lastClockAt = nowM;
-    if(onlineGame) onlineGame.turn = game.turn();
+ // 🟢 فریز کردن ساعت در لحظه حرکت — بدون محاسبه دوباره‌ی زمان
+// (tickClock هر ۲۵۰ms از anchor محاسبه می‌کند؛ اینجا فقط
+//  مقدار فعلی را فریز می‌کنیم و نوبت را عوض می‌کنیم تا پرش رخ نده)
+if(onlineGameId) {
+  if(clockPerfAnchor != null){
+    var perfNow = performance.now();
+    var elapsedFromAnchor = Math.max(0, (perfNow - clockPerfAnchor) / 1000);
+    if(clockPerfTurn === "w"){
+      clockWhite = Math.max(0, clockPerfBaseWhite - elapsedFromAnchor);
+      clockBlack = Math.max(0, clockPerfBaseBlack);
+    } else {
+      clockBlack = Math.max(0, clockPerfBaseBlack - elapsedFromAnchor);
+      clockWhite = Math.max(0, clockPerfBaseWhite);
+    }
+  }
+  // مهره‌ی خودمون روی همین مقدار فعلی فریز می‌شود
+  clockPerfBaseWhite = clockWhite;
+  clockPerfBaseBlack = clockBlack;
+  clockPerfTurn = game.turn();
+  clockPerfAnchor = performance.now();
+  lastClockAt = Date.now();
+  if(onlineGame) onlineGame.turn = game.turn();
   }
 
   say(m.san, {silentToast: true});
