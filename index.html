@@ -1203,6 +1203,22 @@ input[type="color"] {
   .news-editor { padding: 16px; min-height: 400px; }
   .news-editor img { width: 44%; }
 }
+  /* Low-time warning (chess.com style) */
+.clock.low-time{
+  color:#ff5252 !important;
+  border-color:#ff5252 !important;
+  animation:clockPulse 1s ease-in-out infinite;
+}
+.gfs-clock.low-time{
+  color:#ff5252 !important;
+  border-color:#ff5252 !important;
+  box-shadow:0 0 12px rgba(255,82,82,.5),inset 0 0 0 1px rgba(255,82,82,.35) !important;
+  animation:clockPulse 1s ease-in-out infinite;
+}
+@keyframes clockPulse{
+  0%,100%{opacity:1}
+  50%{opacity:.55}
+  }
 </style>
 </head>
 <body>
