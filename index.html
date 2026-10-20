@@ -3379,17 +3379,13 @@ $("resignConfirmNo").onclick = function(){ $("resignConfirmDialog").close(); };
 $("resignConfirmYes").onclick = async function(){
   $("resignConfirmDialog").close();
   if(!onlineGameId || !onlineGame) return;
-  var winnerId = onlineGame.white_id === currentUser.id ? onlineGame.black_id : onlineGame.white_id;
-  var upd = {
-    status: "completed",
-    winner_id: winnerId,
-    result: winnerId === onlineGame.white_id ? "1-0" : "0-1",
-    completed_at: new Date().toISOString()
-  };
-  var res = await sb.from("kf_games").update(upd).eq("id", onlineGameId);
+  
+  var res = await sb.rpc("kf_resign_game", { p_game_id: onlineGameId });
   if(res.error){ say("Could not resign: " + res.error.message, {error: true}); return; }
-  onlineGame = Object.assign({}, onlineGame, upd);
-  if(onlineGame.is_tournament && tournActiveMatch) await finishTournamentMatch(winnerId, true);
+  
+  onlineGame.status = "completed";
+  onlineGame.winner_id = res.data.winner_id;
+  onlineGame.result = res.data.result;
   applyOnlineGame(onlineGame);
 };
   /* ===== HUMILIATION ===== */
