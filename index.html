@@ -5138,10 +5138,41 @@ function start(){
 }
 
 function initApp(){
+  /* 1. اول تخته شطرنج و ظاهر سایت رو بساز (بدون نیاز به دیتابیس) */
+  renderPlayers(null);
+  start();
+  startTournTick();
+  startTournMatchWatcher();
+  setInterval(loadChampion, 60000);
+
+  /* 2. حالا اگه دیتابیس نبود، بازی آفلاین کار میکنه */
   if(!sb){
-    say("Supabase client failed to load.", {error: true});
+    say("حالت آفلاین: اتصال به دیتابیس برقرار نشد.", {error: true});
     return;
   }
+
+  /* 3. ادامه کدهای دیتابیس */
+  sb.auth.onAuthStateChange(function(event){
+    updateAuth();
+    getCurrentProfile().then(function(){
+      checkMyTournamentEntry().then(function(){
+        if($("tournDialog").open) renderTournDialog();
+        updateTournButton();
+      });
+      loadHistory();
+      setTimeout(checkActiveGameAndJoin, 800);
+    });
+  });
+
+  /* Initial auth check */
+  updateAuth().then(function(){
+    getCurrentProfile().then(function(){
+      loadTournamentState();
+      loadChampion();
+      loadHistory();
+      setTimeout(checkActiveGameAndJoin, 800);
+    }).catch(function(){});
+  });
 
   /* Auth state change */
   sb.auth.onAuthStateChange(function(event){
