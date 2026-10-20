@@ -4638,37 +4638,38 @@ async function submitMove(m, clientWhite, clientBlack){
       await finishTournamentMatch(winnerId);
     }
 
-    // ✅ حالا زمان لوکال (clientWhite و clientBlack) رو هم به سرور می‌فرستیم
-    var res = await sb.rpc("kf_submit_move", {
-      p_game_id: onlineGameId,
-      p_fen: game.fen(),
-      p_pgn: game.pgn(),
-      p_turn: game.turn(),
-      p_last_move: {from: m.from, to: m.to, san: m.san},
-      p_status: status,
-      p_result: result,
-      p_winner_id: winnerId,
-      p_client_white_time: clientWhite,
-      p_client_black_time: clientBlack
-    });
-    
-    if(res.error){
-      game.undo();
-      selected = null;
-      targets = [];
-      draw();
-      say("Move could not be saved: " + res.error.message, {error: true});
-      setTimeout(function(){ reloadGameState(onlineGameId); }, 300);
-      return;
-    }
+    // 🟢 فراخوانی دروازه‌بان امن (Edge Function) به جای دیتابیس مستقیم
+var res = await sb.functions.invoke('make-move', {
+  body: {
+    game_id: onlineGameId,
+    from: m.from,
+    to: m.to,
+    promotion: m.promotion || 'q'
+  }
+});
 
-    // 🟢 اگر سرور گفت بازی تموم شد (چون زمان تموم شده بود)
-    if(res.data.status === "completed"){
+// اگر دروازه‌بان خطا داد (مثلا حرکت غیرمجاز بود)
+if(res.error || (res.data && res.data.error)){
+  game.undo();
+  selected = null;
+  targets = [];
+  draw();
+  var errMsg = res.error ? res.error.message : res.data.error;
+  say("Move rejected: " + errMsg, {error: true});
+  setTimeout(function(){ reloadGameState(onlineGameId); }, 300);
+  return;
+}
+
+// جوابی که از دروازه‌بان میاد (شامل زمان‌های جدید سرور)
+var rpcData = res.data;
+
+        // 🟢 اگر سرور گفت بازی تموم شد (چون زمان تموم شده بود)
+    if(rpcData.status === "completed"){
       clockExpired = true;
-      clockWhite = res.data.white_time_left;
-      clockBlack = res.data.black_time_left;
+      clockWhite = rpcData.white_time_left;
+      clockBlack = rpcData.black_time_left;
       
-      var winnerIdR = res.data.winner_id;
+      var winnerIdR = rpcData.winner_id;
       var loserIdR = (winnerIdR === onlineGame.white_id) ? onlineGame.black_id : onlineGame.white_id;
       var loserColor = (loserIdR === onlineGame.white_id) ? "White" : "Black";
       
@@ -4680,20 +4681,21 @@ async function submitMove(m, clientWhite, clientBlack){
 
     // ✅ سرور زمان دقیق رو برگردوند، ما هم همون رو ذخیره می‌کنیم
     onlineGame.turn = game.turn();
-    onlineGame.white_time_left = res.data.white_time_left;
-    onlineGame.black_time_left = res.data.black_time_left;
+    onlineGame.white_time_left = rpcData.white_time_left;
+    onlineGame.black_time_left = rpcData.black_time_left;
     onlineGame.last_move = {from: m.from, to: m.to, san: m.san};
-    onlineGame.last_move_at = res.data.last_move_at || new Date().toISOString();
-    if(res.data.clock_started_at) onlineGame.clock_started_at = res.data.clock_started_at;
+    onlineGame.last_move_at = rpcData.last_move_at || new Date().toISOString();
+    if(rpcData.clock_started_at) onlineGame.clock_started_at = rpcData.clock_started_at;
     clockExpired = false;
-    clockWhite = Number(res.data.white_time_left);
-    clockBlack = Number(res.data.black_time_left);
+    clockWhite = Number(rpcData.white_time_left);
+    clockBlack = Number(rpcData.black_time_left);
     clockPerfBaseWhite = clockWhite;
     clockPerfBaseBlack = clockBlack;
     clockPerfTurn = onlineGame.turn || "w";
+    
     // RPC clock values are measured at the server's last_move_at timestamp,
     // not when the response reaches this phone. Account for network latency.
-    var rpcSnapshotAt = onlineGame.last_move_at || res.data.last_move_at;
+    var rpcSnapshotAt = onlineGame.last_move_at || rpcData.last_move_at;
     var rpcSnapshotAgeMs = rpcSnapshotAt ? (Date.now() - Date.parse(rpcSnapshotAt)) : 0;
     if(!Number.isFinite(rpcSnapshotAgeMs)) rpcSnapshotAgeMs = 0;
     clockPerfAnchor = performance.now() - rpcSnapshotAgeMs;
