@@ -1798,8 +1798,13 @@ input[type="color"] {
 var SUPABASE_URL = "https://cyqactlxetfjyjvklpox.supabase.co";
 var SUPABASE_KEY = "sb_publishable_5kPdWhNs53AY_PB29pRGBw_pvXiB0_k";
 var REDIRECT = "https://navidyousefi166-maker.github.io/crownchess/";
-var sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
+var sb = null;
+try {
+  sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+} catch(e) {
+  console.error("خطای اتصال به دیتابیس:", e);
+}
 function $(id){ return document.getElementById(id); }
 
 /* ===== TOAST SYSTEM ===== */
