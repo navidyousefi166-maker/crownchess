@@ -3347,22 +3347,32 @@ $("drawConfirmYes").onclick = async function(){
 async function respondDrawOffer(accept){
   if(!sb || !onlineGameId || !onlineGame || !currentUser) return;
   if(onlineGame.draw_offer_by === currentUser.id) return;
+  
+  var res = await sb.rpc("kf_respond_draw", { 
+    p_game_id: onlineGameId, 
+    p_accept: accept 
+  });
+  
+  if(res.error){ 
+    say(res.error.message, {error: true}); 
+    return; 
+  }
+  
   if(accept){
-    var upd = {
-      status: "completed",
-      result: "1/2-1/2",
-      winner_id: null,
-      draw_offer_status: "accepted",
-      completed_at: new Date().toISOString()
-    };
-    var res = await sb.from("kf_games").update(upd).eq("id", onlineGameId);
-    if(res.error){ say("Could not accept draw: " + res.error.message, {error: true}); return; }
-    onlineGame = Object.assign({}, onlineGame, upd);
+    onlineGame.status = "completed";
+    onlineGame.result = res.data.result;
+    onlineGame.winner_id = res.data.winner_id;
+    onlineGame.draw_offer_status = res.data.status;
+    
+    if(res.data.status === 'accepted_tiebreak'){
+      var winnerName = (res.data.winner_id === onlineGame.white_id) ? onlineGame.white_username : onlineGame.black_username;
+      say("Draw accepted! " + winnerName + " advances to the next round due to more wins!", {silentToast: false});
+    }
+    
     applyOnlineGame(onlineGame);
   } else {
-    var res2 = await sb.from("kf_games").update({draw_offer_by: null, draw_offer_status: "declined"}).eq("id", onlineGameId);
-    if(res2.error){ say("Could not decline: " + res2.error.message, {error: true}); return; }
-    onlineGame = Object.assign({}, onlineGame, {draw_offer_by: null, draw_offer_status: "declined"});
+    onlineGame.draw_offer_by = null;
+    onlineGame.draw_offer_status = "declined";
     say("Draw offer declined.", {silentToast: true});
   }
   $("drawOfferDialog").close();
