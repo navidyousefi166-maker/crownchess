@@ -2666,7 +2666,22 @@ async function reloadGameState(gameId){
     console.warn("reloadGameState error:", e);
   }
 }
+// Recover online game state when the page resumes
+document.addEventListener("visibilitychange", function(){
+  if (
+    document.visibilityState === "visible" &&
+    onlineGameId &&
+    !submittingMove
+  ) {
+    reloadGameState(onlineGameId);
+  }
+});
 
+window.addEventListener("online", function(){
+  if (onlineGameId && !submittingMove) {
+    reloadGameState(onlineGameId);
+  }
+});
 async function handleTournamentTimeout(loserColor){
   await handleOnlineTimeout(loserColor);
 }
