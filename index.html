@@ -3334,9 +3334,12 @@ async function renderFullscreenStats(){
   var myWins = myIsWhite ? onlineGame.white_wins : onlineGame.black_wins;
   var myTrophyWins = 0;
   try{
-    var st = await sb.from("kf_player_stats").select("tournament_wins").eq("user_id", currentUser.id).maybeSingle();
-    if(st.data && st.data.tournament_wins != null) myTrophyWins = st.data.tournament_wins;
-  } catch(e){}
+  var st = await sb.from("kf_player_stats").select("wins, tournament_wins").eq("user_id", currentUser.id).maybeSingle();
+  if(st.data){
+    if(st.data.tournament_wins != null) myTrophyWins = st.data.tournament_wins;
+    if(st.data.wins != null) window._kfPreGameWins = st.data.wins;
+  }
+} catch(e){}
   $("gfsBotStats").innerHTML = '<span class="gfs-stat">🏆 ' + myTrophyWins + '</span><span class="gfs-stat">' + ((myWins != null) ? myWins : "—") + ' wins</span>';
 
   var oppIsWhite = !myIsWhite;
