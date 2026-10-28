@@ -3962,70 +3962,39 @@ $("rematchDeclineBtn").onclick = function(){ respondRematch(false); };
 
 /* ===== Game end handlers ===== */
 /* Helper: چند بار می‌خواند تا trigger حتماً commit شده باشد */
-async function resolveCelebrationWins(baseline, expectedBonus, isWinner){
-  if(!isWinner){
-    var st = await sb.from("kf_player_stats").select("wins").eq("user_id", currentUser.id).maybeSingle();
-    return { currentWins: (st.data && st.data.wins) || 0, baseline: baseline };
-  }
-  if(baseline != null){
-    var minExpected = baseline + expectedBonus;
-    var deadline = Date.now() + 4000;
-    var currentWins = 0;
-    while(Date.now() < deadline){
-      var st2 = await sb.from("kf_player_stats").select("wins").eq("user_id", currentUser.id).maybeSingle();
-      currentWins = (st2.data && st2.data.wins) || 0;
-      if(currentWins >= minExpected) break;
-      await new Promise(function(r){ setTimeout(r, 250); });
-    }
-    return { currentWins: currentWins, baseline: baseline };
-  }
-  await new Promise(function(r){ setTimeout(r, 1000); });
-  var st3 = await sb.from("kf_player_stats").select("wins").eq("user_id", currentUser.id).maybeSingle();
-  return { currentWins: (st3.data && st3.data.wins) || 0, baseline: null };
-}
-
-function computeCelebrationNumbers(resolved, expectedBonus){
-  var currentWins = resolved.currentWins;
-  var baseline = resolved.baseline;
-  if(baseline != null && currentWins >= baseline){
-    return { oldWins: baseline, newWins: currentWins };
-  }
-  return { oldWins: Math.max(0, currentWins - expectedBonus), newWins: currentWins };
-}
-
 async function handleQuickPlayEnd(row){
   var iWon = row.winner_id === currentUser.id;
   var isDraw = row.result === "1/2-1/2" || (!row.winner_id && !row.result);
   var outcome = isDraw ? "draw" : (iWon ? "win" : "loss");
 
+  var myIsWhite = row.white_id === currentUser.id;
+
+  // Quick Play: kf_join_quick_play از SECURITY DEFINER استفاده کرده و
+  // white_wins/black_wins رو دقیقاً برابر wins قبل از بازی snapshot کرده.
+  // پس نیازی به fetch از DB نداریم و RLS هم دخالتی نمی‌کنه.
+  var myPreGameWins = 0;
+  if(myIsWhite && row.white_wins != null) myPreGameWins = Number(row.white_wins);
+  else if(!myIsWhite && row.black_wins != null) myPreGameWins = Number(row.black_wins);
+
   var expectedBonus = 0;
   if(iWon){
-    var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+    var hcp = myIsWhite ? row.white_handicap : row.black_handicap;
     expectedBonus = 1;
     if(hcp === "n" || hcp === "b") expectedBonus = 2;
     else if(hcp === "r") expectedBonus = 3;
     else if(hcp === "q") expectedBonus = 5;
   }
 
-  var resolved = await resolveCelebrationWins(window._kfPreGameWins, expectedBonus, iWon);
-  var nums = computeCelebrationNumbers(resolved, expectedBonus);
-
   $("celebRematch").hidden = false;
   updateRematchButton();
   showCelebration({
     outcome: outcome,
     user: currentUser,
-    oldWins: nums.oldWins,
-    newWins: nums.newWins,
+    oldWins: myPreGameWins,
+    newWins: myPreGameWins + (iWon ? expectedBonus : 0),
     hasHumiliation: (function(){
-      var myHcp, oppHcp;
-      if(row.white_id === currentUser.id){
-        myHcp = row.white_handicap;
-        oppHcp = row.black_handicap;
-      } else {
-        myHcp = row.black_handicap;
-        oppHcp = row.white_handicap;
-      }
+      var myHcp = myIsWhite ? row.white_handicap : row.black_handicap;
+      var oppHcp = myIsWhite ? row.black_handicap : row.white_handicap;
       if(outcome === "win")  return isValidHcp(myHcp);
       if(outcome === "loss") return isValidHcp(oppHcp);
       return false;
@@ -4048,26 +4017,39 @@ async function handleTournamentEnd(row){
   var iWon = row.winner_id === currentUser.id;
   $("celebRematch").hidden = true;
 
+  var myIsWhite = row.white_id === currentUser.id;
+
   var expectedBonus = 0;
   if(iWon){
-    var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+    var hcpTmp = myIsWhite ? row.white_handicap : row.black_handicap;
     expectedBonus = 1;
-    if(hcp === "n" || hcp === "b") expectedBonus = 2;
-    else if(hcp === "r") expectedBonus = 3;
-    else if(hcp === "q") expectedBonus = 5;
+    if(hcpTmp === "n" || hcpTmp === "b") expectedBonus = 2;
+    else if(hcpTmp === "r") expectedBonus = 3;
+    else if(hcpTmp === "q") expectedBonus = 5;
   }
 
-  var resolved = await resolveCelebrationWins(window._kfPreGameWins, expectedBonus, iWon);
-  var nums = computeCelebrationNumbers(resolved, expectedBonus);
+  // Tournament games don't store wins snapshot in kf_games (default 0),
+  // so we rely on _kfPreGameWins captured at game entry.
+  // If that's also missing, fall back to DB fetch with subtraction.
+  var myPreGameWins = window._kfPreGameWins;
+  if(myPreGameWins == null){
+    try{
+      var st = await sb.from("kf_player_stats").select("wins").eq("user_id", currentUser.id).maybeSingle();
+      if(st.data && st.data.wins != null){
+        myPreGameWins = Math.max(0, Number(st.data.wins) - (iWon ? expectedBonus : 0));
+      }
+    } catch(e){}
+  }
+  if(myPreGameWins == null) myPreGameWins = 0;
 
   showCelebration({
     outcome: iWon ? "win" : "loss",
     user: currentUser,
-    oldWins: nums.oldWins,
-    newWins: nums.newWins,
+    oldWins: myPreGameWins,
+    newWins: myPreGameWins + (iWon ? expectedBonus : 0),
     hasHumiliation: (function(){
-      var myHcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
-      var oppHcp = (row.white_id === currentUser.id) ? row.black_handicap : row.white_handicap;
+      var myHcp = myIsWhite ? row.white_handicap : row.black_handicap;
+      var oppHcp = myIsWhite ? row.black_handicap : row.white_handicap;
       if(iWon) return isValidHcp(myHcp);
       return isValidHcp(oppHcp);
     })(),
