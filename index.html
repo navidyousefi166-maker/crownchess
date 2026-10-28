@@ -3296,6 +3296,7 @@ async function checkActiveGameAndJoin(){
   } catch(e){ console.warn("Auto-rejoin error:", e); }
   }
   function enterFullscreenGame(row){
+  window._kfPreGameWins = null;
   document.body.classList.add("game-focus");
   fsPlayerColor = (row.white_id === currentUser.id) ? "w" : "b";
   flipped = (fsPlayerColor === "b");
