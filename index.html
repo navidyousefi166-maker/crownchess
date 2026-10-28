@@ -3961,42 +3961,75 @@ $("rematchAcceptBtn").onclick = function(){ respondRematch(true); };
 $("rematchDeclineBtn").onclick = function(){ respondRematch(false); };
 
 /* ===== Game end handlers ===== */
+/* Helper: چند بار می‌خواند تا trigger حتماً commit شده باشد */
+async function resolveCelebrationWins(baseline, expectedBonus, isWinner){
+  if(!isWinner){
+    var st = await sb.from("kf_player_stats").select("wins").eq("user_id", currentUser.id).maybeSingle();
+    return { currentWins: (st.data && st.data.wins) || 0, baseline: baseline };
+  }
+  if(baseline != null){
+    var minExpected = baseline + expectedBonus;
+    var deadline = Date.now() + 4000;
+    var currentWins = 0;
+    while(Date.now() < deadline){
+      var st2 = await sb.from("kf_player_stats").select("wins").eq("user_id", currentUser.id).maybeSingle();
+      currentWins = (st2.data && st2.data.wins) || 0;
+      if(currentWins >= minExpected) break;
+      await new Promise(function(r){ setTimeout(r, 250); });
+    }
+    return { currentWins: currentWins, baseline: baseline };
+  }
+  await new Promise(function(r){ setTimeout(r, 1000); });
+  var st3 = await sb.from("kf_player_stats").select("wins").eq("user_id", currentUser.id).maybeSingle();
+  return { currentWins: (st3.data && st3.data.wins) || 0, baseline: null };
+}
+
+function computeCelebrationNumbers(resolved, expectedBonus){
+  var currentWins = resolved.currentWins;
+  var baseline = resolved.baseline;
+  if(baseline != null && currentWins >= baseline){
+    return { oldWins: baseline, newWins: currentWins };
+  }
+  return { oldWins: Math.max(0, currentWins - expectedBonus), newWins: currentWins };
+}
+
 async function handleQuickPlayEnd(row){
   var iWon = row.winner_id === currentUser.id;
   var isDraw = row.result === "1/2-1/2" || (!row.winner_id && !row.result);
   var outcome = isDraw ? "draw" : (iWon ? "win" : "loss");
-  var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id", currentUser.id).maybeSingle();
-  var currentWins = statsRes.data ? (statsRes.data.wins || 0) : 0;
-  var bonus = 0;
+
+  var expectedBonus = 0;
   if(iWon){
     var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
-    bonus = 1;
-    if(hcp === "n" || hcp === "b") bonus = 2;
-    else if(hcp === "r") bonus = 3;
-    else if(hcp === "q") bonus = 5;
+    expectedBonus = 1;
+    if(hcp === "n" || hcp === "b") expectedBonus = 2;
+    else if(hcp === "r") expectedBonus = 3;
+    else if(hcp === "q") expectedBonus = 5;
   }
-  var oldWins = currentWins - bonus;
-  var newWins = currentWins;
+
+  var resolved = await resolveCelebrationWins(window._kfPreGameWins, expectedBonus, iWon);
+  var nums = computeCelebrationNumbers(resolved, expectedBonus);
+
   $("celebRematch").hidden = false;
   updateRematchButton();
   showCelebration({
     outcome: outcome,
     user: currentUser,
-    oldWins: oldWins,
-    newWins: newWins,
+    oldWins: nums.oldWins,
+    newWins: nums.newWins,
     hasHumiliation: (function(){
-  var myHcp, oppHcp;
-  if(row.white_id === currentUser.id){
-    myHcp = row.white_handicap;
-    oppHcp = row.black_handicap;
-  } else {
-    myHcp = row.black_handicap;
-    oppHcp = row.white_handicap;
-  }
-  if(outcome === "win")  return isValidHcp(myHcp);
-  if(outcome === "loss") return isValidHcp(oppHcp);
-  return false;
-})(),
+      var myHcp, oppHcp;
+      if(row.white_id === currentUser.id){
+        myHcp = row.white_handicap;
+        oppHcp = row.black_handicap;
+      } else {
+        myHcp = row.black_handicap;
+        oppHcp = row.white_handicap;
+      }
+      if(outcome === "win")  return isValidHcp(myHcp);
+      if(outcome === "loss") return isValidHcp(oppHcp);
+      return false;
+    })(),
     isTournament: false,
     onDone: function(){
       stopGamePolling();
@@ -4014,28 +4047,30 @@ async function handleQuickPlayEnd(row){
 async function handleTournamentEnd(row){
   var iWon = row.winner_id === currentUser.id;
   $("celebRematch").hidden = true;
-  var statsRes = await sb.from("kf_player_stats").select("*").eq("user_id", currentUser.id).maybeSingle();
-  var currentWins = statsRes.data ? (statsRes.data.wins || 0) : 0;
-  var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
-  var bonus = iWon ? 1 : 0;
-  if(iWon && hcp){
-    if(hcp === "n" || hcp === "b") bonus = 2;
-    else if(hcp === "r") bonus = 3;
-    else if(hcp === "q") bonus = 5;
+
+  var expectedBonus = 0;
+  if(iWon){
+    var hcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+    expectedBonus = 1;
+    if(hcp === "n" || hcp === "b") expectedBonus = 2;
+    else if(hcp === "r") expectedBonus = 3;
+    else if(hcp === "q") expectedBonus = 5;
   }
-  var oldWins = currentWins - bonus;
-  var newWins = currentWins;
+
+  var resolved = await resolveCelebrationWins(window._kfPreGameWins, expectedBonus, iWon);
+  var nums = computeCelebrationNumbers(resolved, expectedBonus);
+
   showCelebration({
     outcome: iWon ? "win" : "loss",
     user: currentUser,
-    oldWins: oldWins,
-    newWins: newWins,
+    oldWins: nums.oldWins,
+    newWins: nums.newWins,
     hasHumiliation: (function(){
-  var myHcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
-  var oppHcp = (row.white_id === currentUser.id) ? row.black_handicap : row.white_handicap;
-  if(iWon) return isValidHcp(myHcp);
-  return isValidHcp(oppHcp);
-})(),
+      var myHcp = (row.white_id === currentUser.id) ? row.white_handicap : row.black_handicap;
+      var oppHcp = (row.white_id === currentUser.id) ? row.black_handicap : row.white_handicap;
+      if(iWon) return isValidHcp(myHcp);
+      return isValidHcp(oppHcp);
+    })(),
     isTournament: true,
     onDone: function(){
       stopGamePolling();
@@ -4050,6 +4085,9 @@ async function handleTournamentEnd(row){
     }
   });
 }
+      
+
+
 
 /* FIX: این تابع فقط برای QUICK PLAY استفاده می‌شود (تورنمنت skip می‌شود) */
 async function finalizeOnlineGame(winnerId){
