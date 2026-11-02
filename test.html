@@ -2371,7 +2371,7 @@ function renderPlayerList(){
   var list = $("tournPlayerList");
   list.innerHTML = "";
   var entries = tournBracketRendered && tournBracketRendered.entries ? tournBracketRendered.entries : [];
-  $("tournPlayerCount").textContent = entries.length + " / 64";
+  $("tournPlayerCount").textContent = entries.length + " players" ;
   if(!entries.length){
     list.innerHTML = '<div class="tourn-empty">No players registered yet.<br>Be the first!</div>';
     return;
