@@ -2277,7 +2277,7 @@ function updateTournButton(){
   if(tournCurrent.status === "registration"){
     tmr.textContent = fmtCountdown(start - now);
     if(tournMyEntry){ btn.classList.add("registered"); btn.classList.remove("live"); sub.textContent = "Registered · Tap to view"; }
-    else{ btn.classList.remove("registered","live"); sub.textContent = "Tap to register · 64 players max"; }
+    else{ btn.classList.remove("registered","live"); sub.textContent = "Tap to register" ; }
   } else if(tournCurrent.status === "active"){
     btn.classList.add("live"); btn.classList.remove("registered"); tmr.textContent = "LIVE";
     sub.textContent = tournMyEntry ? (tournMyEntry.eliminated_round ? "Eliminated" : "Playing now") : "In progress";
