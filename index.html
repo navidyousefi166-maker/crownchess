@@ -2983,11 +2983,72 @@ async function loadOnlineGame(id, skipIntro){
       if(payload.new && payload.new.id === onlineGameId) applyOnlineGame(payload.new);
     })
     .subscribe();
-  if(currentGameIsRoulette && game.history().length === 0){
-    var opening = pickRouletteOpening(id);
-    await spinJackpot(opening);
-    applyRouletteOpening(opening);
-    say("🎰 Opening: " + opening.name, {silentToast: true});
+if(currentGameIsRoulette){
+  var opening = pickRouletteOpening(id);
+
+  // نمایش Jackpot
+  await spinJackpot(opening);
+
+  // ثبت اتمیک Opening در دیتابیس
+  var openingRes = await sb.rpc("kf_apply_roulette_opening", {
+    p_game_id: id,
+    p_opening_name: opening.name
+  });
+
+  if(openingRes.error) throw openingRes.error;
+
+  if(!openingRes.data || openingRes.data.success !== true){
+    throw new Error("Could not apply Roulette opening.");
+  }
+
+  // دریافت موقعیت نهایی و معتبر از دیتابیس
+  var latestRes = await sb.from("kf_games")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if(latestRes.error) throw latestRes.error;
+
+  data = latestRes.data;
+  onlineGame = data;
+
+  // بازیابی تاریخچه کامل شش حرکت
+  if(!game) game = new Chess();
+
+  var openingLoaded = game.load_pgn(data.pgn);
+
+  if(!openingLoaded || game.fen() !== data.fen){
+    throw new Error("Roulette opening position mismatch.");
+  }
+
+  last = data.last_move || null;
+  selected = null;
+  targets = [];
+
+  // همگام‌سازی ساعت با زمان سرور
+  clockWhite = Number(data.white_time_left);
+  clockBlack = Number(data.black_time_left);
+
+  clockPerfBaseWhite = clockWhite;
+  clockPerfBaseBlack = clockBlack;
+  clockPerfTurn = data.turn || "w";
+
+  anchorClockToServerTime(
+    data.last_move_at || data.clock_started_at
+  );
+
+  lastClockAt = Date.now();
+  clockExpired = false;
+
+  renderPlayers(data);
+  paintClocks();
+  updateHumilBadge();
+  updateFirstMoveDeadlineUI();
+  draw();
+
+  say("🎰 Opening: " + opening.name, {
+    silentToast: true
+  });
   }
 }
 
