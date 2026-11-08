@@ -5458,19 +5458,41 @@ function showBannedAccountGate(){
   $("accountGate").hidden=false;
   document.body.classList.add("account-restricted");
 }
+// A ban-status request must never block sign-in or the rest of the app.
+var _banStatusCheckId=0;
+function withTimeout(promise,ms){
+  var timer;
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise(function(_,reject){
+      timer=setTimeout(function(){reject(new Error("Ban status check timed out"));},ms);
+    })
+  ]).finally(function(){clearTimeout(timer);});
+}
 // Do not restore a previous account's ban overlay from shared localStorage.
 async function verifyAccountBanStatus(user){
   var gate=$("accountGate");
+  var checkId=++_banStatusCheckId;
   if(!gate)return;
-  if(!user){gate.hidden=true;document.body.classList.remove("account-restricted");return;}
+  if(!user){
+    gate.hidden=true;
+    document.body.classList.remove("account-restricted");
+    return;
+  }
   try{
-    var result=await sb.functions.invoke("kf-admin",{body:{action:"get_ban_status",user_id:user.id}});
+    var result=await withTimeout(
+      sb.functions.invoke("kf-admin",{body:{action:"get_ban_status",user_id:user.id}}),
+      7000
+    );
+    // Ignore late responses belonging to an older account/session.
+    if(checkId!==_banStatusCheckId)return;
     if(result.error)throw result.error;
     if(result.data&&result.data.banned){rememberBannedAccount();showBannedAccountGate();}
     else{clearRememberedBan();gate.hidden=true;document.body.classList.remove("account-restricted");}
   }catch(error){
-    // A temporary ban-status API failure must not freeze the entire application.
-    // Supabase Auth itself enforces active bans at sign-in and token refresh.
+    if(checkId!==_banStatusCheckId)return;
+    // Ban API failure/timeout must not freeze the application.
+    // Auth bans are also enforced by Supabase during sign-in and token refresh.
     console.error("Account ban status check failed; keeping the app interactive:",error);
     gate.hidden=true;
     document.body.classList.remove("account-restricted");
@@ -5509,7 +5531,6 @@ async function updateAuth(){
   var res = await sb.auth.getSession();
   var session = res.data && res.data.session ? res.data.session : null;
   var user = session ? session.user : null;
-  await verifyAccountBanStatus(user);
   var username = user && user.user_metadata ? user.user_metadata.username : null;
   var avatarUrl = user && user.user_metadata ? user.user_metadata.avatar_url : null;
   $("userBadge").textContent = username || (user ? user.email : "");
@@ -5522,6 +5543,8 @@ async function updateAuth(){
   configureNewsAccess(user);
   configureAdminAccess(user);
   loadFeatureFlags();
+  // Run the ban check in the background; it must not delay auth UI updates.
+  verifyAccountBanStatus(user);
 }
   /* ===== PROFILE ===== */
 $("avatarThumb").onclick = async function(){
