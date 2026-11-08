@@ -2275,9 +2275,18 @@ function updateTournButton(){
   var now = Date.now();
   var start = new Date(tournCurrent.scheduled_at).getTime();
   if(tournCurrent.status === "registration"){
-    tmr.textContent = fmtCountdown(start - now);
-    if(tournMyEntry){ btn.classList.add("registered"); btn.classList.remove("live"); sub.textContent = "Registered · Tap to view"; }
-    else{ btn.classList.remove("registered","live"); sub.textContent = "Tap to register" ; }
+    tmr.textContent = now >= start ? "STARTING..." : fmtCountdown(start - now);
+    if(now >= start){
+      btn.classList.remove("registered");
+      btn.classList.add("live");
+      sub.textContent = "Preparing tournament bracket...";
+    } else if(tournMyEntry){
+      btn.classList.add("registered"); btn.classList.remove("live");
+      sub.textContent = "Registered · Tap to view";
+    } else{
+      btn.classList.remove("registered","live");
+      sub.textContent = "Tap to register";
+    }
   } else if(tournCurrent.status === "active"){
     btn.classList.add("live"); btn.classList.remove("registered"); tmr.textContent = "LIVE";
     sub.textContent = tournMyEntry ? (tournMyEntry.eliminated_round ? "Eliminated" : "Playing now") : "In progress";
@@ -2314,8 +2323,13 @@ function startTournTick(){
   var now = Date.now();
   if(tournCurrent.status === "registration"){
     var start = new Date(tournCurrent.scheduled_at).getTime();
-    $("tournBigTimer").textContent = fmtCountdown(start - now);
-    $("tournBigSub").textContent = "Registration open · " + (tournMyEntry ? "You are registered" : "Tap Register to join");
+    if(now >= start){
+      $("tournBigTimer").textContent = "STARTING...";
+      $("tournBigSub").textContent = "Preparing tournament bracket...";
+    } else {
+      $("tournBigTimer").textContent = fmtCountdown(start - now);
+      $("tournBigSub").textContent = "Registration open · " + (tournMyEntry ? "You are registered" : "Tap Register to join");
+    }
   } else if(tournCurrent.status === "active"){
     $("tournBigTimer").textContent = "LIVE";
     $("tournBigSub").textContent = "Tournament in progress";
