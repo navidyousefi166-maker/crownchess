@@ -1952,6 +1952,7 @@ var tournMyEntry = null;
 var tournMatchCheckTimer = null;
 var tournActiveMatch = null;
 var startingTournMatchId = null;
+var tournStartBlockedMatchId = null;
 var tournBracketRendered = null;
 
 /* History */
@@ -2567,7 +2568,13 @@ async function checkTournMatchStatus(){
       break;
     }
   }
-  if(!myMatch){ if(tournActiveMatch){ tournActiveMatch = null; say("", {silentToast:true}); } return; }
+  if(!myMatch){
+    tournStartBlockedMatchId = null;
+    if(tournActiveMatch){ tournActiveMatch = null; say("", {silentToast:true}); }
+    return;
+  }
+  if(tournStartBlockedMatchId && tournStartBlockedMatchId !== myMatch.id) tournStartBlockedMatchId = null;
+  if(tournStartBlockedMatchId === myMatch.id) return;
   if(tournActiveMatch && tournActiveMatch.id === myMatch.id) return;
   await startTournamentGame(myMatch);
 }
@@ -2627,8 +2634,18 @@ async function startTournamentGame(match){
     var ensureRes = await sb.rpc("kf_ensure_match_game", {p_match_id: match.id});
     if(ensureRes.error){
       var ensureMessage = (ensureRes.error.message || "").toLowerCase();
-      if(ensureMessage.includes("already completed")){
+      var permanentEnsureErrors = [
+        "already completed", "you are not part of this match", "not part of this match",
+        "not signed in", "not authenticated", "authentication required",
+        "permission denied", "not authorized", "unauthorized", "forbidden",
+        "invalid match id", "match not found"
+      ];
+      var permanentEnsureError = permanentEnsureErrors.some(function(fragment){ return ensureMessage.includes(fragment); });
+      if(permanentEnsureError){
         shouldRetry = false;
+        tournStartBlockedMatchId = match.id;
+      }
+      if(ensureMessage.includes("already completed")){
         if(tournBracketRendered && Array.isArray(tournBracketRendered.matches)){
           for(var ci=0; ci<tournBracketRendered.matches.length; ci++){
             if(tournBracketRendered.matches[ci].id === match.id){
@@ -2642,13 +2659,16 @@ async function startTournamentGame(match){
         return;
       }
       console.error("Tournament game creation failed:", ensureRes.error);
-      say("Could not start match: " + (ensureRes.error.message || "unknown error") + " · Retrying...", {error:true});
+      say("Could not start match: " + (ensureRes.error.message || "unknown error") + (permanentEnsureError ? " · Automatic retry stopped." : " · Retrying..."), {error:true});
       return;
     }
 
     var gameId = ensureRes.data;
     if(!gameId){
+      shouldRetry = false;
+      tournStartBlockedMatchId = match.id;
       console.error("Tournament game creation returned no game id.");
+      say("Could not start match: server returned no game ID. Automatic retry stopped.", {error:true});
       return;
     }
 
