@@ -5421,9 +5421,9 @@ function rememberBannedAccount(){try{localStorage.setItem(KF_BAN_MARKER_KEY,"1")
 function clearRememberedBan(){try{localStorage.removeItem(KF_BAN_MARKER_KEY);}catch(e){}}
 function showBannedAccountGate(){
   $("accountGateTitle").textContent="Account banned";
-  $("accountGateMessage").textContent="This account has been banned from Kingsfall. You cannot sign in or access the game while this ban is active.";
+  $("accountGateMessage").textContent="This account has been banned from Kingsfall. Sign out to use a different account.";
   $("accountGateRetry").hidden=false;
-  $("accountGateRetry").textContent="Try signing in again";
+  $("accountGateRetry").textContent="Sign in with another account";
   $("accountGateSignOut").hidden=true;
   $("accountGate").hidden=false;
   document.body.classList.add("account-restricted");
@@ -5448,11 +5448,30 @@ async function verifyAccountBanStatus(user){
   }
 }
 $("accountGateRetry").addEventListener("click",async function(){
-  this.disabled=true;
-  var sr=sb?await sb.auth.getSession():null,session=sr&&sr.data&&sr.data.session;
-  if(session)await updateAuth();
-  else{clearRememberedBan();$("accountGate").hidden=true;document.body.classList.remove("account-restricted");openAuth("signin");}
-  this.disabled=false;
+  var button=this;
+  button.disabled=true;
+  try{
+    var sr=sb?await sb.auth.getSession():null;
+    var session=sr&&sr.data&&sr.data.session;
+    if(session&&sb){
+      var signedOut=await sb.auth.signOut();
+      if(signedOut.error)throw signedOut.error;
+    }
+    clearRememberedBan();
+    $("accountGate").hidden=true;
+    document.body.classList.remove("account-restricted");
+    currentUser=null;
+    $("userBadge").textContent="";
+    $("avatarThumb").style.display="none";
+    $("signIn").hidden=false;
+    $("signUp").hidden=false;
+    $("signOut").hidden=true;
+    openAuth("signin");
+  }catch(error){
+    $("accountGateMessage").textContent="Could not switch accounts: "+String(error&&error.message||error);
+  }finally{
+    button.disabled=false;
+  }
 });
 $("accountGateSignOut").addEventListener("click",function(){$("signOut").click();});
 async function updateAuth(){
