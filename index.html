@@ -6018,7 +6018,18 @@ $("adminUsers").addEventListener("click",async function(e){
  }
  if(e.target.closest(".admin-ban")){
   var b=e.target.closest("button"),ban=b.getAttribute("data-banned")!=="true";if(!confirm((ban?"Ban":"Unban")+" this player?"))return;b.disabled=true;
-  try{await adminInvoke({action:"set_ban",user_id:id,banned:ban});say(ban?"Player banned.":"Player unbanned.",{silentToast:true});await loadAdminPanel();}catch(err){say("Account action failed: "+(err.message||err),{error:true});b.disabled=false;}
+  try{
+   var banResult=await adminInvoke({action:"set_ban",user_id:id,banned:ban});
+   var target=adminUsersCache.find(function(u){return u.id===id;});
+   if(target)target.banned_until=banResult.banned_until||null;
+   var userCard=card, state=userCard.querySelector(".admin-user-state");
+   if(state){state.textContent=ban?"BANNED":"ACTIVE";state.classList.toggle("banned",ban);}
+   b.textContent=ban?"Unban":"Ban";b.setAttribute("data-banned",String(ban));b.disabled=false;
+   var bannedCount=adminUsersCache.filter(function(u){return u.banned_until&&new Date(u.banned_until)>new Date();}).length;
+   var overviewStats=$("adminOverview").querySelectorAll(".admin-stat strong");
+   if(overviewStats[1])overviewStats[1].textContent=String(bannedCount);
+   say(ban?"Player banned.":"Player unbanned.",{silentToast:true});
+  }catch(err){say("Account action failed: "+(err.message||err),{error:true});b.disabled=false;}
  }
 });
 $("adminFeatures").addEventListener("change",async function(e){
