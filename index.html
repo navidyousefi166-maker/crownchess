@@ -1249,6 +1249,8 @@ input[type="color"] {
 .nav-tabs.admin-active::after{display:none}
 @media(max-width:700px){
 .nav-tabs .nav-tab[data-page="admin"]{transform:translate(-50%,-50%) translateX(30px);opacity:0;pointer-events:none}
+.nav-tabs.news-active .nav-tab[data-page="admin"]{transform:translate(-50%,-50%) translateX(90px) scale(.65);opacity:1;pointer-events:auto}
+.nav-tabs.admin-active .nav-tab[data-page="news"]{transform:translate(-50%,-50%) translateX(-90px) scale(.65);opacity:1;pointer-events:auto}
 .admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-stat strong{font-size:21px}.admin-heading{align-items:flex-start}.admin-section{padding:11px}
 }
 @media(min-width:701px){.admin-wrap{padding:0 8px}}
