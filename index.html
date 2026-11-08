@@ -647,9 +647,10 @@ body.game-focus #board{max-width:none;border:0;box-shadow:none;border-radius:0}
 .game-fullscreen{position:fixed;inset:0;background:var(--bg3);display:none;z-index:200;flex-direction:column;justify-content:center}
 body.game-focus .game-fullscreen{display:flex}
   .gfs-topbar,.gfs-bottombar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;box-sizing:border-box;min-height:86px;background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2))}
-.gfs-topbar{position:relative;padding-bottom:38px;border-bottom:1px solid var(--line2)}
-.gfs-topbar .fullscreen-deadline{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);margin:0;padding:3px 12px;min-height:24px;gap:8px;font-size:11px;white-space:nowrap;z-index:2}
-.gfs-topbar .fullscreen-deadline strong{font-size:17px;min-width:24px}
+.gfs-topbar{border-bottom:1px solid var(--line2)}
+.gfs-bottombar{position:relative;padding-bottom:38px}
+.gfs-bottombar .fullscreen-deadline{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);margin:0;padding:3px 12px;min-height:24px;gap:8px;font-size:11px;white-space:nowrap;z-index:2}
+.gfs-bottombar .fullscreen-deadline strong{font-size:17px;min-width:24px}
 .gfs-bottombar{border-top:1px solid var(--line2)}
 .gfs-left{flex:0 0 auto;display:flex;align-items:center;gap:10px;min-width:0}
 .gfs-right{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;margin-left:auto}
@@ -1745,7 +1746,6 @@ input[type="color"] {
       </div>
       <div class="gfs-humil-badge" id="gfsTopHumil" hidden><span class="humil-mask-icon"></span><span>HUMILIATION</span></div>
     </div>
-    <div class="first-move-deadline fullscreen-deadline" id="firstMoveDeadlineFullscreen" hidden><span>First Move Deadline</span><strong>20</strong></div>
   </div>
   <div class="gfs-board-wrap" id="gfsBoardWrap"></div>
     <div class="gfs-bottombar">
@@ -1766,6 +1766,7 @@ input[type="color"] {
       </div>
       <div class="gfs-humil-badge" id="gfsBotHumil" hidden><span class="humil-mask-icon"></span><span>HUMILIATION</span></div>
     </div>
+    <div class="first-move-deadline fullscreen-deadline" id="firstMoveDeadlineFullscreen" hidden><span>First Move Deadline</span><strong>20</strong></div>
   </div>
 </div>
 
