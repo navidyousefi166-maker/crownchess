@@ -432,10 +432,9 @@ footer .foot-copy{font-size:11px;color:var(--muted);margin-top:12px}
 dialog{width:min(420px,calc(100% - 24px));background:var(--panel-bg2);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:0}
 dialog::backdrop{background:rgba(2,6,17,.79);backdrop-filter:blur(4px)}
 /* Keep the sign-in dialog visible and above every page layer on mobile browsers. */
-#authDialog{position:fixed;inset:0;margin:auto;max-width:420px;max-height:calc(100dvh - 24px);overflow:auto;z-index:40001}
-#authDialog[open]{display:block}
-#authDialog::backdrop{background:rgba(2,6,17,.82);backdrop-filter:blur(4px)}
-#authDialog .modal{display:block;width:100%;box-sizing:border-box}
+#authDialog{position:fixed;inset:0;z-index:40001;display:none;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;background:rgba(2,6,17,.86);backdrop-filter:blur(4px)}
+#authDialog.is-open{display:flex}
+#authDialog .modal{display:block;width:min(420px,100%);max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;background:var(--panel-bg2);color:var(--text);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,.65)}
 .modal{padding:20px}
 .modal-head{display:flex;justify-content:space-between;align-items:center}
 .modal-head h2{margin:0}
@@ -1524,7 +1523,7 @@ input[type="color"] {
   </footer>
 </div>
   <div class="account-gate" id="accountGate" hidden><div class="account-gate-card"><div class="account-gate-icon">♛</div><div class="kicker">KINGSFALL ACCOUNT STATUS</div><h1 id="accountGateTitle">Account suspended</h1><p id="accountGateMessage">This account has been banned from Kingsfall.</p><button class="btn gold" id="accountGateRetry" type="button" hidden>Try again</button><button class="btn" id="accountGateSignOut" type="button">Sign out</button></div></div>
-<dialog id="authDialog">
+<div id="authDialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <form class="modal" id="authForm">
     <div class="modal-head">
       <div>
@@ -1548,7 +1547,7 @@ input[type="color"] {
       <button type="button" id="switch">Create an account</button>
     </div>
   </form>
-</dialog>
+</div>
 <dialog id="profileDialog">
   <form class="profile-modal" id="profileForm">
     <div class="modal-head">
@@ -5382,6 +5381,10 @@ function askPromotion(color){
 }
 
 /* ============ AUTH ============ */
+function closeAuthDialog(){
+  var dialog=$("authDialog");
+  if(dialog) dialog.classList.remove("is-open");
+}
 function openAuth(m){
   mode = m;
   $("authForm").reset();
@@ -5395,17 +5398,12 @@ function openAuth(m){
   $("password").autocomplete = up ? "new-password" : "current-password";
   $("signupNameWrap").hidden = !up;
   $("signupName").required = up;
-  var authDialog = $("authDialog");
-  try {
-    if (!authDialog.open) authDialog.showModal();
-  } catch (error) {
-    console.error("Could not open sign-in dialog:", error);
-    authDialog.setAttribute("open", "");
-  }
+  $("authDialog").classList.add("is-open");
+  setTimeout(function(){var field=$(up?"signupName":"email");if(field)field.focus();},50);
 }
 $("signIn").onclick = null;
 $("signUp").onclick = null;
-$("close").onclick = function(){ $("authDialog").close(); };
+$("close").onclick = closeAuthDialog;
 $("switch").onclick = function(){ openAuth(mode === "signup" ? "signin" : "signup"); };
 
 $("authForm").addEventListener("submit", async function(e){
@@ -5431,13 +5429,13 @@ $("authForm").addEventListener("submit", async function(e){
       $("authMessage").textContent = "Signed in successfully.";
     }
     await updateAuth();
-    if(mode === "signin") setTimeout(function(){ $("authDialog").close(); }, 500);
+    if(mode === "signin") setTimeout(closeAuthDialog, 500);
   } catch(err){
     var authErrorText=String(err&&err.message||"Authentication failed.");
     if(mode==="signin" && /bann?ed|ban_duration|user is banned/i.test(authErrorText)){
       rememberBannedAccount();
       showBannedAccountGate();
-      if($("authDialog").open)$("authDialog").close();
+      if($("authDialog").classList.contains("is-open"))closeAuthDialog();
     }else{
       $("authMessage").textContent = authErrorText;
       $("authMessage").classList.add("error");
