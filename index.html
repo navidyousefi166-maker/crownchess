@@ -4222,7 +4222,7 @@ function showCelebration(opts){
   _celebOnDone = opts.onDone || null;
   screen.className = "celebration show " + opts.outcome;
   // Rematch is only available after Quick Play games, never in tournament matches.
-  $("celebRematch").hidden = !!opts.isTournament;
+  $("celebRematch").hidden = !!opts.isTournament || kfFeatureFlags.rematch===false;
   $("celebAnalyze").hidden = false;
   $("celebExit").textContent = "Exit";
   var text = "";
@@ -4387,6 +4387,7 @@ async function requestRematch(){
     say("A rematch is already in progress.", {silentToast: true});
     return;
   }
+  if(kfFeatureFlags.rematch===false){say("Rematch is temporarily disabled.",{info:true});return;}
   var res = await sb.rpc("kf_request_rematch", {p_game_id: onlineGameId});
   if(res.error){ say("Could not request rematch: " + res.error.message, {error: true}); return; }
   onlineGame = Object.assign({}, onlineGame, {
@@ -4407,6 +4408,7 @@ async function requestRematch(){
   }, 30000);
 }
 async function respondRematch(accept){
+   if(kfFeatureFlags.rematch===false){if($("rematchDialog").open)$("rematchDialog").close();say("Rematch is temporarily disabled.",{info:true});return;}
    if(!sb || !onlineGameId || !onlineGame || !currentUser) return;
   if(onlineGame.rematch_requested_by === currentUser.id) return;
   if(onlineGame.rematch_status !== "pending") return;
@@ -4507,7 +4509,7 @@ async function handleQuickPlayEnd(row){
   }
   var oldWins = currentWins - bonus;
   var newWins = currentWins;
-  $("celebRematch").hidden = false;
+  $("celebRematch").hidden = kfFeatureFlags.rematch===false;
   updateRematchButton();
   showCelebration({
     outcome: outcome,
@@ -6137,9 +6139,8 @@ function renderAdminUsers(){
  }).join("");
 }
 function renderAdminFeatures(rows){
-  rows=rows.filter(function(f){return f.feature_key!=="rematch";});
-  $("adminFeatures").innerHTML=rows.map(function(f){return '<div class="admin-feature"><div><strong>'+adminEscape(f.label)+'</strong><small>'+adminEscape(f.description)+'</small></div><input class="admin-toggle" type="checkbox" data-feature="'+adminEscape(f.feature_key)+'" '+(f.enabled?'checked':'')+' aria-label="Toggle '+adminEscape(f.label)+'"></div>';}).join("")||'<div class="admin-empty">No features configured.</div>';
- }
+ $("adminFeatures").innerHTML=rows.map(function(f){return '<div class="admin-feature"><div><strong>'+adminEscape(f.label)+'</strong><small>'+adminEscape(f.description)+'</small></div><input class="admin-toggle" type="checkbox" data-feature="'+adminEscape(f.feature_key)+'" '+(f.enabled?'checked':'')+' aria-label="Toggle '+adminEscape(f.label)+'"></div>';}).join("")||'<div class="admin-empty">No features configured.</div>';
+}
 $("navAdmin").onclick=function(){if(currentUser&&currentUser.id===adminOwnerId)showPage("admin");};
 $("adminRefresh").onclick=loadAdminPanel;$("adminUserSearch").addEventListener("input",renderAdminUsers);
 function showRegisteredUsers(){if(!currentUser||currentUser.id!==adminOwnerId)return;$("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=false;$("adminPageTitle").textContent="👥 User Management";$("adminPageSubtitle").textContent="Manage Kingsfall accounts";$("adminBackToOverview").hidden=false;$("adminUserSearch").value="";renderAdminUsers();window.scrollTo({top:0,behavior:"smooth"});}
@@ -6206,8 +6207,10 @@ function applyFeatureFlagsToUI(f){
  if(f.tournaments===false&&$("tournDialog").open)$("tournDialog").close();
  var computerPanel=document.querySelector(".computer-panel");
  if(computerPanel)computerPanel.hidden=f.computer_mode===false;
- var rematchButton=$("celebRematch");
- if(rematchButton&&onlineGame&&onlineGame.status==="completed"&&!onlineGame.is_tournament&&$("celebrationScreen").classList.contains("show"))rematchButton.hidden=false;
+ var rematchButton=$("celebRematch"),rematchDialog=$("rematchDialog");
+ if(f.rematch===false){if(rematchButton)rematchButton.hidden=true;if(rematchDialog&&rematchDialog.open)rematchDialog.close();}
+ else if(rematchButton&&onlineGame&&onlineGame.status==="completed"&&!onlineGame.is_tournament&&$("celebrationScreen").classList.contains("show")){rematchButton.hidden=false;}
+}
 function startFeatureFlagRealtime(){
  if(!sb||kfFeatureChannel||!sb.channel)return;
  kfFeatureChannel=sb.channel("kf-feature-flags")
