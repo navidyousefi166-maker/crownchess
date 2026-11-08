@@ -5341,6 +5341,7 @@ async function updateAuth(){
   $("signIn").hidden = !!user;
   $("signUp").hidden = !!user;
   $("signOut").hidden = !user;
+  configureNewsAccess(user);
 }
   /* ===== PROFILE ===== */
 $("avatarThumb").onclick = async function(){
@@ -5870,6 +5871,56 @@ $("newsColorPicker").oninput = function() {
 // News image insertion: preserve editor cursor and make the entire button clickable.
 var newsSavedRange = null;
 var newsEditor = $("newsEditor");
+var newsSaveTimer = null;
+var newsLoadToken = 0;
+var newsOwnerId = "cc80cc38-f476-4edd-8efc-45e2722f3c4f";
+
+function configureNewsAccess(user){
+  if(!newsEditor) return;
+  var canWrite = !!(user && user.id === newsOwnerId);
+  newsEditor.contentEditable = canWrite ? "true" : "false";
+  newsEditor.setAttribute("aria-readonly", canWrite ? "false" : "true");
+  var toolbar = document.querySelector(".news-toolbar");
+  if(toolbar) toolbar.hidden = !canWrite;
+  newsEditor.classList.toggle("news-readonly", !canWrite);
+  loadNewsContent(++newsLoadToken);
+}
+
+async function loadNewsContent(token){
+  if(!sb || !newsEditor) return;
+  try{
+    var res = await sb.from("kf_news").select("content_html").eq("id", 1).maybeSingle();
+    if(token !== newsLoadToken) return;
+    if(res.error) throw res.error;
+    if(res.data && typeof res.data.content_html === "string"){
+      newsEditor.innerHTML = res.data.content_html;
+    }
+  } catch(e){
+    console.warn("Could not load Kingsfall News:", e);
+    say("News could not be loaded. Please refresh the page.", {error:true});
+  }
+}
+
+function scheduleNewsSave(){
+  if(!currentUser || currentUser.id !== newsOwnerId) return;
+  if(newsSaveTimer) clearTimeout(newsSaveTimer);
+  newsSaveTimer = setTimeout(async function(){
+    newsSaveTimer = null;
+    try{
+      var res = await sb.from("kf_news").upsert(
+        {id:1, content_html:newsEditor.innerHTML, updated_at:new Date().toISOString()},
+        {onConflict:"id"}
+      );
+      if(res.error) throw res.error;
+      say("News published.", {silentToast:true});
+    } catch(e){
+      console.error("News save failed:",e);
+      say("Could not publish news. Please try again.", {error:true});
+    }
+  }, 900);
+}
+
+newsEditor.addEventListener("input", scheduleNewsSave);
 newsEditor.addEventListener("keyup", saveNewsRange);
 newsEditor.addEventListener("mouseup", saveNewsRange);
 newsEditor.addEventListener("input", saveNewsRange);
@@ -5904,6 +5955,7 @@ $("newsImageUpload").addEventListener("change", function(e) {
     var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
     newsSavedRange = range.cloneRange();
     newsEditor.focus();
+    newsEditor.dispatchEvent(new Event("input", {bubbles:true}));
   };
   reader.readAsDataURL(file);
   this.value = "";
