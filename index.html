@@ -1227,6 +1227,8 @@ input[type="color"] {
 }
 /* PRIVATE ADMIN PANEL */
 .admin-wrap{max-width:1180px;margin:22px auto 36px}
+.admin-heading-actions{display:flex;align-items:center;gap:8px}
+.admin-heading-actions [hidden],#adminUserManagementSection[hidden],#adminOverviewView[hidden]{display:none!important}
 .admin-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
 .admin-heading h1{margin:4px 0;font-size:clamp(22px,4vw,30px);color:var(--gold2)}
 .admin-heading p,.admin-section-head p{margin:2px 0;color:var(--muted);font-size:12px}
@@ -1479,11 +1481,13 @@ input[type="color"] {
   </div>
 </div>
 <div class="page" id="pageAdmin"><div class="admin-wrap">
-<div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1>🛡️ Admin Panel</h1><p>Private administration · Owner access only</p></div><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div>
+<div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1 id="adminPageTitle">🛡️ Admin Panel</h1><p id="adminPageSubtitle">Private administration · Owner access only</p></div><div class="admin-heading-actions"><button class="btn" id="adminBackToOverview" type="button" hidden>← Back</button><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div></div>
+<div id="adminOverviewView">
 <div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div></div>
-<section class="admin-section"><div class="admin-section-head"><div><h2>👥 User Management</h2><p>Search accounts, edit records, and manage access</p></div></div><input class="admin-search" id="adminUserSearch" type="search" placeholder="Search by username or email…"><div id="adminUsers" class="admin-users"><div class="admin-loading">Loading users…</div></div></section>
 <section class="admin-section"><div class="admin-section-head"><div><h2>⚙️ Feature Management</h2><p>Temporarily enable or disable game features</p></div></div><div id="adminFeatures" class="admin-features"><div class="admin-loading">Loading features…</div></div></section>
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
+</div>
+<section class="admin-section" id="adminUserManagementSection" hidden><div class="admin-section-head"><div><h2>👥 User Management</h2><p>Search accounts, edit records, and manage access</p></div></div><input class="admin-search" id="adminUserSearch" type="search" placeholder="Search by username or email…"><div id="adminUsers" class="admin-users"><div class="admin-loading">Loading users…</div></div></section>
 </div></div>
   <footer>
     <div class="foot-brand">♛ Kingsfall · Every King Can Fall.</div>
@@ -5971,7 +5975,9 @@ function renderAdminFeatures(rows){
 }
 $("navAdmin").onclick=function(){if(currentUser&&currentUser.id===adminOwnerId)showPage("admin");};
 $("adminRefresh").onclick=loadAdminPanel;$("adminUserSearch").addEventListener("input",renderAdminUsers);
-function showRegisteredUsers(){if(!currentUser||currentUser.id!==adminOwnerId)return;$("adminUserSearch").value="";renderAdminUsers();var section=$("adminUsers").closest(".admin-section");if(section)section.scrollIntoView({behavior:"smooth",block:"start"});}
+function showRegisteredUsers(){if(!currentUser||currentUser.id!==adminOwnerId)return;$("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=false;$("adminPageTitle").textContent="👥 User Management";$("adminPageSubtitle").textContent="Manage Kingsfall accounts";$("adminBackToOverview").hidden=false;$("adminUserSearch").value="";renderAdminUsers();window.scrollTo({top:0,behavior:"smooth"});}
+function showAdminOverview(){$("adminUserManagementSection").hidden=true;$("adminOverviewView").hidden=false;$("adminPageTitle").textContent="🛡️ Admin Panel";$("adminPageSubtitle").textContent="Private administration · Owner access only";$("adminBackToOverview").hidden=true;window.scrollTo({top:0,behavior:"smooth"});}
+$("adminBackToOverview").addEventListener("click",showAdminOverview);
 $("adminOverview").addEventListener("click",function(e){if(e.target.closest(".registered-users-card"))showRegisteredUsers();});
 $("adminOverview").addEventListener("keydown",function(e){if(e.target.closest(".registered-users-card")&&(e.key==="Enter"||e.key===" ")){e.preventDefault();showRegisteredUsers();}});
 $("adminUsers").addEventListener("click",async function(e){
