@@ -2420,6 +2420,7 @@ function startTournTick(){
 }
 
 function openTournDialog(){
+  if(kfFeatureFlags.tournaments===false){say("Tournaments are temporarily disabled.",{info:true});return;}
   if(!tournCurrent){ say("Tournament data loading…", {silentToast:true}); return; }
   tournView = "next";
   renderTournDialog();
@@ -3528,6 +3529,7 @@ setInterval(updateFirstMoveDeadlineUI, 250);
 
 /* ===== START QUICK PLAY ===== */
 async function startQuickPlay(){
+  if(kfFeatureFlags.quick_play===false){say("Quick Play is temporarily disabled.",{info:true});return;}
   if(computerTimer){ clearTimeout(computerTimer); computerTimer = null; }
   computerMode = false;
   document.body.classList.remove("computer-mode");
@@ -4022,6 +4024,7 @@ function applyHandicapToGame(color, type, square){
 
 /* Secure server-side Humiliation RPC: never update kf_games directly. */
 async function submitHumiliation(square, type){
+  if(kfFeatureFlags.humiliation===false) throw new Error("Humiliation is temporarily disabled.");
   if(!sb || !onlineGameId || !onlineGame || !currentUser || !square || !type) throw new Error("Game or piece selection is missing.");
   var res = await sb.rpc("kf_apply_humiliation", {p_game_id: onlineGameId, p_square: square});
   if(res.error) throw res.error;
@@ -4322,6 +4325,7 @@ async function requestRematch(){
     say("A rematch is already in progress.", {silentToast: true});
     return;
   }
+  if(kfFeatureFlags.rematch===false){say("Rematch is temporarily disabled.",{info:true});return;}
   var res = await sb.rpc("kf_request_rematch", {p_game_id: onlineGameId});
   if(res.error){ say("Could not request rematch: " + res.error.message, {error: true}); return; }
   onlineGame = Object.assign({}, onlineGame, {
@@ -4706,6 +4710,7 @@ async function applyRouletteOpening(opening, firstMoveAtMs, serverOffsetMs){
   await waitForRouletteServerTime(firstMoveAtMs + opening.moves.length * 800, serverOffsetMs);
 }
 async function startRoulette(){
+  if(kfFeatureFlags.roulette===false){say("Roulette is temporarily disabled.",{info:true});return;}
   if(computerTimer){ clearTimeout(computerTimer); computerTimer = null; }
   computerMode = false;
   document.body.classList.remove("computer-mode");
@@ -4756,6 +4761,7 @@ $("computerRating").addEventListener("input", function(){
 });
 
 function startComputerGame(userColor){
+  if(kfFeatureFlags.computer_mode===false){say("Play vs Computer is temporarily disabled.",{info:true});return;}
   if(onlineGameId){ say("Finish the current game first.", {silentToast: true}); return; }
   if(computerTimer){ clearTimeout(computerTimer); computerTimer = null; }
   stopQueuePoll();
@@ -5948,8 +5954,9 @@ $("adminFeatures").addEventListener("change",async function(e){
  try{var r=await sb.rpc("kf_admin_set_feature",{p_feature_key:key,p_enabled:on});if(r.error)throw r.error;await loadFeatureFlags();say("Feature setting updated.",{silentToast:true});}
  catch(err){el.checked=!on;say("Could not change feature: "+(err.message||err),{error:true});}finally{el.disabled=false;}
 });
+var kfFeatureFlags={};
 async function loadFeatureFlags(){
- if(!sb)return;var r=await sb.rpc("kf_get_feature_flags");if(r.error){console.warn("Feature flags unavailable",r.error);return;}var f=r.data||{};
+ if(!sb)return;var r=await sb.rpc("kf_get_feature_flags");if(r.error){console.warn("Feature flags unavailable",r.error);return;}var f=r.data||{};kfFeatureFlags=f;
  var selectors={quick_play:".quickbar",tournaments:".tournament-bar",roulette:".roulette-bar"};
  Object.keys(selectors).forEach(function(k){var el=document.querySelector(selectors[k]);if(el)el.hidden=f[k]===false;});
 }
