@@ -5416,9 +5416,9 @@ $("authForm").addEventListener("submit", async function(e){
   }
 });
 
-var KF_BAN_MARKER_KEY="kingsfall_account_banned_v1";
-function rememberBannedAccount(){try{localStorage.setItem(KF_BAN_MARKER_KEY,"1");}catch(e){}}
-function clearRememberedBan(){try{localStorage.removeItem(KF_BAN_MARKER_KEY);}catch(e){}}
+// Ban status is account-specific and must never persist as a browser-wide flag.
+function rememberBannedAccount(){}
+function clearRememberedBan(){}
 function showBannedAccountGate(){
   $("accountGateTitle").textContent="Account banned";
   $("accountGateMessage").textContent="This account has been banned from Kingsfall. Sign out to use a different account.";
@@ -5428,7 +5428,7 @@ function showBannedAccountGate(){
   $("accountGate").hidden=false;
   document.body.classList.add("account-restricted");
 }
-try{if(localStorage.getItem(KF_BAN_MARKER_KEY)==="1")showBannedAccountGate();}catch(e){}
+// Do not restore a previous account's ban overlay from shared localStorage.
 async function verifyAccountBanStatus(user){
   var gate=$("accountGate");
   if(!gate)return;
