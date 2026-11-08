@@ -5439,12 +5439,11 @@ async function verifyAccountBanStatus(user){
     if(result.data&&result.data.banned){rememberBannedAccount();showBannedAccountGate();}
     else{clearRememberedBan();gate.hidden=true;document.body.classList.remove("account-restricted");}
   }catch(error){
-    console.error("Account ban status check failed:",error);
-    $("accountGateTitle").textContent="Unable to verify account";
-    $("accountGateMessage").textContent="Kingsfall could not verify this account's status. Please try again before continuing.";
-    $("accountGateRetry").hidden=false;
-    $("accountGateRetry").textContent="Try again";
-    gate.hidden=false;document.body.classList.add("account-restricted");
+    // A temporary ban-status API failure must not freeze the entire application.
+    // Supabase Auth itself enforces active bans at sign-in and token refresh.
+    console.error("Account ban status check failed; keeping the app interactive:",error);
+    gate.hidden=true;
+    document.body.classList.remove("account-restricted");
   }
 }
 $("accountGateRetry").addEventListener("click",async function(){
