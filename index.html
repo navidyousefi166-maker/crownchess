@@ -1238,6 +1238,19 @@ input[type="color"] {
 .admin-stat span{display:block;color:var(--muted);font-size:11px}.admin-stat strong{display:block;color:var(--gold2);font-size:25px;margin-top:4px;font-variant-numeric:tabular-nums}
 .admin-section{margin:14px 0}.admin-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.admin-section-head h2{font-size:17px;margin:0;color:var(--gold2)}
 .admin-search{width:100%;padding:11px 13px;border:1px solid var(--line2);border-radius:8px;background:var(--panel-bg2);color:var(--text);font:inherit;margin-bottom:12px}
+.admin-chip.admin-wins-count{cursor:pointer;border-color:var(--gold3);color:var(--gold2);font-weight:800;user-select:none;transition:background .15s,border-color .15s}
+.admin-chip.admin-wins-count:hover,.admin-chip.admin-wins-count:focus-visible{background:rgba(237,197,107,.13);border-color:var(--gold2);outline:none}
+.admin-wins-overlay{position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px}
+.admin-wins-overlay[hidden]{display:none!important}
+.admin-wins-dialog{position:relative;width:min(390px,100%);border:1px solid var(--gold3);border-radius:16px;padding:24px 20px 18px;text-align:center;background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2));box-shadow:0 18px 70px rgba(0,0,0,.55)}
+.admin-wins-close{position:absolute;right:12px;top:8px;border:0;background:none;color:var(--muted);font-size:28px;cursor:pointer}
+.admin-wins-dialog h2{margin:5px 0;color:var(--gold2);font-size:23px}
+.admin-wins-player{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.admin-wins-hint{font-size:11px;color:var(--muted);margin:18px 0 7px}
+.admin-wins-wheel{height:150px;display:flex;align-items:center;justify-content:center;gap:20px;border:1px solid var(--line2);border-radius:12px;background:rgba(0,0,0,.18);touch-action:none;user-select:none;cursor:ns-resize}
+.admin-wins-number{font-size:clamp(48px,14vw,76px);font-weight:900;line-height:1;color:var(--gold2);font-variant-numeric:tabular-nums;min-width:2ch}
+.admin-wins-arrows{font-size:17px;line-height:2.2;color:var(--gold3);opacity:.8}
+.admin-wins-actions{display:flex;justify-content:center;gap:10px;margin-top:18px}
 .admin-users,.admin-features{display:grid;gap:10px}.admin-user{border:1px solid var(--line);border-radius:9px;padding:12px;background:rgba(0,0,0,.12)}
 .admin-user-top{display:flex;align-items:center;gap:10px;min-width:0}.admin-user-top img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);background:var(--btn-bg)}
 .admin-user-ident{min-width:0;flex:1}.admin-user-name{font-weight:800;overflow-wrap:anywhere}.admin-user-meta{font-size:10px;color:var(--muted);overflow-wrap:anywhere}
@@ -1488,7 +1501,7 @@ input[type="color"] {
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
 </div>
 <section class="admin-section" id="adminUserManagementSection" hidden><div class="admin-section-head"><div><h2>👥 User Management</h2><p>Search accounts, edit records, and manage access</p></div></div><input class="admin-search" id="adminUserSearch" type="search" placeholder="Search by username or email…"><div id="adminUsers" class="admin-users"><div class="admin-loading">Loading users…</div></div></section>
-</div></div>
+<div class="admin-wins-overlay" id="adminWinsEditor" hidden><div class="admin-wins-dialog" role="dialog" aria-modal="true" aria-labelledby="adminWinsTitle"><button class="admin-wins-close" id="adminWinsClose" type="button" aria-label="Close">×</button><div class="kicker">PLAYER RECORD</div><h2 id="adminWinsTitle">Wins</h2><div class="admin-wins-player" id="adminWinsPlayer"></div><div class="admin-wins-hint">Swipe up or down to change the number</div><div class="admin-wins-wheel" id="adminWinsWheel" tabindex="0" role="slider" aria-label="Wins count" aria-valuemin="0" aria-valuemax="100000000"><div class="admin-wins-number" id="adminWinsNumber">0</div><div class="admin-wins-arrows">▲<br>▼</div></div><div class="admin-wins-actions"><button class="btn" id="adminWinsCancel" type="button">Cancel</button><button class="btn gold" id="adminWinsSave" type="button">Save wins</button></div></div></div>
   <footer>
     <div class="foot-brand">♛ Kingsfall · Every King Can Fall.</div>
     <div class="foot-support">
@@ -5966,7 +5979,7 @@ function renderAdminUsers(){
  $("adminUsers").innerHTML=list.map(function(u){
   var banned=!!u.banned_until&&new Date(u.banned_until)>new Date(),id=adminEscape(u.id);
   return '<article class="admin-user" data-user-id="'+id+'"><div class="admin-user-top"><img src="'+adminEscape(u.avatar_url||defaultAvatar())+'" alt=""><div class="admin-user-ident"><div class="admin-user-name">'+adminEscape(u.username)+'</div><div class="admin-user-meta">'+adminEscape(u.email)+' · '+id+'</div></div><span class="admin-user-state '+(banned?'banned':'')+'">'+(banned?'BANNED':'ACTIVE')+'</span></div>'+
-  '<div class="admin-user-stats"><span class="admin-chip">♟ Wins: '+Number(u.wins||0)+'</span><span class="admin-chip">🏆 Trophies: '+Number(u.tournament_wins||0)+'</span><span class="admin-chip">🎭 Humiliation losses: '+Number(u.humiliation_losses||0)+'</span><span class="admin-chip">Joined: '+adminEscape(new Date(u.created_at).toLocaleDateString())+'</span></div>'+
+  '<div class="admin-user-stats"><span class="admin-chip admin-wins-count" role="button" tabindex="0" data-wins="'+Number(u.wins||0)+'" aria-label="Edit wins count">♟ Wins: '+Number(u.wins||0)+'</span><span class="admin-chip">🏆 Trophies: '+Number(u.tournament_wins||0)+'</span><span class="admin-chip">🎭 Humiliation losses: '+Number(u.humiliation_losses||0)+'</span><span class="admin-chip">Joined: '+adminEscape(new Date(u.created_at).toLocaleDateString())+'</span></div>'+
   '<div class="admin-actions"><select class="admin-metric"><option value="wins">Wins</option><option value="tournament_wins">Trophies</option><option value="humiliation_losses">Humiliation losses</option></select><input class="admin-stat-value" type="number" min="0" max="100000000" step="1" value="0"><button class="btn gold admin-save-stat" type="button">Save record</button><button class="btn admin-ban" type="button" data-banned="'+banned+'">'+(banned?'Unban':'Ban')+'</button></div></article>';
  }).join("");
 }
@@ -5980,6 +5993,22 @@ function showAdminOverview(){$("adminUserManagementSection").hidden=true;$("admi
 $("adminBackToOverview").addEventListener("click",showAdminOverview);
 $("adminOverview").addEventListener("click",function(e){if(e.target.closest(".registered-users-card"))showRegisteredUsers();});
 $("adminOverview").addEventListener("keydown",function(e){if(e.target.closest(".registered-users-card")&&(e.key==="Enter"||e.key===" ")){e.preventDefault();showRegisteredUsers();}});
+var adminWinsTargetId=null,adminWinsValue=0,adminWinsDragY=null,adminWinsDragRemainder=0;
+function updateAdminWinsDisplay(){var n=$("adminWinsNumber");n.textContent=adminWinsValue.toLocaleString("en-US");$("adminWinsWheel").setAttribute("aria-valuenow",String(adminWinsValue));}
+function openAdminWinsEditor(userId){var u=adminUsersCache.find(function(x){return x.id===userId;});if(!u)return;adminWinsTargetId=userId;adminWinsValue=Math.max(0,Math.min(100000000,Number(u.wins)||0));$("adminWinsPlayer").textContent=u.username||"Player";updateAdminWinsDisplay();$("adminWinsEditor").hidden=false;}
+function closeAdminWinsEditor(){$("adminWinsEditor").hidden=true;adminWinsTargetId=null;adminWinsDragY=null;adminWinsDragRemainder=0;}
+function changeAdminWins(delta){adminWinsValue=Math.max(0,Math.min(100000000,adminWinsValue+delta));updateAdminWinsDisplay();}
+$("adminUsers").addEventListener("click",function(e){var chip=e.target.closest(".admin-wins-count");if(chip){var userCard=chip.closest(".admin-user");if(userCard)openAdminWinsEditor(userCard.getAttribute("data-user-id"));}});
+$("adminUsers").addEventListener("keydown",function(e){var chip=e.target.closest(".admin-wins-count");if(chip&&(e.key==="Enter"||e.key===" ")){e.preventDefault();var userCard=chip.closest(".admin-user");if(userCard)openAdminWinsEditor(userCard.getAttribute("data-user-id"));}});
+$("adminWinsClose").addEventListener("click",closeAdminWinsEditor);$("adminWinsCancel").addEventListener("click",closeAdminWinsEditor);
+$("adminWinsEditor").addEventListener("click",function(e){if(e.target===$("adminWinsEditor"))closeAdminWinsEditor();});
+$("adminWinsWheel").addEventListener("wheel",function(e){e.preventDefault();changeAdminWins(e.deltaY<0?1:-1);},{passive:false});
+$("adminWinsWheel").addEventListener("pointerdown",function(e){adminWinsDragY=e.clientY;adminWinsDragRemainder=0;this.setPointerCapture(e.pointerId);});
+$("adminWinsWheel").addEventListener("pointermove",function(e){if(adminWinsDragY===null)return;var dy=adminWinsDragY-e.clientY;adminWinsDragY=e.clientY;adminWinsDragRemainder+=dy;var steps=Math.trunc(adminWinsDragRemainder/28);if(steps){changeAdminWins(steps);adminWinsDragRemainder-=steps*28;}});
+$("adminWinsWheel").addEventListener("pointerup",function(){adminWinsDragY=null;adminWinsDragRemainder=0;});
+$("adminWinsWheel").addEventListener("pointercancel",function(){adminWinsDragY=null;adminWinsDragRemainder=0;});
+$("adminWinsWheel").addEventListener("keydown",function(e){if(e.key==="ArrowUp"){e.preventDefault();changeAdminWins(1);}if(e.key==="ArrowDown"){e.preventDefault();changeAdminWins(-1);}if(e.key==="PageUp"){e.preventDefault();changeAdminWins(10);}if(e.key==="PageDown"){e.preventDefault();changeAdminWins(-10);}});
+$("adminWinsSave").addEventListener("click",async function(){if(!adminWinsTargetId)return;var btn=this;btn.disabled=true;try{var result=await sb.rpc("kf_admin_update_stats",{p_user_id:adminWinsTargetId,p_metric:"wins",p_value:adminWinsValue});if(result.error)throw result.error;var u=adminUsersCache.find(function(x){return x.id===adminWinsTargetId;});if(u)u.wins=adminWinsValue;renderAdminUsers();closeAdminWinsEditor();say("Wins count updated.",{silentToast:true});}catch(err){say("Could not update wins: "+(err.message||err),{error:true});}finally{btn.disabled=false;}});
 $("adminUsers").addEventListener("click",async function(e){
  var card=e.target.closest(".admin-user");if(!card)return;var id=card.getAttribute("data-user-id");
  if(e.target.closest(".admin-save-stat")){
