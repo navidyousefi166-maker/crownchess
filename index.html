@@ -431,6 +431,11 @@ footer .foot-support a:hover{opacity:.8}
 footer .foot-copy{font-size:11px;color:var(--muted);margin-top:12px}
 dialog{width:min(420px,calc(100% - 24px));background:var(--panel-bg2);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:0}
 dialog::backdrop{background:rgba(2,6,17,.79);backdrop-filter:blur(4px)}
+/* Keep the sign-in dialog visible and above every page layer on mobile browsers. */
+#authDialog{position:fixed;inset:0;margin:auto;max-width:420px;max-height:calc(100dvh - 24px);overflow:auto;z-index:40001}
+#authDialog[open]{display:block}
+#authDialog::backdrop{background:rgba(2,6,17,.82);backdrop-filter:blur(4px)}
+#authDialog .modal{display:block;width:100%;box-sizing:border-box}
 .modal{padding:20px}
 .modal-head{display:flex;justify-content:space-between;align-items:center}
 .modal-head h2{margin:0}
@@ -5369,7 +5374,13 @@ function openAuth(m){
   $("password").autocomplete = up ? "new-password" : "current-password";
   $("signupNameWrap").hidden = !up;
   $("signupName").required = up;
-  $("authDialog").showModal();
+  var authDialog = $("authDialog");
+  try {
+    if (!authDialog.open) authDialog.showModal();
+  } catch (error) {
+    console.error("Could not open sign-in dialog:", error);
+    authDialog.setAttribute("open", "");
+  }
 }
 $("signIn").onclick = function(){ openAuth("signin"); };
 $("signUp").onclick = function(){ openAuth("signup"); };
