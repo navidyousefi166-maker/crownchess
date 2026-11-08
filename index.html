@@ -4113,7 +4113,8 @@ function showCelebration(opts){
   var screen = $("celebrationScreen");
   _celebOnDone = opts.onDone || null;
   screen.className = "celebration show " + opts.outcome;
-  $("celebRematch").hidden = false;
+  // Rematch is only available after Quick Play games, never in tournament matches.
+  $("celebRematch").hidden = !!opts.isTournament;
   $("celebAnalyze").hidden = false;
   $("celebExit").textContent = "Exit";
   var text = "";
