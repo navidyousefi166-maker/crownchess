@@ -540,6 +540,8 @@ body.theme-ocean .an-eval-black{background:#0a1628}
 .tp-badge.you{background:var(--gold);color:#2a0710}
 .tourn-empty{text-align:center;color:var(--muted);padding:20px 10px;font-size:13px}
 .tourn-actions{display:flex;gap:8px;flex-wrap:wrap}
+.tourn-actions button.tourn-view-btn{flex:0 1 auto;min-width:110px;padding:10px 12px;font-size:12px}
+.tourn-actions button.tourn-view-btn.active{border-color:var(--gold);color:var(--gold);background:var(--btn-hover)}
 .tourn-actions button{flex:1;min-width:140px;padding:12px 14px;font-weight:800;border-radius:10px;cursor:pointer;border:1px solid var(--line);background:var(--btn-bg);color:var(--text);font-family:inherit;font-size:14px}
 .tourn-actions button.primary{background:linear-gradient(135deg,var(--gold2),var(--gold3));border-color:var(--gold);color:#2a0710}
 .tourn-actions button.danger{background:var(--btn-hover);border-color:var(--danger);color:#ffb8c4}
@@ -1518,6 +1520,8 @@ input[type="color"] {
           <div class="sub" id="tournBigSub">Registration open</div>
         </div>
         <div class="tourn-actions">
+          <button class="tourn-view-btn active" id="tournNextViewBtn" type="button">Next Tournament</button>
+          <button class="tourn-view-btn" id="tournLastViewBtn" type="button">Last Tournament</button>
           <button class="primary" id="tournRegisterBtn" type="button">Register</button>
         </div>
         <div class="tourn-msg" id="tournMsg"></div>
@@ -1954,6 +1958,9 @@ var tournActiveMatch = null;
 var startingTournMatchId = null;
 var tournStartBlockedMatchId = null;
 var tournBracketRendered = null;
+var tournLast = null;
+var tournLastBracketRendered = null;
+var tournView = "next";
 
 /* History */
 var historyData = [];
@@ -2199,6 +2206,21 @@ async function loadLeaderboard(){
 $("lbRefresh").onclick = loadLeaderboard;
 
 /* ============ TOURNAMENT STATE ============ */
+async function loadLastTournamentState(){
+  if(!sb) return;
+  try{
+    var res = await sb.rpc("kf_get_last_tournament");
+    if(res.error) throw res.error;
+    tournLast = res.data || null;
+    tournLastBracketRendered = null;
+    if(tournLast && tournLast.id){
+      var full = await sb.rpc("kf_get_tournament_full", {p_tournament_id:tournLast.id});
+      if(!full.error && full.data) tournLastBracketRendered = full.data;
+    }
+    if($("tournDialog").open && tournView === "last") renderTournDialog();
+  } catch(err){ console.warn("Last tournament state error:", err); }
+}
+
 async function loadTournamentState(){
   if(!sb) return;
   try{
@@ -2209,6 +2231,7 @@ async function loadTournamentState(){
       var chRes = await sb.rpc("kf_get_tournament_full", {p_tournament_id: tournCurrent.id});
       if(!chRes.error && chRes.data) tournBracketRendered = chRes.data;
     }
+    await loadLastTournamentState();
     if(currentUser) await checkMyTournamentEntry();
     updateTournButton();
     startTournChannel();
@@ -2258,9 +2281,12 @@ function handleTournUpdate(row){
   if(!row) return;
   if(!tournCurrent || row.id === tournCurrent.id){
     tournCurrent = row;
-    if(row.status === "completed") loadChampion();
+    if(row.status === "completed"){
+      loadChampion();
+      loadLastTournamentState();
+    }
     updateTournButton();
-    if($("tournDialog").open) refreshTournLive();
+    if($("tournDialog").open && tournView === "next") refreshTournLive();
   }
 }
 
@@ -2347,46 +2373,92 @@ function startTournTick(){
 
 function openTournDialog(){
   if(!tournCurrent){ say("Tournament data loading…", {silentToast:true}); return; }
+  tournView = "next";
   renderTournDialog();
   $("tournDialog").showModal();
   refreshTournLive();
 }
+
+$("tournNextViewBtn").onclick = function(){
+  tournView = "next";
+  $("tournNextViewBtn").classList.add("active");
+  $("tournLastViewBtn").classList.remove("active");
+  renderTournDialog();
+  refreshTournLive();
+};
+
+$("tournLastViewBtn").onclick = async function(){
+  tournView = "last";
+  $("tournLastViewBtn").classList.add("active");
+  $("tournNextViewBtn").classList.remove("active");
+  await loadLastTournamentState();
+  renderTournDialog();
+};
 $("tournClose").onclick = function(){ $("tournDialog").close(); };
 
 function renderTournDialog(){
-  if(!tournCurrent) return;
-  $("tournTitle").textContent = tournCurrent.status === "registration" ? "Next Tournament"
-    : tournCurrent.status === "active" ? "Live Tournament"
-    : tournCurrent.status === "cancelled" ? "Tournament Cancelled"
-    : "Tournament Complete";
-  var pill = $("tournStatusPill");
-  if(tournCurrent.status === "registration"){ pill.textContent = "Registration"; pill.className = "pill reg"; }
-  else if(tournCurrent.status === "active"){ pill.textContent = "● LIVE"; pill.className = "pill live"; }
-  else if(tournCurrent.status === "cancelled"){ pill.textContent = "Cancelled"; pill.className = "pill"; }
-  else { pill.textContent = "Completed"; pill.className = "pill"; }
-  $("tournScheduleText").textContent = "Starts " + fmtTimeLocal(tournCurrent.scheduled_at);
-  updateTournBigTimer();
-  var actionBtn = $("tournRegisterBtn");
-  if(tournCurrent.status === "registration"){
-    actionBtn.hidden = false;
-    actionBtn.textContent = tournMyEntry ? "Cancel" : "Register";
-    actionBtn.classList.toggle("primary", !tournMyEntry);
-    actionBtn.classList.toggle("danger", !!tournMyEntry);
-    actionBtn.disabled = false;
-  } else {
-    actionBtn.hidden = true;
+  var isLast = tournView === "last";
+  var displayTourn = isLast ? tournLast : tournCurrent;
+  var displayBracket = isLast ? tournLastBracketRendered : tournBracketRendered;
+  $("tournNextViewBtn").classList.toggle("active", !isLast);
+  $("tournLastViewBtn").classList.toggle("active", isLast);
+  if(!displayTourn){
+    $("tournTitle").textContent = isLast ? "Last Tournament" : "Next Tournament";
+    $("tournStatusPill").textContent = isLast ? "No completed tournament" : "Loading";
+    $("tournStatusPill").className = "pill";
+    $("tournScheduleText").textContent = isLast ? "A completed tournament will appear here" : "—";
+    $("tournRegisterBtn").hidden = true;
+    $("tournBracketWrap").hidden = true;
+    $("tournCountdownBig").hidden = false;
+    $("tournBigTimer").textContent = "—";
+    $("tournBigSub").textContent = isLast ? "No tournament history yet" : "Tournament data loading…";
+    $("tournPlayerList").innerHTML = "";
+    $("tournPlayerCount").textContent = "0 players";
+    return;
   }
-  var hasBracket = tournBracketRendered && tournBracketRendered.matches && tournBracketRendered.matches.length > 0;
+  if(isLast){
+    $("tournTitle").textContent = "Last Tournament";
+    $("tournStatusPill").textContent = "Completed";
+    $("tournStatusPill").className = "pill";
+    $("tournScheduleText").textContent = "Completed " + fmtTimeLocal(displayTourn.completed_at || displayTourn.scheduled_at);
+    $("tournRegisterBtn").hidden = true;
+    $("tournMsg").textContent = "";
+  } else {
+    $("tournTitle").textContent = displayTourn.status === "registration" ? "Next Tournament"
+      : displayTourn.status === "active" ? "Live Tournament"
+      : displayTourn.status === "cancelled" ? "Tournament Cancelled" : "Tournament Complete";
+    var pill = $("tournStatusPill");
+    if(displayTourn.status === "registration"){ pill.textContent = "Registration"; pill.className = "pill reg"; }
+    else if(displayTourn.status === "active"){ pill.textContent = "● LIVE"; pill.className = "pill live"; }
+    else if(displayTourn.status === "cancelled"){ pill.textContent = "Cancelled"; pill.className = "pill"; }
+    else { pill.textContent = "Completed"; pill.className = "pill"; }
+    $("tournScheduleText").textContent = "Starts " + fmtTimeLocal(displayTourn.scheduled_at);
+    updateTournBigTimer();
+    var actionBtn = $("tournRegisterBtn");
+    if(displayTourn.status === "registration"){
+      actionBtn.hidden = false;
+      actionBtn.textContent = tournMyEntry ? "Cancel" : "Register";
+      actionBtn.classList.toggle("primary", !tournMyEntry);
+      actionBtn.classList.toggle("danger", !!tournMyEntry);
+      actionBtn.disabled = false;
+    } else actionBtn.hidden = true;
+  }
+  var hasBracket = displayBracket && displayBracket.matches && displayBracket.matches.length > 0;
   if(hasBracket){
     $("tournBracketWrap").hidden = false;
     $("tournCountdownBig").hidden = true;
-    renderBracket(tournBracketRendered);
+    renderBracket(displayBracket);
     $("tournPlayerList").innerHTML = "";
-    $("tournPlayerCount").textContent = (tournBracketRendered.entries ? tournBracketRendered.entries.length : 0) + " players";
+    $("tournPlayerCount").textContent = (displayBracket.entries ? displayBracket.entries.length : 0) + " players";
   } else {
     $("tournBracketWrap").hidden = true;
     $("tournCountdownBig").hidden = false;
-    renderPlayerList();
+    if(isLast){
+      $("tournBigTimer").textContent = "🏆";
+      $("tournBigSub").textContent = "Champion: " + (displayTourn.winner_username || "—");
+      $("tournPlayerList").innerHTML = "";
+      $("tournPlayerCount").textContent = "0 players";
+    } else renderPlayerList();
   }
 }
 
