@@ -5409,30 +5409,37 @@ $("switch").onclick = function(){ openAuth(mode === "signup" ? "signin" : "signu
 $("authForm").addEventListener("submit", async function(e){
   e.preventDefault();
   if(!sb){ $("authMessage").textContent = "Supabase did not load."; return; }
+  var submitMode = mode;
   var email = $("email").value.trim(), password = $("password").value;
   var submit = $("submit");
   submit.disabled = true;
   submit.textContent = "Please wait…";
   $("authMessage").textContent = "";
+  $("authMessage").classList.remove("error");
   try{
     var result;
-    if(mode === "signup"){
+    if(submitMode === "signup"){
       var uname = ($("signupName").value || "").trim();
-      result = await sb.auth.signUp({email: email, password: password, options: {emailRedirectTo: REDIRECT, data: {username: uname}}});
+      result = await withTimeout(sb.auth.signUp({email: email, password: password, options: {emailRedirectTo: REDIRECT, data: {username: uname}}}), 15000);
     } else {
-      result = await sb.auth.signInWithPassword({email: email, password: password});
+      result = await withTimeout(sb.auth.signInWithPassword({email: email, password: password}), 15000);
     }
     if(result.error) throw result.error;
-    if(mode === "signup"){
+    var signedInUser = submitMode === "signin"
+      ? (result.data && (result.data.user || (result.data.session && result.data.session.user)))
+      : (result.data && result.data.session ? (result.data.user || result.data.session.user) : null);
+    if(submitMode === "signup"){
       $("authMessage").textContent = result.data.session ? "Account created and signed in." : "Account created. Check your email to confirm.";
     } else {
       $("authMessage").textContent = "Signed in successfully.";
     }
-    await updateAuth();
-    if(mode === "signin") setTimeout(closeAuthDialog, 500);
+    // Never wait for getSession() after a successful login. Use the user returned
+    // by signInWithPassword so a stalled session read cannot trap the modal.
+    applyAuthUser(signedInUser || null);
+    if(submitMode === "signin") closeAuthDialog();
   } catch(err){
     var authErrorText=String(err&&err.message||"Authentication failed.");
-    if(mode==="signin" && /bann?ed|ban_duration|user is banned/i.test(authErrorText)){
+    if(submitMode==="signin" && /bann?ed|ban_duration|user is banned/i.test(authErrorText)){
       rememberBannedAccount();
       showBannedAccountGate();
       if($("authDialog").classList.contains("is-open"))closeAuthDialog();
@@ -5442,7 +5449,7 @@ $("authForm").addEventListener("submit", async function(e){
     }
   } finally {
     submit.disabled = false;
-    submit.textContent = mode === "signup" ? "Create account" : "Sign In";
+    submit.textContent = submitMode === "signup" ? "Create account" : "Sign In";
   }
 });
 
@@ -5526,11 +5533,7 @@ $("accountGateRetry").addEventListener("click",async function(){
   }
 });
 $("accountGateSignOut").addEventListener("click",function(){$("signOut").click();});
-async function updateAuth(){
-  if(!sb) return;
-  var res = await sb.auth.getSession();
-  var session = res.data && res.data.session ? res.data.session : null;
-  var user = session ? session.user : null;
+function applyAuthUser(user){
   var username = user && user.user_metadata ? user.user_metadata.username : null;
   var avatarUrl = user && user.user_metadata ? user.user_metadata.avatar_url : null;
   $("userBadge").textContent = username || (user ? user.email : "");
@@ -5543,8 +5546,21 @@ async function updateAuth(){
   configureNewsAccess(user);
   configureAdminAccess(user);
   loadFeatureFlags();
-  // Run the ban check in the background; it must not delay auth UI updates.
+  // Ban lookup is deliberately detached from the authentication/UI path.
   verifyAccountBanStatus(user);
+}
+async function updateAuth(userOverride){
+  if(!sb) return;
+  var user;
+  if(arguments.length){
+    user = userOverride || null;
+  } else {
+    // A stuck session read must not leave startup/auth UI pending forever.
+    var res = await withTimeout(sb.auth.getSession(), 8000);
+    var session = res.data && res.data.session ? res.data.session : null;
+    user = session ? session.user : null;
+  }
+  applyAuthUser(user);
 }
   /* ===== PROFILE ===== */
 $("avatarThumb").onclick = async function(){
@@ -5995,13 +6011,17 @@ function initApp(){
 
   /* Initial auth check */
   loadFeatureFlags();
-  updateAuth().then(function(){
+  updateAuth().catch(function(error){
+    console.error("Initial auth refresh failed:", error);
+  }).then(function(){
     getCurrentProfile().then(function(){
       loadTournamentState();
       loadChampion();
       loadHistory();
       setTimeout(checkActiveGameAndJoin, 800);
-    }).catch(function(){});
+    }).catch(function(error){
+      console.warn("Initial profile load failed:", error);
+    });
   });
 
   /* Network events: a fresh page resets any Supabase request left pending by an outage.
