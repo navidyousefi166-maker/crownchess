@@ -3464,6 +3464,10 @@ function updateFirstMoveDeadlineUI(){
   if(!onlineGame || onlineGame.status !== "active" || !currentUser){ hide(); return; }
 
   var isWhite = onlineGame.white_id === currentUser.id;
+  var myTurn = isWhite ? "w" : "b";
+  // The deadline banner belongs only to the player whose first move is currently due.
+  if(onlineGame.turn !== myTurn){ hide(); return; }
+
   var firstMoveAt = isWhite ? onlineGame.white_first_move_at : onlineGame.black_first_move_at;
   if(firstMoveAt){ hide(); return; }
 
