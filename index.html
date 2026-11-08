@@ -6194,8 +6194,19 @@ $("adminFeatures").addEventListener("change",async function(e){
 });
 var kfFeatureFlags={},kfFeatureChannel=null,kfFeatureLoadBusy=false;
 function applyFeatureFlagsToUI(f){
- var selectors={quick_play:".quickbar",tournaments:".tournament-bar",roulette:".roulette-bar",computer_mode:".computer-panel"};
- Object.keys(selectors).forEach(function(k){var el=document.querySelector(selectors[k]);if(el)el.hidden=f[k]===false;});
+ // Keep cancellation controls visible for players already queued when a feature is disabled.
+ var quickBar=document.querySelector(".quickbar"),quickButton=$("quickPlay"),quickState=$("quickState"),cancelQueue=$("cancelQueue");
+ if(quickButton)quickButton.hidden=f.quick_play===false;
+ if(quickState)quickState.hidden=f.quick_play===false;
+ if(quickBar)quickBar.hidden=f.quick_play===false&&(!cancelQueue||cancelQueue.hidden);
+ var rouletteBar=document.querySelector(".roulette-bar"),rouletteButton=$("rouletteBtn"),cancelRoulette=$("cancelRoulette");
+ if(rouletteButton)rouletteButton.hidden=f.roulette===false;
+ if(rouletteBar)rouletteBar.hidden=f.roulette===false&&(!cancelRoulette||cancelRoulette.hidden);
+ var tournamentBar=document.querySelector(".tournament-bar");
+ if(tournamentBar)tournamentBar.hidden=f.tournaments===false;
+ if(f.tournaments===false&&$("tournDialog").open)$("tournDialog").close();
+ var computerPanel=document.querySelector(".computer-panel");
+ if(computerPanel)computerPanel.hidden=f.computer_mode===false;
  var rematchButton=$("celebRematch"),rematchDialog=$("rematchDialog");
  if(f.rematch===false){if(rematchButton)rematchButton.hidden=true;if(rematchDialog&&rematchDialog.open)rematchDialog.close();}
  else if(rematchButton&&onlineGame&&onlineGame.status==="completed"&&!onlineGame.is_tournament&&$("celebrationScreen").classList.contains("show")){rematchButton.hidden=false;}
