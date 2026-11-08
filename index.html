@@ -1435,6 +1435,9 @@ input[type="color"] {
         <button class="nt-btn" id="newsImageBtn" title="Insert Image">🖼️ Add Image</button>
         <input type="file" id="newsImageUpload" accept="image/*" style="display:none">
       </div>
+      <div class="nt-group">
+        <button class="nt-btn" id="newsSaveBtn" type="button" title="Save and publish news">💾 Save</button>
+      </div>
     </div>
     <div id="newsEditor" contenteditable="true" class="news-editor">
       <h1 style="color: var(--gold);">Kingsfall News</h1>
@@ -5901,24 +5904,41 @@ async function loadNewsContent(token){
   }
 }
 
+async function saveNewsNow(){
+  if(!currentUser || currentUser.id !== newsOwnerId || !sb) {
+    say("Only the Kingsfall owner can publish news.", {error:true});
+    return;
+  }
+  if(newsSaveTimer) { clearTimeout(newsSaveTimer); newsSaveTimer = null; }
+  var saveBtn = $("newsSaveBtn");
+  if(saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Saving..."; }
+  try{
+    var res = await sb.from("kf_news").upsert(
+      {id:1, content_html:newsEditor.innerHTML, updated_at:new Date().toISOString()},
+      {onConflict:"id"}
+    );
+    if(res.error) throw res.error;
+    if(saveBtn) saveBtn.textContent = "✓ Saved";
+    say("News saved and published.", {silentToast:true});
+    setTimeout(function(){
+      if(saveBtn && saveBtn.isConnected) { saveBtn.textContent = "💾 Save"; saveBtn.disabled = false; }
+    }, 1600);
+  } catch(e){
+    console.error("News save failed:",e);
+    say("Could not save news. Please try again.", {error:true});
+    if(saveBtn) { saveBtn.textContent = "💾 Save"; saveBtn.disabled = false; }
+  }
+}
+
 function scheduleNewsSave(){
   if(!currentUser || currentUser.id !== newsOwnerId) return;
   if(newsSaveTimer) clearTimeout(newsSaveTimer);
-  newsSaveTimer = setTimeout(async function(){
+  newsSaveTimer = setTimeout(function(){
     newsSaveTimer = null;
-    try{
-      var res = await sb.from("kf_news").upsert(
-        {id:1, content_html:newsEditor.innerHTML, updated_at:new Date().toISOString()},
-        {onConflict:"id"}
-      );
-      if(res.error) throw res.error;
-      say("News published.", {silentToast:true});
-    } catch(e){
-      console.error("News save failed:",e);
-      say("Could not publish news. Please try again.", {error:true});
-    }
+    saveNewsNow();
   }, 900);
 }
+$("newsSaveBtn").addEventListener("click", saveNewsNow);
 
 newsEditor.addEventListener("input", scheduleNewsSave);
 newsEditor.addEventListener("keyup", saveNewsRange);
