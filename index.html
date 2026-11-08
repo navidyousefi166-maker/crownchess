@@ -5908,7 +5908,7 @@ async function loadAdminPanel(){
  $("adminUsers").innerHTML='<div class="admin-loading">Loading registered users…</div>';
  $("adminFeatures").innerHTML='<div class="admin-loading">Loading features…</div>';
  try{
-  var pair=await Promise.all([adminInvoke({action:"list_users"}),sb.from("kf_feature_flags").select("feature_key,label,description,enabled").order("feature_key")]);
+  var pair=await Promise.all([adminInvoke({action:"list_users"}),sb.rpc("kf_admin_list_features")]);
   adminUsersCache=pair[0].users||[];if(pair[1].error)throw pair[1].error;
   renderAdminUsers();renderAdminFeatures(pair[1].data||[]);
   var wins=adminUsersCache.reduce(function(n,u){return n+Number(u.wins||0);},0),cups=adminUsersCache.reduce(function(n,u){return n+Number(u.tournament_wins||0);},0);
