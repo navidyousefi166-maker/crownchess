@@ -5454,7 +5454,8 @@ $("accountGateRetry").addEventListener("click",async function(){
     var sr=sb?await sb.auth.getSession():null;
     var session=sr&&sr.data&&sr.data.session;
     if(session&&sb){
-      var signedOut=await sb.auth.signOut();
+      // Keep account switching possible even if the banned session cannot refresh remotely.
+      var signedOut=await sb.auth.signOut({scope:"local"});
       if(signedOut.error)throw signedOut.error;
     }
     clearRememberedBan();
@@ -5926,15 +5927,18 @@ function initApp(){
 
   /* Auth state change */
   sb.auth.onAuthStateChange(function(event){
-    updateAuth();
-    getCurrentProfile().then(function(){
+    // Run Supabase requests after the auth callback returns to avoid auth-lock deadlocks.
+    setTimeout(function(){
+      updateAuth().catch(function(error){ console.error("Auth refresh failed:",error); });
+      getCurrentProfile().then(function(){
       checkMyTournamentEntry().then(function(){
         if($("tournDialog").open) renderTournDialog();
         updateTournButton();
       });
       loadHistory();
       setTimeout(checkActiveGameAndJoin, 800);
-    });
+      });
+    }, 0);
   });
 
   /* Initial auth check */
