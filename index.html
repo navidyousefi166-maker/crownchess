@@ -1882,6 +1882,27 @@ var sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_K
 
 function $(id){ return document.getElementById(id); }
 
+// Capture authentication clicks before the rest of the application initializes.
+document.addEventListener("click", function(event){
+  var button = event.target && event.target.closest ? event.target.closest("#signIn, #signUp") : null;
+  if(!button) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  try {
+    openAuth(button.id === "signUp" ? "signup" : "signin");
+  } catch(error) {
+    console.error("Kingsfall authentication dialog error:", error);
+    var dialog = $("authDialog");
+    var message = $("authMessage");
+    if(dialog) {
+      if($("authTitle")) $("authTitle").textContent = "Sign-in error";
+      if(message) message.textContent = "Could not open sign-in: " + String(error && error.message || error);
+      try { if(!dialog.open) dialog.showModal(); } catch(ignore) { dialog.setAttribute("open", ""); }
+    }
+  }
+}, true);
+
+
 /* ===== TOAST SYSTEM (NEW) ===== */
 var _toastWrap = null;
 function ensureToastWrap(){
@@ -5382,8 +5403,8 @@ function openAuth(m){
     authDialog.setAttribute("open", "");
   }
 }
-$("signIn").onclick = function(){ openAuth("signin"); };
-$("signUp").onclick = function(){ openAuth("signup"); };
+$("signIn").onclick = null;
+$("signUp").onclick = null;
 $("close").onclick = function(){ $("authDialog").close(); };
 $("switch").onclick = function(){ openAuth(mode === "signup" ? "signin" : "signup"); };
 
