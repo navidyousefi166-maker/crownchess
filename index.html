@@ -1154,6 +1154,8 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
   flex-wrap: wrap;
   align-items: center;
 }
+/* The owner-only toolbar must stay hidden for every other account. */
+.news-toolbar[hidden] { display: none !important; }
 .nt-group {
   display: flex;
   align-items: center;
