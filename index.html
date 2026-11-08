@@ -1232,6 +1232,7 @@ input[type="color"] {
 .admin-heading p,.admin-section-head p{margin:2px 0;color:var(--muted);font-size:12px}
 .admin-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
 .admin-stat,.admin-section{border:1px solid var(--line2);border-radius:10px;background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2));padding:14px}
+.admin-stat.registered-users-card{cursor:pointer;transition:border-color .18s,transform .18s}.admin-stat.registered-users-card:hover,.admin-stat.registered-users-card:focus-visible{border-color:var(--gold2);transform:translateY(-2px);outline:none}
 .admin-stat span{display:block;color:var(--muted);font-size:11px}.admin-stat strong{display:block;color:var(--gold2);font-size:25px;margin-top:4px;font-variant-numeric:tabular-nums}
 .admin-section{margin:14px 0}.admin-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.admin-section-head h2{font-size:17px;margin:0;color:var(--gold2)}
 .admin-search{width:100%;padding:11px 13px;border:1px solid var(--line2);border-radius:8px;background:var(--panel-bg2);color:var(--text);font:inherit;margin-bottom:12px}
@@ -1479,7 +1480,7 @@ input[type="color"] {
 </div>
 <div class="page" id="pageAdmin"><div class="admin-wrap">
 <div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1>🛡️ Admin Panel</h1><p>Private administration · Owner access only</p></div><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div>
-<div class="admin-stats" id="adminOverview"><div class="admin-stat"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div></div>
+<div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div></div>
 <section class="admin-section"><div class="admin-section-head"><div><h2>👥 User Management</h2><p>Search accounts, edit records, and manage access</p></div></div><input class="admin-search" id="adminUserSearch" type="search" placeholder="Search by username or email…"><div id="adminUsers" class="admin-users"><div class="admin-loading">Loading users…</div></div></section>
 <section class="admin-section"><div class="admin-section-head"><div><h2>⚙️ Feature Management</h2><p>Temporarily enable or disable game features</p></div></div><div id="adminFeatures" class="admin-features"><div class="admin-loading">Loading features…</div></div></section>
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
@@ -5920,7 +5921,7 @@ async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  $("adminUsers").innerHTML='<div class="admin-loading">Loading registered users…</div>';
  $("adminFeatures").innerHTML='<div class="admin-loading">Loading features…</div>';
- $("adminOverview").innerHTML='<div class="admin-stat"><span>Registered users</span><strong>Loading…</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div>';
+ $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>Loading…</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div>';
  // Count directly in the database; independent of the user-list endpoint.
  try{
   var countResult=await sb.rpc("kf_admin_registered_user_count");
@@ -5936,11 +5937,11 @@ async function loadAdminPanel(){
  }
  try{
   var usersResult=await adminInvoke({action:"list_users"});
-  adminUsersCache=usersResult.users||[];
+  adminUsersCache=(usersResult.users||[]).slice().sort(function(a,b){return (Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0);});
   var wins=adminUsersCache.reduce(function(n,u){return n+Number(u.wins||0);},0),cups=adminUsersCache.reduce(function(n,u){return n+Number(u.tournament_wins||0);},0);
   var banned=adminUsersCache.filter(function(u){return u.banned_until&&new Date(u.banned_until)>new Date();}).length;
   var firstValue=$("adminOverview").querySelector(".admin-stat strong");
-  $("adminOverview").innerHTML='<div class="admin-stat"><span>Registered users</span><strong>'+(firstValue?adminEscape(firstValue.textContent):'—')+'</strong></div><div class="admin-stat"><span>Banned users</span><strong>'+banned+'</strong></div><div class="admin-stat"><span>Total wins</span><strong>'+wins+'</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>'+cups+'</strong></div>';
+  $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>'+(firstValue?adminEscape(firstValue.textContent):'—')+'</strong></div><div class="admin-stat"><span>Banned users</span><strong>'+banned+'</strong></div><div class="admin-stat"><span>Total wins</span><strong>'+wins+'</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>'+cups+'</strong></div>';
   renderAdminUsers();
  }catch(e){
   $("adminUsers").innerHTML='<div class="admin-empty">Could not load user list: '+adminEscape(e.message||e)+'</div>';
@@ -5970,6 +5971,9 @@ function renderAdminFeatures(rows){
 }
 $("navAdmin").onclick=function(){if(currentUser&&currentUser.id===adminOwnerId)showPage("admin");};
 $("adminRefresh").onclick=loadAdminPanel;$("adminUserSearch").addEventListener("input",renderAdminUsers);
+function showRegisteredUsers(){if(!currentUser||currentUser.id!==adminOwnerId)return;$("adminUserSearch").value="";renderAdminUsers();var section=$("adminUsers").closest(".admin-section");if(section)section.scrollIntoView({behavior:"smooth",block:"start"});}
+$("adminOverview").addEventListener("click",function(e){if(e.target.closest(".registered-users-card"))showRegisteredUsers();});
+$("adminOverview").addEventListener("keydown",function(e){if(e.target.closest(".registered-users-card")&&(e.key==="Enter"||e.key===" ")){e.preventDefault();showRegisteredUsers();}});
 $("adminUsers").addEventListener("click",async function(e){
  var card=e.target.closest(".admin-user");if(!card)return;var id=card.getAttribute("data-user-id");
  if(e.target.closest(".admin-save-stat")){
