@@ -3616,7 +3616,7 @@ function runFullscreenNameMarquee(){
 function startFullscreenNameMarquee(){
   if(gfsNameMarqueeTimer) clearInterval(gfsNameMarqueeTimer);
   if(!document.body.classList.contains("game-focus")) return;
-  gfsNameMarqueeTimer = setInterval(runFullscreenNameMarquee, 120000);
+  gfsNameMarqueeTimer = setInterval(runFullscreenNameMarquee, 30000);
 }
 function stopFullscreenNameMarquee(){
   if(gfsNameMarqueeTimer){ clearInterval(gfsNameMarqueeTimer); gfsNameMarqueeTimer = null; }
