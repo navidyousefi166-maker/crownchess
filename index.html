@@ -1947,10 +1947,13 @@ $("navTable").onclick = function(){ showPage("table"); };
     if(Math.abs(dx) < Math.abs(dy) * 1.5) return;
     var current = document.querySelector(".page.active");
     if(!current) return;
+    // Ordered mobile navigation: Home → Table → News → Admin
     if(dx < 0 && current.id === "pageHome") showPage("table");
-else if(dx < 0 && current.id === "pageTable") showPage("news");
-else if(dx > 0 && current.id === "pageNews") showPage("table");
-else if(dx > 0 && current.id === "pageTable") showPage("home");
+    else if(dx < 0 && current.id === "pageTable") showPage("news");
+    else if(dx < 0 && current.id === "pageNews" && currentUser && currentUser.id === adminOwnerId) showPage("admin");
+    else if(dx > 0 && current.id === "pageAdmin" && currentUser && currentUser.id === adminOwnerId) showPage("news");
+    else if(dx > 0 && current.id === "pageNews") showPage("table");
+    else if(dx > 0 && current.id === "pageTable") showPage("home");
   }, {passive:true});
 })();
   /* ===== GLOBAL STATE ===== */
@@ -6102,30 +6105,6 @@ newsEditor.addEventListener("drop", function(e){
 });
 newsEditor.addEventListener("dragend", function(){ draggedNewsImage = null; });
 
-/* ===== MOBILE SWIPE BETWEEN NEWS AND ADMIN ===== */
-(function(){
-  var touchStartX=0,touchStartY=0,touchStartTarget=null;
-  document.addEventListener("touchstart",function(e){
-    if(!e.touches||e.touches.length!==1)return;
-    touchStartX=e.touches[0].clientX;
-    touchStartY=e.touches[0].clientY;
-    touchStartTarget=e.target;
-  },{passive:true});
-  document.addEventListener("touchend",function(e){
-    if(!e.changedTouches||e.changedTouches.length!==1)return;
-    var dx=e.changedTouches[0].clientX-touchStartX;
-    var dy=e.changedTouches[0].clientY-touchStartY;
-    if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.35)return;
-    if(touchStartTarget&&touchStartTarget.closest&&touchStartTarget.closest("input,textarea,select,button,[contenteditable='true'],.news-toolbar"))return;
-    var news=$("pageNews"),admin=$("pageAdmin");
-    if(!news||!admin)return;
-    if(news.classList.contains("active")&&dx<0&&currentUser&&currentUser.id===adminOwnerId){
-      showPage("admin");
-    }else if(admin.classList.contains("active")&&dx>0&&currentUser&&currentUser.id===adminOwnerId){
-      showPage("news");
-    }
-  },{passive:true});
-})();
 initApp();
 
 })();
