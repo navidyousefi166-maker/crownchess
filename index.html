@@ -5401,8 +5401,19 @@ $("authForm").addEventListener("submit", async function(e){
     await updateAuth();
     if(mode === "signin") setTimeout(function(){ $("authDialog").close(); }, 500);
   } catch(err){
-    $("authMessage").textContent = err.message || "Authentication failed.";
-    $("authMessage").classList.add("error");
+    var authErrorText=String(err&&err.message||"Authentication failed.");
+    if(mode==="signin" && /bann?ed|ban_duration|user is banned/i.test(authErrorText)){
+      $("accountGateTitle").textContent="Account banned";
+      $("accountGateMessage").textContent="This account has been banned from Kingsfall. You cannot sign in or access the game while this ban is active.";
+      $("accountGateRetry").hidden=true;
+      $("accountGateSignOut").hidden=true;
+      $("accountGate").hidden=false;
+      document.body.classList.add("account-restricted");
+      if($("authDialog").open)$("authDialog").close();
+    }else{
+      $("authMessage").textContent = authErrorText;
+      $("authMessage").classList.add("error");
+    }
   } finally {
     submit.disabled = false;
     submit.textContent = mode === "signup" ? "Create account" : "Sign In";
