@@ -4032,7 +4032,6 @@ function applyHandicapToGame(color, type, square){
 
 /* Secure server-side Humiliation RPC: never update kf_games directly. */
 async function submitHumiliation(square, type){
-  if(kfFeatureFlags.humiliation===false) throw new Error("Humiliation is temporarily disabled.");
   if(!sb || !onlineGameId || !onlineGame || !currentUser || !square || !type) throw new Error("Game or piece selection is missing.");
   var res = await sb.rpc("kf_apply_humiliation", {p_game_id: onlineGameId, p_square: square});
   if(res.error) throw res.error;
