@@ -5928,7 +5928,7 @@ async function loadAdminPanel(){
   var registeredCount=Number(countResult.data||0);
   var overview=$("adminOverview");
   var first=overview.querySelector(".admin-stat strong");
-  if(first)first.textContent=registeredCount.toLocaleString();
+  if(first)first.textContent=registeredCount.toLocaleString("en-US",{numberingSystem:"latn"});
  }catch(countError){
   var first=$("adminOverview").querySelector(".admin-stat strong");
   if(first)first.textContent="Error";
