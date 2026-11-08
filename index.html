@@ -212,6 +212,7 @@ body.theme-ocean .theme-toggle{
 .page{display:none}
 .page.active{display:block}
 main{padding:16px 0 24px}
+.quickbar[hidden],.tournament-bar[hidden],.roulette-bar[hidden],.computer-panel[hidden]{display:none!important}
 .kicker{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:2px}
 .quickbar{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -4221,7 +4222,7 @@ function showCelebration(opts){
   _celebOnDone = opts.onDone || null;
   screen.className = "celebration show " + opts.outcome;
   // Rematch is only available after Quick Play games, never in tournament matches.
-  $("celebRematch").hidden = !!opts.isTournament;
+  $("celebRematch").hidden = !!opts.isTournament || kfFeatureFlags.rematch===false;
   $("celebAnalyze").hidden = false;
   $("celebExit").textContent = "Exit";
   var text = "";
@@ -4407,7 +4408,8 @@ async function requestRematch(){
   }, 30000);
 }
 async function respondRematch(accept){
-  if(!sb || !onlineGameId || !onlineGame || !currentUser) return;
+   if(kfFeatureFlags.rematch===false){if($("rematchDialog").open)$("rematchDialog").close();say("Rematch is temporarily disabled.",{info:true});return;}
+   if(!sb || !onlineGameId || !onlineGame || !currentUser) return;
   if(onlineGame.rematch_requested_by === currentUser.id) return;
   if(onlineGame.rematch_status !== "pending") return;
   _rematchAccepting = true;
@@ -4507,7 +4509,7 @@ async function handleQuickPlayEnd(row){
   }
   var oldWins = currentWins - bonus;
   var newWins = currentWins;
-  $("celebRematch").hidden = false;
+  $("celebRematch").hidden = kfFeatureFlags.rematch===false;
   updateRematchButton();
   showCelebration({
     outcome: outcome,
@@ -6190,12 +6192,32 @@ $("adminFeatures").addEventListener("change",async function(e){
  try{var r=await sb.rpc("kf_admin_set_feature",{p_feature_key:key,p_enabled:on});if(r.error)throw r.error;await loadFeatureFlags();say("Feature setting updated.",{silentToast:true});}
  catch(err){el.checked=!on;say("Could not change feature: "+(err.message||err),{error:true});}finally{el.disabled=false;}
 });
-var kfFeatureFlags={};
-async function loadFeatureFlags(){
- if(!sb)return;var r=await sb.rpc("kf_get_feature_flags");if(r.error){console.warn("Feature flags unavailable",r.error);return;}var f=r.data||{};kfFeatureFlags=f;
- var selectors={quick_play:".quickbar",tournaments:".tournament-bar",roulette:".roulette-bar"};
+var kfFeatureFlags={},kfFeatureChannel=null,kfFeatureLoadBusy=false;
+function applyFeatureFlagsToUI(f){
+ var selectors={quick_play:".quickbar",tournaments:".tournament-bar",roulette:".roulette-bar",computer_mode:".computer-panel"};
  Object.keys(selectors).forEach(function(k){var el=document.querySelector(selectors[k]);if(el)el.hidden=f[k]===false;});
+ var rematchButton=$("celebRematch"),rematchDialog=$("rematchDialog");
+ if(f.rematch===false){if(rematchButton)rematchButton.hidden=true;if(rematchDialog&&rematchDialog.open)rematchDialog.close();}
+ else if(rematchButton&&onlineGame&&onlineGame.status==="completed"&&!onlineGame.is_tournament&&$("celebrationScreen").classList.contains("show")){rematchButton.hidden=false;}
 }
+function startFeatureFlagRealtime(){
+ if(!sb||kfFeatureChannel||!sb.channel)return;
+ kfFeatureChannel=sb.channel("kf-feature-flags")
+  .on("postgres_changes",{event:"*",schema:"public",table:"kf_feature_flags"},function(){loadFeatureFlags();})
+  .subscribe(function(status){if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")console.warn("Feature flag realtime unavailable; periodic refresh remains active.");});
+}
+async function loadFeatureFlags(){
+ if(!sb||kfFeatureLoadBusy)return; kfFeatureLoadBusy=true;
+ try{
+  var r=await sb.rpc("kf_get_feature_flags");
+  if(r.error){console.warn("Feature flags unavailable",r.error);return;}
+  var f=r.data||{};kfFeatureFlags=f;applyFeatureFlagsToUI(f);startFeatureFlagRealtime();
+ }catch(error){console.warn("Feature flag refresh failed",error);}
+ finally{kfFeatureLoadBusy=false;}
+}
+// Realtime normally applies changes immediately; this lightweight fallback also
+// recovers from temporary mobile-network or websocket interruptions.
+setInterval(loadFeatureFlags,30000);
 
 /* ===== NEWS PAGE ===== */
 $("navNews").onclick = function(){ showPage("news"); };
