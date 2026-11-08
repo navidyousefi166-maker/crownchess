@@ -658,6 +658,12 @@ body.game-focus .game-fullscreen{display:flex}
 .gfs-avatar{width:90px;height:90px;border-radius:50%;object-fit:cover;border:4px solid var(--gold);background:var(--btn-bg);flex:none}
 .gfs-info{min-width:0;display:flex;flex-direction:column;gap:5px}
 .gfs-info .gfs-name{font-weight:900;font-size:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.gfs-info .gfs-name{display:block;width:100%;min-width:0;text-overflow:clip}
+.gfs-bottombar .gfs-info .gfs-name{text-align:right}
+.gfs-name-marquee{display:inline-block;max-width:none;white-space:nowrap;transform:translateX(0)}
+.gfs-name.marquee-active .gfs-name-marquee{animation:gfsNameMarquee var(--gfs-marquee-duration,6s) linear 1}
+@keyframes gfsNameMarquee{from{transform:translateX(0)}to{transform:translateX(var(--gfs-marquee-shift,0px))}}
+
 .gfs-info .gfs-stats{font-size:15px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
 .gfs-bottombar .gfs-info{text-align:right;align-items:flex-end}
 .gfs-bottombar .gfs-info .gfs-name{justify-content:flex-end}
@@ -3576,6 +3582,53 @@ async function checkActiveGameAndJoin(){
     }
   } catch(e){ console.warn("Auto-rejoin error:", e); }
   }
+var gfsNameMarqueeTimer = null;
+function runFullscreenNameMarquee(){
+  ["gfsTopName","gfsBotName"].forEach(function(id){
+    var box = $(id);
+    if(!box) return;
+    var label = box.querySelector(".gfs-name-marquee");
+    if(!label){
+      var initialText = box.textContent || "";
+      box.textContent = "";
+      label = document.createElement("span");
+      label.className = "gfs-name-marquee";
+      label.textContent = initialText;
+      box.appendChild(label);
+    }
+    box.classList.remove("marquee-active");
+    label.style.transform = "translateX(0)";
+    box.style.removeProperty("--gfs-marquee-shift");
+    box.style.removeProperty("--gfs-marquee-duration");
+    if(label.scrollWidth <= box.clientWidth + 2) return;
+    var distance = Math.ceil(label.scrollWidth - box.clientWidth + 12);
+    var duration = Math.max(5, Math.min(16, distance / 32));
+    box.style.setProperty("--gfs-marquee-shift", (-distance) + "px");
+    box.style.setProperty("--gfs-marquee-duration", duration + "s");
+    box.classList.add("marquee-active");
+    label.onanimationend = function(){
+      box.classList.remove("marquee-active");
+      label.style.transform = "translateX(0)";
+      label.onanimationend = null;
+    };
+  });
+}
+function startFullscreenNameMarquee(){
+  if(gfsNameMarqueeTimer) clearInterval(gfsNameMarqueeTimer);
+  if(!document.body.classList.contains("game-focus")) return;
+  gfsNameMarqueeTimer = setInterval(runFullscreenNameMarquee, 120000);
+}
+function stopFullscreenNameMarquee(){
+  if(gfsNameMarqueeTimer){ clearInterval(gfsNameMarqueeTimer); gfsNameMarqueeTimer = null; }
+  ["gfsTopName","gfsBotName"].forEach(function(id){
+    var box = $(id);
+    if(!box) return;
+    box.classList.remove("marquee-active");
+    box.style.removeProperty("--gfs-marquee-shift");
+    box.style.removeProperty("--gfs-marquee-duration");
+  });
+}
+
   function enterFullscreenGame(row){
   document.body.classList.add("game-focus");
   fsPlayerColor = (row.white_id === currentUser.id) ? "w" : "b";
@@ -3592,6 +3645,10 @@ async function checkActiveGameAndJoin(){
 
   $("gfsTopName").textContent = topName || "Opponent";
   $("gfsBotName").textContent = botName || "You";
+  ["gfsTopName","gfsBotName"].forEach(function(id){
+    var el = $(id);
+    if(el){ el.textContent = el.textContent; }
+  });
 
   var meHadHandicap = (fsPlayerColor === "w" && isValidHcp(row.white_handicap))
                    || (fsPlayerColor === "b" && isValidHcp(row.black_handicap));
@@ -3606,6 +3663,7 @@ async function checkActiveGameAndJoin(){
   $("gfsBotAvatar").src = botAvatar || defaultAvatar();
   $("gfsResignBtn").disabled = false;
   renderFullscreenStats();
+  startFullscreenNameMarquee();
   draw();
 }
 
@@ -3640,6 +3698,7 @@ async function renderFullscreenStats(){
 }
 
 function exitFullscreenGame(){
+  stopFullscreenNameMarquee();
   document.body.classList.remove("game-focus");
   _boardBuilt = false;
   hideHumilBanner();
