@@ -5876,7 +5876,6 @@ $("newsColorPicker").oninput = function() {
 // News image insertion: preserve editor cursor and make the entire button clickable.
 var newsSavedRange = null;
 var newsEditor = $("newsEditor");
-var newsSaveTimer = null;
 var newsLoadToken = 0;
 var newsOwnerId = "cc80cc38-f476-4edd-8efc-45e2722f3c4f";
 
@@ -5911,7 +5910,6 @@ async function saveNewsNow(){
     say("Only the Kingsfall owner can publish news.", {error:true});
     return;
   }
-  if(newsSaveTimer) { clearTimeout(newsSaveTimer); newsSaveTimer = null; }
   var saveBtn = $("newsSaveBtn");
   if(saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Saving..."; }
   try{
@@ -5932,17 +5930,8 @@ async function saveNewsNow(){
   }
 }
 
-function scheduleNewsSave(){
-  if(!currentUser || currentUser.id !== newsOwnerId) return;
-  if(newsSaveTimer) clearTimeout(newsSaveTimer);
-  newsSaveTimer = setTimeout(function(){
-    newsSaveTimer = null;
-    saveNewsNow();
-  }, 900);
-}
+// News is saved only when the owner explicitly presses the Save button.
 $("newsSaveBtn").addEventListener("click", saveNewsNow);
-
-newsEditor.addEventListener("input", scheduleNewsSave);
 newsEditor.addEventListener("keyup", saveNewsRange);
 newsEditor.addEventListener("mouseup", saveNewsRange);
 newsEditor.addEventListener("input", saveNewsRange);
