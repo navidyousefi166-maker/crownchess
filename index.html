@@ -5921,14 +5921,40 @@ async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  $("adminUsers").innerHTML='<div class="admin-loading">Loading registered users…</div>';
  $("adminFeatures").innerHTML='<div class="admin-loading">Loading features…</div>';
+ $("adminOverview").innerHTML='<div class="admin-stat"><span>Registered users</span><strong>Loading…</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div>';
+ // Count directly in the database; independent of the user-list endpoint.
  try{
-  var pair=await Promise.all([adminInvoke({action:"list_users"}),sb.rpc("kf_admin_list_features")]);
-  adminUsersCache=pair[0].users||[];if(pair[1].error)throw pair[1].error;
-  renderAdminUsers();renderAdminFeatures(pair[1].data||[]);
+  var countResult=await sb.rpc("kf_admin_registered_user_count");
+  if(countResult.error)throw countResult.error;
+  var registeredCount=Number(countResult.data||0);
+  var overview=$("adminOverview");
+  var first=overview.querySelector(".admin-stat strong");
+  if(first)first.textContent=registeredCount.toLocaleString();
+ }catch(countError){
+  var first=$("adminOverview").querySelector(".admin-stat strong");
+  if(first)first.textContent="Error";
+  console.error("Registered-user count failed:",countError);
+ }
+ try{
+  var usersResult=await adminInvoke({action:"list_users"});
+  adminUsersCache=usersResult.users||[];
   var wins=adminUsersCache.reduce(function(n,u){return n+Number(u.wins||0);},0),cups=adminUsersCache.reduce(function(n,u){return n+Number(u.tournament_wins||0);},0);
   var banned=adminUsersCache.filter(function(u){return u.banned_until&&new Date(u.banned_until)>new Date();}).length;
-  $("adminOverview").innerHTML='<div class="admin-stat"><span>Registered users</span><strong>'+adminUsersCache.length+'</strong></div><div class="admin-stat"><span>Banned users</span><strong>'+banned+'</strong></div><div class="admin-stat"><span>Total wins</span><strong>'+wins+'</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>'+cups+'</strong></div>';
- }catch(e){$("adminUsers").innerHTML='<div class="admin-empty">Could not load users: '+adminEscape(e.message||e)+'</div>';$("adminFeatures").innerHTML='<div class="admin-empty">Feature settings unavailable.</div>';}
+  var firstValue=$("adminOverview").querySelector(".admin-stat strong");
+  $("adminOverview").innerHTML='<div class="admin-stat"><span>Registered users</span><strong>'+(firstValue?adminEscape(firstValue.textContent):'—')+'</strong></div><div class="admin-stat"><span>Banned users</span><strong>'+banned+'</strong></div><div class="admin-stat"><span>Total wins</span><strong>'+wins+'</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>'+cups+'</strong></div>';
+  renderAdminUsers();
+ }catch(e){
+  $("adminUsers").innerHTML='<div class="admin-empty">Could not load user list: '+adminEscape(e.message||e)+'</div>';
+  console.error("Admin user list failed:",e);
+ }
+ try{
+  var featuresResult=await sb.rpc("kf_admin_list_features");
+  if(featuresResult.error)throw featuresResult.error;
+  renderAdminFeatures(featuresResult.data||[]);
+ }catch(featureError){
+  $("adminFeatures").innerHTML='<div class="admin-empty">Feature settings unavailable.</div>';
+  console.error("Admin features failed:",featureError);
+ }
 }
 function renderAdminUsers(){
  var q=($("adminUserSearch").value||"").toLowerCase().trim(),list=adminUsersCache.filter(function(u){return !q||(u.username+" "+u.email+" "+u.id).toLowerCase().includes(q);});
