@@ -5394,11 +5394,14 @@ async function runFullAnalysis(runId){
       var onlyGoodMove = bestChance != null && nextChance != null &&
                          bestChance >= 0.40 && gap >= 0.12 &&
                          !goodAlternative;
-      // Escaping a check by moving the king is not Great, even when it is
-      // the only good legal response. Keep the normal Best classification.
-      var kingEscapeFromCheck = history[mi].piece === "k" &&
+      // A king's forced response to check, or a simple king capture,
+      // is not Great even if the alternative is much worse.
+      // Keep the original Best/Good assessment in these cases.
+      var kingMove = history[mi].piece === "k";
+      var kingEscapeFromCheck = kingMove &&
                                 new Chess(positions[mi]).in_check();
-      if(onlyGoodMove && !kingEscapeFromCheck) {
+      var kingCapturesPiece = kingMove && !!history[mi].captured;
+      if(onlyGoodMove && !kingEscapeFromCheck && !kingCapturesPiece) {
         mm.quality = "great";
         mm.alternative = multi.second.uci;
         mm.alternativeGap = gap;
