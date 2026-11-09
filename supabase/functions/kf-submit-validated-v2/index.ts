@@ -4,6 +4,27 @@ import { Chess } from "npm:chess.js@1.4.0";
 const cors = {"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization,apikey,content-type,x-client-info","Access-Control-Allow-Methods":"POST, OPTIONS"};
 const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,"Content-Type":"application/json"}});
 const startFen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+// Best-effort audit in a background task, separate from live game timing.
+function logInvalidMove(admin:ReturnType<typeof createClient>, data:{
+  request_id:string;game_id:string;player_id:string;white_id:string;black_id:string;
+  white_username:string|null;black_username:string|null;
+  move_from:string;move_to:string;promotion:string|null;
+  position_fen:string;position_pgn:string|null;
+}):void{
+  const task=(async()=>{
+    try{
+      const since=new Date(Date.now()-10000).toISOString();
+      const {data:recent,error:readError}=await admin.from("kf_invalid_move_reports")
+        .select("id").eq("game_id",data.game_id).eq("player_id",data.player_id)
+        .gte("reported_at",since).limit(1);
+      if(readError){console.warn("[Kingsfall audit] rate check failed",readError.message);return;}
+      if(recent?.length)return;
+      const {error}=await admin.from("kf_invalid_move_reports").insert({...data,reason:"illegal_chess_move"});
+      if(error)console.warn("[Kingsfall audit] write failed",error.message);
+    }catch(e){console.warn("[Kingsfall audit] background error",e);}
+  })();
+  EdgeRuntime.waitUntil(task);
+}
 type Input={game_id?:string;from?:string;to?:string;promotion?:string;request_id?:string};
 function appendPgn(before:string,startingFen:string,move:{san:string,color:string},result:string|null){
   const parts=startingFen.split(" ");
@@ -34,7 +55,7 @@ Deno.serve(async req=>{
     const client=createClient(url,anonKey,{global:{headers:{Authorization:auth}},auth:{persistSession:false}});
     const {data:userData,error:userError}=await client.auth.getUser(token);
     if(userError||!userData.user)return json({error:"Not authenticated"},401);
-    const {data:row,error:readError}=await client.from("kf_games").select("id,white_id,black_id,status,fen,pgn,turn,clock_started_at,last_move_at,is_roulette,is_bloodblade,white_handicap,black_handicap").eq("id",input.game_id).maybeSingle();
+    const {data:row,error:readError}=await client.from("kf_games").select("id,white_id,black_id,white_username,black_username,status,fen,pgn,turn,clock_started_at,last_move_at,is_roulette,is_bloodblade,white_handicap,black_handicap").eq("id",input.game_id).maybeSingle();
     if(readError||!row)return json({error:"Game unavailable"},404);
     if(row.status!=="active")return json({error:"Game not active"},409);
     const uid=userData.user.id;
@@ -53,8 +74,18 @@ Deno.serve(async req=>{
     }
     const requested={from:input.from,to:input.to,...(input.promotion?{promotion:input.promotion}:{})};
     let move;
-    try{move=board.move(requested);}catch{return json({error:"Illegal chess move",code:"ILLEGAL_MOVE"},422);}
-    if(!move)return json({error:"Illegal chess move",code:"ILLEGAL_MOVE"},422);
+    try{move=board.move(requested);}catch{move=null;}
+    if(!move){
+      const admin=createClient(url,secret,{auth:{persistSession:false}});
+      logInvalidMove(admin,{
+        request_id:input.request_id!,game_id:row.id,player_id:uid,
+        white_id:row.white_id,black_id:row.black_id,
+        white_username:row.white_username||null,black_username:row.black_username||null,
+        move_from:input.from!,move_to:input.to!,promotion:input.promotion||null,
+        position_fen:row.fen,position_pgn:row.pgn||null
+      });
+      return json({error:"Illegal chess move",code:"ILLEGAL_MOVE"},422);
+    }
     const newFen=board.fen();
     const isMate=board.isCheckmate();
     const isDraw=board.isDraw();
