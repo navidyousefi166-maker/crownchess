@@ -1575,26 +1575,10 @@ input[type="color"] {
 <div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1 id="adminPageTitle">🛡️ Admin Panel</h1><p id="adminPageSubtitle">Private administration · Owner access only</p></div><div class="admin-heading-actions"><button class="btn" id="adminBackToOverview" type="button" hidden>← Back</button><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div></div>
 <div id="adminOverviewView">
 <div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div></div>
-<section class="admin-section" id="adminAuditSection"><div class="admin-section-head"><div><h2>🛡️ Move Integrity Alerts</h2><p>Background move validation · alerts are for admin review, never automatic punishment</p></div></div><div id="adminAuditAlerts" class="admin-users"><div class="admin-loading">Loading move checks…</div></div></section>
 <section class="admin-section"><div class="admin-section-head"><div><h2>⚙️ Feature Management</h2><p>Temporarily enable or disable game features</p></div></div><div id="adminFeatures" class="admin-features"><div class="admin-loading">Loading features…</div></div></section>
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
 </div>
 <section class="admin-section" id="adminUserManagementSection" hidden><div class="admin-section-head"><div><h2>👥 User Management</h2><p>Search accounts, edit records, and manage access</p></div></div><input class="admin-search" id="adminUserSearch" type="search" placeholder="Search by username or email…"><div id="adminUsers" class="admin-users"><div class="admin-loading">Loading users…</div></div></section>
-<div id="kfAuditReplay" class="kf-audit-replay" hidden role="dialog" aria-modal="true" aria-labelledby="kfAuditReplayTitle">
-<div class="kf-audit-replay-panel">
-<div class="kf-audit-replay-head"><div><strong id="kfAuditReplayTitle">🛡️ Suspicious Game Review</strong><div id="kfAuditReplayPlayers" class="kf-audit-replay-status"></div></div><button class="btn" type="button" id="kfAuditReplayClose">✕ Close</button></div>
-<div class="kf-audit-offender" id="kfAuditReplayOffender"></div>
-<div class="kf-audit-replay-note" id="kfAuditReplayReason"></div>
-<div id="kfAuditReplayBoard" class="kf-audit-replay-board" aria-label="Read-only board replay"></div>
-<div class="kf-audit-replay-controls">
-<button class="btn" type="button" id="kfAuditReplayFirst" aria-label="First position">⏮</button>
-<button class="btn" type="button" id="kfAuditReplayPrev" aria-label="Previous move">◀</button>
-<span id="kfAuditReplayCounter" style="min-width:85px;text-align:center">—</span>
-<button class="btn" type="button" id="kfAuditReplayNext" aria-label="Next move">▶</button>
-<button class="btn" type="button" id="kfAuditReplayLast" aria-label="Last position">⏭</button>
-</div>
-<div id="kfAuditReplayStatus" class="kf-audit-replay-status"></div>
-</div></div>
 <div class="admin-wins-overlay" id="adminWinsEditor" hidden><div class="admin-wins-dialog" role="dialog" aria-modal="true" aria-labelledby="adminWinsTitle"><button class="admin-wins-close" id="adminWinsClose" type="button" aria-label="Close">×</button><div class="kicker">PLAYER RECORD</div><h2 id="adminWinsTitle">Wins</h2><div class="admin-wins-player" id="adminWinsPlayer"></div><div class="admin-wins-hint">Swipe up or down to change the number</div><div class="admin-wins-wheel" id="adminWinsWheel" tabindex="0" role="slider" aria-label="Wins count" aria-valuemin="0" aria-valuemax="100000000"><div class="admin-wins-number" id="adminWinsNumber">0</div><div class="admin-wins-arrows">▲<br>▼</div></div><div class="admin-wins-actions"><button class="btn" id="adminWinsCancel" type="button">Cancel</button><button class="btn gold" id="adminWinsSave" type="button">Save wins</button></div></div></div>
   <footer>
     <div class="foot-brand">♛ Kingsfall · Every King Can Fall.</div>
@@ -6892,131 +6876,8 @@ async function adminInvoke(body){
  if(!currentUser||currentUser.id!==adminOwnerId)throw Error("Owner access required");
  var r=await sb.functions.invoke("kf-admin",{body:body});if(r.error)throw r.error;if(r.data&&r.data.error)throw Error(r.data.error);return r.data;
 }
-var kfAuditReplayPositions=[],kfAuditReplayIndex=0,kfAuditReplayAlert=null,kfAuditReplayMarkedIndex=-1,kfAuditReplayOriginalFocus=null;
-function kfAuditReplayShow(index){
- if(!kfAuditReplayPositions.length)return;
- kfAuditReplayIndex=Math.max(0,Math.min(kfAuditReplayPositions.length-1,index));
- var state=kfAuditReplayPositions[kfAuditReplayIndex],fen=state.fen||"",parts=fen.split(" "),ranks=(parts[0]||"").split("/");
- var target=$("kfAuditReplayBoard"),html="";
- for(var r=0;r<8;r++){
-  var squares=[],rank=ranks[r]||"";
-  for(var j=0;j<rank.length;j++){var ch=rank[j];if(/[1-8]/.test(ch)){for(var n=0;n<Number(ch);n++)squares.push("");}else squares.push(ch);}
-  for(var f=0;f<8;f++){
-   var sq="abcdefgh"[f]+(8-r),piece=squares[f]||"",highlight=state.from===sq||state.to===sq;
-   var suspect=kfAuditReplayIndex===kfAuditReplayMarkedIndex&&highlight;
-   html+='<div class="kf-audit-replay-square '+((r+f)%2?"dark":"light")+(highlight?" last":"")+(suspect?" suspect":"")+'">'+(piece?svg({color:piece===piece.toUpperCase()?"w":"b",type:piece.toLowerCase()}):"")+'</div>';
-  }
- }
- target.innerHTML=html;
- $("kfAuditReplayCounter").textContent=kfAuditReplayIndex+" / "+(kfAuditReplayPositions.length-1);
- $("kfAuditReplayStatus").textContent=(state.label||"Start position")+(kfAuditReplayIndex===kfAuditReplayMarkedIndex?" · ⚠️ Reported move":"");
- $("kfAuditReplayFirst").disabled=$("kfAuditReplayPrev").disabled=kfAuditReplayIndex===0;
- $("kfAuditReplayNext").disabled=$("kfAuditReplayLast").disabled=kfAuditReplayIndex===kfAuditReplayPositions.length-1;
-}
-function kfAuditReplayClose(){
- $("kfAuditReplay").hidden=true;kfAuditReplayPositions=[];kfAuditReplayAlert=null;
- if(kfAuditReplayOriginalFocus&&kfAuditReplayOriginalFocus.isConnected)kfAuditReplayOriginalFocus.focus();
-}
-async function kfAuditReplayOpen(id,trigger){
- if(!currentUser||currentUser.id!==adminOwnerId)return;
- kfAuditReplayOriginalFocus=trigger||null;
- $("kfAuditReplay").hidden=false;
- $("kfAuditReplayPlayers").textContent="Loading saved game…";
- $("kfAuditReplayOffender").textContent="Loading reported account…";
- $("kfAuditReplayReason").textContent="";
- $("kfAuditReplayBoard").innerHTML="";
- $("kfAuditReplayStatus").textContent="";
- $("kfAuditReplayCounter").textContent="—";
- try{
-  var res=await sb.rpc("kf_admin_move_audit_replay",{p_alert_id:id});
-  if(res.error)throw res.error;
-  var a=res.data;if(!a)throw Error("Report not found.");
-  if($("kfAuditReplay").hidden)return;
-  kfAuditReplayAlert=a;
-  $("kfAuditReplayPlayers").textContent=(a.white_username||"White")+" vs "+(a.black_username||"Black");
-  var offenderId=String(a.player_id||a.offender_id||a.user_id||"");
-  var offenderName=(offenderId&&String(a.white_id||a.white_user_id||"")===offenderId)?a.white_username:(offenderId&&String(a.black_id||a.black_user_id||"")===offenderId)?a.black_username:(a.player_username||a.offender_username||a.username||"");
-  var offenderSide=(offenderId&&String(a.white_id||a.white_user_id||"")===offenderId)?"White":(offenderId&&String(a.black_id||a.black_user_id||"")===offenderId)?"Black":"";
-  $("kfAuditReplayOffender").innerHTML="<b>⚠️ Reported account: "+adminEscape(offenderName||offenderId||"Unknown")+"</b>"+(offenderSide?" · "+adminEscape(offenderSide):"")+(offenderId?"<small>Account ID: "+adminEscape(offenderId)+"</small>":"");
-  $("kfAuditReplayReason").textContent=(a.verdict==="flagged"?"Flagged: ":"Needs review: ")+(a.detail||"Unknown reason");
-  if(typeof Chess!=="function")throw Error("Chess rules library is unavailable.");
-  var board=new Chess(),pgn=a.pgn||"",loaded=false;
-  if(pgn){try{loaded=board.load_pgn(pgn,{sloppy:true});}catch(_e){}}
-  if(!loaded&&a.after_pgn){board=new Chess();try{loaded=board.load_pgn(a.after_pgn,{sloppy:true});}catch(_e){}}
-  var history=loaded?board.history({verbose:true}):[],replay=new Chess();
-  kfAuditReplayPositions=[{fen:replay.fen(),label:"Start position",from:null,to:null}];
-  var suspect=a.move_data||{},suspectFrom=suspect.from||"",suspectTo=suspect.to||"",suspectSan=String(suspect.san||"").replace(/[+#?!]/g,"");
-  kfAuditReplayMarkedIndex=-1;
-  for(var i=0;i<history.length;i++){
-   var move=history[i],m=replay.move(move.san);
-   if(!m)break;
-   kfAuditReplayPositions.push({fen:replay.fen(),from:m.from,to:m.to,label:(Math.floor(i/2)+1)+(i%2?"... ":". ")+m.san});
-   if(kfAuditReplayMarkedIndex<0&&suspectFrom===m.from&&suspectTo===m.to&&(!suspectSan||suspectSan===m.san.replace(/[+#?!]/g,"")))kfAuditReplayMarkedIndex=i+1;
-  }
-  // A suspicious move may be illegal, so it cannot occur in a legally replayed PGN.
-  // In that case use the authoritative before/after FEN snapshots rather than inventing moves.
-  if(kfAuditReplayMarkedIndex<0&&a.before_fen){
-   kfAuditReplayPositions.push({fen:a.before_fen,label:"⚠️ Position before reported move",from:null,to:null});
-   kfAuditReplayPositions.push({fen:a.after_fen||a.before_fen,label:"⚠️ Submitted position after reported move",from:suspectFrom,to:suspectTo});
-   kfAuditReplayMarkedIndex=kfAuditReplayPositions.length-1;
-  }
-  var i0=kfAuditReplayMarkedIndex>0?kfAuditReplayMarkedIndex:Math.max(0,kfAuditReplayPositions.length-1);
-  kfAuditReplayShow(i0);
-  if(!loaded)$("kfAuditReplayStatus").textContent+=" · Full PGN unavailable or invalid; available position snapshots shown.";
- }catch(err){
-  $("kfAuditReplayPlayers").textContent="Unable to open game";
-  $("kfAuditReplayOffender").textContent="Reported account unavailable";
-  $("kfAuditReplayReason").textContent=err.message||String(err);
- }
-}
-$("kfAuditReplayClose").addEventListener("click",kfAuditReplayClose);
-$("kfAuditReplayFirst").addEventListener("click",function(){kfAuditReplayShow(0);});
-$("kfAuditReplayPrev").addEventListener("click",function(){kfAuditReplayShow(kfAuditReplayIndex-1);});
-$("kfAuditReplayNext").addEventListener("click",function(){kfAuditReplayShow(kfAuditReplayIndex+1);});
-$("kfAuditReplayLast").addEventListener("click",function(){kfAuditReplayShow(kfAuditReplayPositions.length-1);});
-$("kfAuditReplay").addEventListener("click",function(e){if(e.target===$("kfAuditReplay"))kfAuditReplayClose();});
-document.addEventListener("keydown",function(e){if(!$("kfAuditReplay").hidden&&e.key==="Escape")kfAuditReplayClose();});
-$("adminAuditAlerts").addEventListener("click",function(e){var btn=e.target.closest(".admin-audit-open");if(btn){var id=Number(btn.getAttribute("data-alert-id"));if(Number.isSafeInteger(id)&&id>0)kfAuditReplayOpen(id,btn);}});
-async function loadAdminAuditAlerts(){
- if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
- var list=$("adminAuditAlerts");if(!list)return;
- try{
-  var result=await sb.rpc("kf_admin_move_audit_alerts",{p_limit:30});
-  if(result.error)throw result.error;
-  var alerts=Array.isArray(result.data)?result.data:[];
-  if(!alerts.length){list.innerHTML='<div class="admin-empty">No suspicious moves reported.</div>';return;}
-  list.innerHTML=alerts.map(function(a){
-    var label=a.verdict==="flagged"?"Potentially invalid move":"Needs review",m=a.move_data||{};
-    return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">⚠️ '+adminEscape(label)+'</div><div class="admin-user-meta">Game '+adminEscape(a.game_id||"")+' · Player '+adminEscape(a.player_id||"Unknown")+'</div></div></div><div class="admin-user-stats"><span class="admin-chip">'+adminEscape((m.from||"?")+" → "+(m.to||"?")+" "+(m.san||""))+'</span><span class="admin-chip">'+adminEscape(a.detail||"")+'</span><span class="admin-chip">'+adminEscape(a.detected_at?new Date(a.detected_at).toLocaleString():"")+'</span></div><div class="admin-actions"><button class="btn admin-audit-open" type="button" data-alert-id="'+Number(a.id)+'">View Game</button><button class="btn admin-audit-delete" type="button" data-alert-id="'+Number(a.id)+'">Delete</button></div></article>';
-  }).join("");
- }catch(err){list.innerHTML='<div class="admin-empty">Move-audit reports unavailable: '+adminEscape(err.message||err)+'</div>';}
-}
-$("adminAuditAlerts").addEventListener("click",async function(e){
- var btn=e.target.closest(".admin-audit-delete");
- if(!btn||btn.disabled||!currentUser||currentUser.id!==adminOwnerId)return;
- var id=Number(btn.getAttribute("data-alert-id"));
- if(!Number.isSafeInteger(id)||id<=0)return;
- if(!confirm("Permanently delete this reviewed report from Supabase?"))return;
- btn.disabled=true;
- btn.textContent="Deleting…";
- try{
-  var result=await sb.rpc("kf_admin_delete_move_audit_alert",{p_alert_id:id});
-  if(result.error)throw result.error;
-  if(result.data!==true)throw Error("Report no longer exists.");
-  var card=btn.closest(".admin-user");
-  if(card)card.remove();
-  if(!$("adminAuditAlerts").querySelector(".admin-user"))$("adminAuditAlerts").innerHTML='<div class="admin-empty">No suspicious moves reported.</div>';
-  say("Report permanently deleted.",{silentToast:true});
-  loadAdminAuditAlerts();
- }catch(err){
-  btn.disabled=false;
-  btn.textContent="Delete";
-  say("Could not delete report: "+(err.message||err),{error:true});
- }
-});
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
- loadAdminAuditAlerts();
  $("adminUsers").innerHTML='<div class="admin-loading">Loading registered users…</div>';
  $("adminFeatures").innerHTML='<div class="admin-loading">Loading features…</div>';
  $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>Loading…</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div>';
@@ -7069,7 +6930,7 @@ function renderAdminFeatures(rows){
 }
 $("navAdmin").onclick=function(){if(currentUser&&currentUser.id===adminOwnerId)showPage("admin");};
 $("adminRefresh").onclick=loadAdminPanel;$("adminUserSearch").addEventListener("input",renderAdminUsers);
-setInterval(function(){if(currentUser&&currentUser.id===adminOwnerId&&$("pageAdmin").classList.contains("active")&&!$("adminOverviewView").hidden){loadAdminAuditAlerts();}},30000);
+
 function showRegisteredUsers(){if(!currentUser||currentUser.id!==adminOwnerId)return;$("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=false;$("adminPageTitle").textContent="👥 User Management";$("adminPageSubtitle").textContent="Manage Kingsfall accounts";$("adminBackToOverview").hidden=false;$("adminUserSearch").value="";renderAdminUsers();window.scrollTo({top:0,behavior:"smooth"});}
 function showAdminOverview(){$("adminUserManagementSection").hidden=true;$("adminOverviewView").hidden=false;$("adminPageTitle").textContent="🛡️ Admin Panel";$("adminPageSubtitle").textContent="Private administration · Owner access only";$("adminBackToOverview").hidden=true;window.scrollTo({top:0,behavior:"smooth"});}
 $("adminBackToOverview").addEventListener("click",showAdminOverview);
