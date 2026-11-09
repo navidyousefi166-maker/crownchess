@@ -2121,6 +2121,35 @@ var clockPerfTurn = "w";
 // Clock V2: monotonic rendering calibrated against the server.
 var kfServerOffsetMs=0, kfServerOffsetKnown=false, kfClockSyncBusy=false;
 var kfClockSyncTimer=null, kfPendingClockMove=false, kfClockBeforeMove=null;
+// A visual-only phase correction for the running clock. The server's remaining
+// time is never modified, and timeout decisions use the unsmoothed time.
+var kfRunningClockBlend=null;
+function kfAuthoritativeRunningClock(now){
+  if(!onlineGame || clockPerfAnchor==null)return null;
+  var turn=onlineGame.turn||clockPerfTurn||"w";
+  var base=turn==="w"?clockPerfBaseWhite:clockPerfBaseBlack;
+  return {turn:turn,time:Math.max(0,base-Math.max(0,(now-clockPerfAnchor)/1000))};
+}
+function kfVisualRunningClock(now,official){
+  if(!kfRunningClockBlend||!official||kfRunningClockBlend.turn!==official.turn)return official?official.time:0;
+  var b=kfRunningClockBlend;
+  var remaining=Math.max(0,1-(now-b.started)/b.duration);
+  if(remaining<=0){kfRunningClockBlend=null;return official.time;}
+  return Math.max(0,official.time+b.delta*remaining);
+}
+function kfBlendClockAfterRebase(previousTurn,previousVisible){
+  var now=performance.now();
+  var official=kfAuthoritativeRunningClock(now);
+  if(!official){kfRunningClockBlend=null;return;}
+  if(previousTurn!==official.turn||!Number.isFinite(previousVisible)){
+    kfRunningClockBlend=null;return;
+  }
+  var delta=previousVisible-official.time;
+  if(Math.abs(delta)<0.035){kfRunningClockBlend=null;return;}
+  delta=Math.max(-1.5,Math.min(1.5,delta));
+  kfRunningClockBlend={turn:official.turn,delta:delta,started:now,
+    duration:Math.max(2400,Math.abs(delta)*5500)};
+}
 function kfCalibrateServerTime(iso,start,end){
   var t=Date.parse(iso),rtt=end-start;
   if(!Number.isFinite(t)||rtt<0||rtt>1800)return false;
@@ -2135,8 +2164,12 @@ async function kfSyncClock(gid){
   try{
     var res=await sb.rpc("kf_clock_sync",{p_game_id:gid}),end=Date.now();
     if(gid!==onlineGameId||submittingMove||kfPendingClockMove||res.error||!res.data)return;
-    if(kfCalibrateServerTime(res.data.server_now,start,end)&&onlineGame)
+    if(kfCalibrateServerTime(res.data.server_now,start,end)&&onlineGame){
+      var beforeTurn=onlineGame.turn||clockPerfTurn;
+      var beforeShown=beforeTurn==="w"?clockWhite:clockBlack;
       anchorClockToServerTime(onlineGame.last_move_at||onlineGame.clock_started_at);
+      kfBlendClockAfterRebase(beforeTurn,beforeShown);
+    }
   }catch(e){console.debug("[Kingsfall clock] sync failed",e);}
   finally{kfClockSyncBusy=false;}
 }
@@ -2348,6 +2381,7 @@ function resetClocks(){
   lastClockAt = Date.now();
   clockPerfAnchor=null;
   kfPendingClockMove=false;kfClockBeforeMove=null;
+  kfRunningClockBlend=null;
   kfServerOffsetKnown=false;kfServerOffsetMs=0;
   firstMoveDeadlineAnchor=null;
   firstMoveDeadlinePerfAnchor = null;
@@ -3188,6 +3222,7 @@ async function leaveOnlineState(){
   onlineGameId = null;
   onlineGame=null;submittingMove=false;
   kfPendingClockMove=false;kfClockBeforeMove=null;
+  kfRunningClockBlend=null;
   if(kfClockSyncTimer){clearInterval(kfClockSyncTimer);kfClockSyncTimer=null;}
   tournActiveMatch = null;
   document.body.classList.remove("online", "computer-mode", "game-focus");
@@ -3477,12 +3512,15 @@ if(row.last_move && (!prevLastMove ||
 if(hasNewMove || row.clock_started_at !== prevClockStartedAt || (row.turn && row.turn !== clockPerfTurn)){
   // Rebase from the authoritative snapshot using monotonic time so the display
   // does not jump when the device wall clock or a delayed realtime event changes.
+  var beforeTurn=onlineGame.turn||clockPerfTurn;
+  var beforeShown=beforeTurn==="w"?clockWhite:clockBlack;
   if(row.white_time_left != null) clockWhite = Number(row.white_time_left);
   if(row.black_time_left != null) clockBlack = Number(row.black_time_left);
   clockPerfBaseWhite = clockWhite;
   clockPerfBaseBlack = clockBlack;
   clockPerfTurn = row.turn || "w";
   anchorClockToServerTime(row.last_move_at || row.clock_started_at);
+  kfBlendClockAfterRebase(beforeTurn,beforeShown);
   lastClockAt = Date.now();
   clockExpired = false;
 }
@@ -3660,15 +3698,21 @@ function tickClock(){
   var turn = onlineGame.turn || clockPerfTurn || "w";
   if(turn === "w"){
     clockWhite = Math.max(0, clockPerfBaseWhite - elapsed);
+    var officialWhite=clockWhite;
+    clockWhite=kfVisualRunningClock(performance.now(),{turn:"w",time:officialWhite});
     clockBlack = Math.max(0, clockPerfBaseBlack);
   } else {
     clockBlack = Math.max(0, clockPerfBaseBlack - elapsed);
+    var officialBlack=clockBlack;
+    clockBlack=kfVisualRunningClock(performance.now(),{turn:"b",time:officialBlack});
     clockWhite = Math.max(0, clockPerfBaseWhite);
   }
 
-  if((clockWhite <= 0 || clockBlack <= 0) && !clockClaimPending && !kfPendingClockMove){
+  // Never claim a timeout from the blended display; use server-aligned time.
+  var trueRunning=kfAuthoritativeRunningClock(performance.now());
+  if(trueRunning && trueRunning.time<=0 && !clockClaimPending && !kfPendingClockMove){
     clockExpired = true;
-    var loser = clockWhite <= 0 ? "White" : "Black";
+    var loser = trueRunning.turn==="w" ? "White" : "Black";
     say(loser + " ran out of time. Checking the official result…", {silentToast: true});
     if(onlineGameId) handleOnlineTimeout(loser);
   }
@@ -6110,10 +6154,14 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
     if(kfRpcDuration >= 150){
       console.debug("[Kingsfall clock] move RPC:",Math.round(kfRpcDuration)+"ms","server adjustment:",Math.round(kfAdjustment*1000)+"ms");
     }
+    // Blend only the newly running side. The stopped mover stays exact.
+    var shownNext=clockPerfTurn==="w"?clockWhite:clockBlack;
+    var turnBeforeConfirmation=clockPerfTurn;
     kfPendingClockMove=false;
     clockPerfBaseWhite=clockWhite;clockPerfBaseBlack=clockBlack;
     clockPerfTurn=onlineGame.turn||"w";
     anchorClockToServerTime(onlineGame.last_move_at||onlineGame.clock_started_at);
+    kfBlendClockAfterRebase(turnBeforeConfirmation,shownNext);
     lastClockAt=Date.now();tickClock();
 
   } catch(err) {
@@ -6664,6 +6712,7 @@ if(onlineGameId) {
     anchor:clockPerfAnchor,perfTurn:clockPerfTurn
   };
   kfPendingClockMove=true;
+  kfRunningClockBlend=null;
   if(clockPerfAnchor != null){
     var perfNow = performance.now();
     var elapsedFromAnchor = Math.max(0, (perfNow - clockPerfAnchor) / 1000);
