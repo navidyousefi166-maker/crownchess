@@ -5093,71 +5093,6 @@ var analysisIndex = 0;
 var analysisRunning = false;
 var analysisRunId = 0;
 
-var exceptionalAnalysisWorker = null;
-function newExceptionalAnalysisWorker(runId){
-  var worker,active=null,closed=false,ready=false,readyResolve;
-  var readyPromise=new Promise(function(resolve){readyResolve=resolve;});
-  var queue=Promise.resolve(),bootTimer;
-  function close(){
-    if(closed)return;
-    closed=true;clearTimeout(bootTimer);readyResolve(false);
-    if(active){var job=active;active=null;clearTimeout(job.stop);clearTimeout(job.force);job.resolve(null);}
-    if(worker){try{worker.terminate();}catch(e){}worker=null;}
-  }
-  try{
-    worker=new Worker(STOCKFISH_19_JS+"?v=19.0.1");
-    worker.onmessage=function(ev){
-      if(closed||runId!==analysisRunId)return;
-      String(ev.data||"").split(/\r?\n/).forEach(function(line){
-        if(line.indexOf("uciok")>=0){worker.postMessage("isready");return;}
-        if(line.indexOf("readyok")>=0){ready=true;clearTimeout(bootTimer);readyResolve(true);return;}
-        if(!active)return;
-        if(line.indexOf("info ")===0&&!/\b(lowerbound|upperbound)\b/.test(line)){
-          var dep=line.match(/\bdepth (\d+)/),cp=line.match(/\bscore cp (-?\d+)/),mate=line.match(/\bscore mate (-?\d+)/);
-          if(dep&&(cp||mate)&&Number(dep[1])>=active.depth){
-            active.depth=Number(dep[1]);
-            var m=mate?Number(mate[1]):0;
-            active.score=cp?Number(cp[1]):(m>0?10000-m*100:-10000+Math.abs(m)*100);
-            var pv=line.match(/\bpv (.+)$/);
-            active.pv=pv?pv[1].trim().split(/\s+/).slice(0,12):null;
-          }
-        }
-        if(line.indexOf("bestmove ")===0){
-          var job=active;active=null;clearTimeout(job.stop);clearTimeout(job.force);
-          var uci=line.split(/\s+/)[1];
-          job.resolve({best:uci&&uci!=="(none)"?uci:null,score:job.score,depth:job.depth,pv:job.pv});
-        }
-      });
-    };
-    worker.onerror=close;worker.onmessageerror=close;
-    bootTimer=setTimeout(close,15000);
-    worker.postMessage("uci");
-  }catch(e){close();}
-  function probe(fen,ms,moves){
-    var task=queue.then(async function(){
-      if(closed||runId!==analysisRunId||!await readyPromise)return null;
-      return new Promise(function(resolve){
-        var job={resolve:resolve,depth:-1,score:null,pv:null,stop:null,force:null};active=job;
-        try{
-          worker.postMessage("setoption name Skill Level value 20");
-          worker.postMessage("setoption name UCI_LimitStrength value false");
-          worker.postMessage("setoption name MultiPV value 1");
-          worker.postMessage("position fen "+fen);
-          worker.postMessage("go movetime "+ms+(moves&&moves.length?" searchmoves "+moves.join(" "):""));
-          job.stop=setTimeout(function(){
-            if(active!==job)return;
-            try{worker.postMessage("stop");}catch(e){}
-            job.force=setTimeout(function(){if(active===job)close();},1000);
-          },ms+500);
-        }catch(e){close();}
-      });
-    });
-    queue=task.catch(function(){return null;});return task;
-  }
-  return {probe:probe,close:close,ready:function(){return ready&&!closed;}};
-}
-
-
 $("analyze").onclick = function(){
   if(!game || game.history().length < 1){ say("Play some moves first.", {silentToast: true}); return; }
   openAnalysis();
@@ -5165,7 +5100,6 @@ $("analyze").onclick = function(){
 $("analysisClose").onclick = function(){
   analysisRunning = false;
   analysisRunId++;
-  if(exceptionalAnalysisWorker){exceptionalAnalysisWorker.close();exceptionalAnalysisWorker=null;}
   if(stockfishAnalysisMode && stockfishWorker){
     try{ stockfishWorker.terminate(); }catch(err){}
     stockfishWorker = null;
@@ -5183,7 +5117,6 @@ $("anNextBtn").onclick = function(){ gotoAnalysisIndex(analysisIndex + 1); };
 $("anEndBtn").onclick = function(){ gotoAnalysisIndex(analysisMoves.length); };
 
 function openAnalysis(){
-  if(exceptionalAnalysisWorker){exceptionalAnalysisWorker.close();exceptionalAnalysisWorker=null;}
   analysisMoves = [];
   analysisPositions = [];
   analysisIndex = 0;
@@ -5242,8 +5175,7 @@ async function runFullAnalysis(runId){
   var posAnalyses = new Array(total);
   var initialAnalyses = new Array(total);
   analysisRunning = true;
-  exceptionalAnalysisWorker = newExceptionalAnalysisWorker(runId);
-  // One primary Stockfish worker: interleave bounded critical searches with the first
+  // One Stockfish worker: interleave bounded critical searches with the first
   // pass, avoiding simultaneous UCI commands to the same engine.
   var moveTime = history.length > 80 ? 550 : 850;
   var initialCache = new Map(), criticalCache = new Map();
@@ -5320,51 +5252,6 @@ async function runFullAnalysis(runId){
       return;
     }
   }
-
-  // Queue promising exceptional moves on the isolated engine in parallel
-  // with the primary engine's critical-position refinement.
-  var exceptionalTiming={start:performance.now(),multiMs:0,bestMs:0,secondMs:0,fallbacks:0,pairedDirect:0};
-  var prefetchedExceptional=new Map();
-  async function verifyExceptional(index,allowFallback){
-    if(!analysisRunning||runId!==analysisRunId)return null;
-    var h=history[index],played=h.from+h.to+(h.promotion||"");
-    var legal=new Chess(positions[index]).moves({verbose:true}).map(function(m){return m.from+m.to+(m.promotion||"");});
-    if(legal.length<2||legal.indexOf(played)<0)return null;
-    async function search(ms,moves){
-      var r=exceptionalAnalysisWorker?await exceptionalAnalysisWorker.probe(positions[index],ms,moves):null;
-      if(!r&&allowFallback&&runId===analysisRunId&&analysisRunning)
-        r=await analyzeFenPromise(positions[index],ms,runId,1,moves);
-      return r;
-    }
-    var start=performance.now(),best=await search(1650,null);
-    exceptionalTiming.bestMs+=performance.now()-start;
-    if(!best||best.best!==played||best.score==null||best.depth<12)return null;
-    var alternatives=legal.filter(function(u){return u!==played;});
-    start=performance.now();
-    var second=await search(1650,alternatives);
-    exceptionalTiming.secondMs+=performance.now()-start;
-    if(!second||!second.best||second.score==null||second.depth<12||
-       alternatives.indexOf(second.best)<0)return null;
-    return {best:best,second:second};
-  }
-  var preliminary=[];
-  for(var pi=0;pi<history.length;pi++){
-    var b=initialAnalyses[pi],a=initialAnalyses[pi+1],h=history[pi];
-    if(!b||!a||b.score==null||a.score==null||b.depth<11||a.depth<11||
-       b.best!==h.from+h.to+(h.promotion||""))continue;
-    var wb=1/(1+Math.exp(-Math.max(-1500,Math.min(1500,b.score))*0.0036));
-    var wa=1/(1+Math.exp(-Math.max(-1500,Math.min(1500,-a.score))*0.0036));
-    if(wb>0.08&&wb<0.92&&Math.max(0,wb-wa)<=0.02)preliminary.push(pi);
-  }
-  function priorityIndex(i){
-    var h=history[i];return (h.piece!=="p"?2:0)+(h.captured?3:0)+
-      (h.san.indexOf("+")>=0?2:0)+(h.san.indexOf("#")>=0?4:0);
-  }
-  preliminary.sort(function(a,b){return priorityIndex(b)-priorityIndex(a);});
-  preliminary.slice(0,12).forEach(function(i){
-    if(exceptionalAnalysisWorker)prefetchedExceptional.set(i,verifyExceptional(i,false));
-  });
-
   // Finish critical checks on the remaining candidates, shallowest first.
   var refineIndices = Array.from(criticalQueued).filter(function(index){
     return !criticalDone.has(index);
@@ -5464,6 +5351,7 @@ async function runFullAnalysis(runId){
     return priority(b) - priority(a);
   }).slice(0, 12);
   var greatDiagnostics = {candidates:candidates.length,paired:0,unique:0,alternative:0};
+  var exceptionalTiming = {start:performance.now(),multiMs:0,bestMs:0,secondMs:0,fallbacks:0,pairedDirect:0};
   for(var ci=0; ci<candidates.length; ci++){
     if(!analysisRunning || runId !== analysisRunId) return;
     var candidate = candidates[ci], mi = candidate.i, mm = candidate.m;
@@ -5479,11 +5367,19 @@ async function runFullAnalysis(runId){
         return m.from + m.to + (m.promotion || "");
       });
       if(legalUci.length < 2 || legalUci.indexOf(playedMoveUci) < 0) continue;
-      var paired=prefetchedExceptional.has(mi)?await prefetchedExceptional.get(mi):null;
-      if(!paired)paired=await verifyExceptional(mi,true);
-      if(!analysisRunning||runId!==analysisRunId)return;
-      if(!paired)continue;
-      var verifiedBest=paired.best,verifiedSecond=paired.second;
+      var bestStarted = performance.now();
+      var verifiedBest = await analyzeFenPromise(positions[mi], 1650, runId, 1);
+      exceptionalTiming.bestMs += performance.now() - bestStarted;
+      if(!analysisRunning || runId !== analysisRunId) return;
+      if(!verifiedBest || verifiedBest.best !== playedMoveUci ||
+         verifiedBest.score == null || verifiedBest.depth < 12) continue;
+      var alternatives = legalUci.filter(function(u){return u !== playedMoveUci;});
+      var secondStarted = performance.now();
+      var verifiedSecond = await analyzeFenPromise(positions[mi], 1650, runId, 1, alternatives);
+      exceptionalTiming.secondMs += performance.now() - secondStarted;
+      if(!analysisRunning || runId !== analysisRunId) return;
+      if(!verifiedSecond || !verifiedSecond.best || verifiedSecond.score == null ||
+         verifiedSecond.depth < 12 || alternatives.indexOf(verifiedSecond.best) < 0) continue;
       multi = {
         uci:verifiedBest.best, score:verifiedBest.score, depth:verifiedBest.depth,
         pv:verifiedBest.pv,
@@ -5564,7 +5460,6 @@ async function runFullAnalysis(runId){
     brilliant:moves.filter(function(m){return m.quality === "brilliant";}).length,
     great:moves.filter(function(m){return m.quality === "great";}).length
   });
-  if(exceptionalAnalysisWorker){exceptionalAnalysisWorker.close();exceptionalAnalysisWorker=null;}
   analysisMoves = moves;
   analysisPositions = positions;
   analysisRunning = false;
