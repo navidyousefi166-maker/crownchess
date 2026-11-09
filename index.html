@@ -985,7 +985,7 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 .lb-refresh:hover{background:var(--btn-hover);border-color:var(--gold)}
 .lb-table-head{
   display:grid;
-  grid-template-columns:60px 1fr 90px 90px 110px;
+  grid-template-columns:54px minmax(110px,1fr) 76px 70px 90px 84px;
   gap:8px;padding:10px 14px;
   background:var(--panel-bg2);border:1px solid var(--line);border-radius:10px 10px 0 0;
   font-size:11px;color:var(--muted);font-weight:800;letter-spacing:1px;
@@ -1000,7 +1000,7 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 }
 .lb-row{
   display:grid;
-  grid-template-columns:60px 1fr 90px 90px 110px;
+  grid-template-columns:54px minmax(110px,1fr) 76px 70px 90px 84px;
   gap:8px;padding:10px 14px;align-items:center;
   border-bottom:1px solid rgba(255,255,255,.04);
   transition:background .15s;
@@ -1022,12 +1022,14 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 .lb-stat.wins{color:var(--gold2)}
 .lb-stat.trophies{color:var(--gold)}
 .lb-stat.humil{color:#ff9b8b}
+.lb-stat.bt{color:#ff727d;font-size:13px;white-space:nowrap}
+@media(max-width:600px){.lb-stat.bt{font-size:10px}.lb-user{gap:5px}.lb-user img{width:25px;height:25px}}
 .lb-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
 .lb-loading{text-align:center;padding:30px;color:var(--muted);font-size:13px}
 @media(max-width:600px){
   .lb-wrap{padding:12px}
   .lb-head h2{font-size:16px}
-  .lb-table-head,.lb-row{grid-template-columns:42px 1fr 55px 55px 65px;gap:6px;padding:8px 10px;font-size:10px}
+  .lb-table-head,.lb-row{grid-template-columns:28px minmax(65px,1fr) 42px 34px 44px 57px;gap:6px;padding:8px 10px;font-size:10px}
   .lb-table-head span{letter-spacing:.5px}
   .lb-rank{font-size:14px}
   .lb-user img{width:30px;height:30px;border-width:1.5px}
@@ -1374,7 +1376,7 @@ input[type="color"] {
     <button class="btn" id="cancelRoulette" hidden style="flex:none;padding:0 16px">Cancel</button>
   </div>
 
-  <div class="bloodblade-bar"><button class="bloodblade-btn" id="bloodbladeBtn" type="button" aria-label="Bloodblade mandatory sacrifice"><svg class="bloodblade-art" viewBox="0 0 800 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="bbMetal"><stop stop-color="#5e3c36"/><stop offset=".3" stop-color="#a9a3a3"/><stop offset=".8" stop-color="#f4d2c3"/><stop offset="1" stop-color="#b22b30"/></linearGradient></defs><path d="M30 45H105V55H30Z" fill="#9c7441" stroke="#21120b" stroke-width="5"/><circle cx="26" cy="50" r="14" fill="#b6985a"/><path d="M102 13V88M80 13L125 28L106 46L83 35M80 87L125 73L106 54L83 65" fill="#b38b58" stroke="#27100b" stroke-width="5"/><path d="M112 48L652 17L777 50L652 83L112 56Z" fill="url(#bbMetal)" stroke="#3d080b" stroke-width="5"/><path d="M180 48L600 40L732 50L603 56Z" fill="#980b18" opacity=".85"/><path d="M270 60Q290 98 303 89L306 62M442 58Q454 97 468 88L471 60M557 59Q579 99 593 88L590 62" fill="none" stroke="#9b030f" stroke-width="9"/></svg><span class="bloodblade-text"><strong>BLOODBLADE</strong><small id="bloodbladeSub">Mandatory sacrifice · 5-minute duel</small></span><span class="bloodblade-new">NEW</span></button><button class="btn" id="cancelBloodblade" hidden type="button">Cancel</button></div><section class="computer-panel" aria-label="Play against computer">
+  <div class="bloodblade-bar"><button class="bloodblade-btn" id="bloodbladeBtn" type="button" aria-label="Bloodblade mandatory sacrifice"><svg class="bloodblade-art" viewBox="0 0 800 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="bbMetal"><stop stop-color="#5e3c36"/><stop offset=".3" stop-color="#a9a3a3"/><stop offset=".8" stop-color="#f4d2c3"/><stop offset="1" stop-color="#b22b30"/></linearGradient></defs><path d="M30 45H105V55H30Z" fill="#9c7441" stroke="#21120b" stroke-width="5"/><circle cx="26" cy="50" r="14" fill="#b6985a"/><path d="M102 13V88M80 13L125 28L106 46L83 35M80 87L125 73L106 54L83 65" fill="#b38b58" stroke="#27100b" stroke-width="5"/><path d="M112 48L652 17L777 50L652 83L112 56Z" fill="url(#bbMetal)" stroke="#3d080b" stroke-width="5"/><path d="M180 48L600 40L732 50L603 56Z" fill="#980b18" opacity=".85"/><path d="M270 60Q290 98 303 89L306 62M442 58Q454 97 468 88L471 60M557 59Q579 99 593 88L590 62" fill="none" stroke="#9b030f" stroke-width="9"/></svg><span class="bloodblade-text"><strong>BLOODBLADE</strong><small id="bloodbladeSub">Blood Tributes · mandatory sacrifice</small></span><span class="bloodblade-new">NEW</span></button><button class="btn" id="cancelBloodblade" hidden type="button">Cancel</button></div><section class="computer-panel" aria-label="Play against computer">
     <div class="computer-head">
       <div>
         <div class="computer-title">PLAY VS COMPUTER</div>
@@ -1482,6 +1484,7 @@ input[type="color"] {
           <span>Wins</span>
           <span>🏆</span>
           <span>Humil.</span>
+          <span title="Blood Tributes — wins / losses">BT</span>
         </div>
         <div class="lb-list" id="lbList">
           <div class="lb-loading">Loading leaderboard…</div>
@@ -2286,7 +2289,7 @@ async function loadLeaderboard(){
   var list = $("lbList");
   if(!sb){ list.innerHTML = '<div class="lb-empty">Supabase is unavailable.</div>'; return; }
   list.innerHTML = '<div class="lb-loading">Loading leaderboard…</div>';
-  var res = await sb.rpc("kf_get_leaderboard", {p_limit: 100});
+  var res = await sb.rpc("kf_get_leaderboard_bt", {p_limit: 100});
   if(res.error){
     console.error("Leaderboard error:", res);
     list.innerHTML = '<div class="lb-empty">Could not load leaderboard.<br><small style="color:#ef8b83;word-break:break-word;display:block;margin-top:8px">'+
@@ -2319,7 +2322,8 @@ async function loadLeaderboard(){
       '</div>' +
       '<div class="lb-stat wins">' + (row.wins || 0) + '</div>' +
       '<div class="lb-stat trophies">' + (row.tournament_wins || 0) + '</div>' +
-      '<div class="lb-stat humil">' + (row.humiliation_losses || 0) + '</div>';
+      '<div class="lb-stat humil">' + (row.humiliation_losses || 0) + '</div>' +
+       '<div class="lb-stat bt" title="Blood Tributes: wins / losses">' + Number(row.bt_wins || 0) + ' / ' + Number(row.bt_losses || 0) + '</div>';
     list.appendChild(div);
   }
 }
@@ -3093,7 +3097,7 @@ async function leaveOnlineState(){
   $("new").disabled = false;
   $("undo").disabled = !(game && game.history().length);
   setQuickState("5-minute game · Match by wins");
-  setBloodbladeState("Mandatory sacrifice · 5-minute duel");
+  setBloodbladeState("Blood Tributes · mandatory sacrifice");
   renderPlayers(null);
 }
   async function pollQueue(){
@@ -3650,7 +3654,7 @@ async function cancelQuickPlay(){
   try{ if(sb) await sb.rpc("kf_cancel_quick_play"); } catch(e){}
   setQuickState("5-minute game · Match by wins");
   setRouletteState("Random opening · variable-length line auto-played");
-  setBloodbladeState("Mandatory sacrifice · 5-minute duel");
+  setBloodbladeState("Blood Tributes · mandatory sacrifice");
   say("Search cancelled.", {silentToast: true});
 }
 
@@ -4870,7 +4874,7 @@ async function startBloodblade(){
   if(res.error)throw res.error;
   var data=res.data;
   if(data&&data.status==="matched"&&data.game_id){
-   setBloodbladeState("Mandatory sacrifice · 5-minute duel");
+   setBloodbladeState("Blood Tributes · mandatory sacrifice");
    await loadOnlineGame(data.game_id);
   }else{
    setBloodbladeState("Searching by wins…",{lock:true,cancel:true});
@@ -4878,7 +4882,7 @@ async function startBloodblade(){
    queueTimeout=setTimeout(async function(){if(onlineGameId)return;await cancelQuickPlay();say("No Bloodblade opponents found.",{silentToast:true});},120000);
    await pollQueue();
   }
- }catch(err){setBloodbladeState("Mandatory sacrifice · 5-minute duel");say("Bloodblade error: "+(err.message||err),{error:true});}
+ }catch(err){setBloodbladeState("Blood Tributes · mandatory sacrifice");say("Bloodblade error: "+(err.message||err),{error:true});}
 }
 $("bloodbladeBtn").onclick=startBloodblade;
 $("cancelBloodblade").onclick=cancelQuickPlay;
