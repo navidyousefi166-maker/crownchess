@@ -3003,12 +3003,9 @@ async function startTournamentGame(match){
       var fWinner = (onlineGame.white_id === currentUser.id) ? onlineGame.black_id : onlineGame.white_id;
       var fResult = (onlineGame.white_id === currentUser.id) ? "0-1" : "1-0";
       try {
-        await sb.from("kf_games").update({
-          status: "completed",
-          winner_id: fWinner,
-          result: fResult,
-          completed_at: new Date().toISOString()
-        }).eq("id", onlineGameId);
+        // Forfeiting is always authorized and recorded by the server.
+        var forfeitRes = await sb.rpc("kf_forfeit_game",{p_game_id:onlineGameId});
+        if(forfeitRes.error) throw forfeitRes.error;
       } catch(e){ console.warn("Forfeit failed:", e); }
     }
 
@@ -6009,18 +6006,23 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
     // The database may resolve a tournament stalemate to a winner by profile wins.
 
     // Send the move and let the server persist the authoritative result.
-    var res = await sb.rpc("kf_submit_move", {
-      p_game_id: onlineGameId,
-      p_fen: game.fen(),
-      p_pgn: game.pgn(),
-      p_turn: game.turn(),
-      p_last_move: {from: m.from, to: m.to, san: m.san},
-      p_status: status,
-      p_result: result,
-      p_winner_id: winnerId,
-      p_client_white_time: clientWhite,
-      p_client_black_time: clientBlack
+    // Position, history, result and clock are now derived by the server.
+    // The client sends only move coordinates and an idempotency token.
+    var res = await sb.functions.invoke("kf-submit-validated-v2", {
+      body: {
+        game_id: onlineGameId,
+        from: m.from,
+        to: m.to,
+        ...(m.promotion ? {promotion:m.promotion} : {}),
+        request_id: crypto.randomUUID()
+      }
     });
+    if(res.error && res.error.context && typeof res.error.context.json === "function"){
+      try{
+        var rejected = await res.error.context.json();
+        if(rejected && rejected.error) res.error.message = rejected.error;
+      }catch(e){}
+    }
     var responseAt = performance.now();
     var receivedAt = res.data && Date.parse(res.data.server_received_at);
     var completedAt = res.data && Date.parse(res.data.server_completed_at);
