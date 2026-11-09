@@ -5005,7 +5005,8 @@ function makeComputerMove(){
 var analysisMoves = [];
 var analysisPositions = [];
 var analysisIndex = 0;
-var analysisRunning = false;\nvar analysisRunId = 0;
+var analysisRunning = false;
+var analysisRunId = 0;
 
 $("analyze").onclick = function(){
   if(!game || game.history().length < 1){ say("Play some moves first.", {silentToast: true}); return; }
