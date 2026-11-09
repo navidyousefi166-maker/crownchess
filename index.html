@@ -4881,32 +4881,22 @@ var STOCKFISH_URL = "stockfish.js";
 var stockfishBootTimer = null;
 var stockfishBootGeneration = 0;
 var stockfishEngineName = "Loading";
-var STOCKFISH_19_JS = "https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-lite-single.js";
-var STOCKFISH_19_WASM = "https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-lite-single.wasm";
+var stockfishBootError = "";
+var STOCKFISH_19_JS = "engine/stockfish-19-lite-single.js";
+var STOCKFISH_19_WASM = "engine/stockfish-19-lite-single.wasm";
 
 function initStockfish(){
   if(stockfishWorker) return;
   var generation = ++stockfishBootGeneration;
-  // Run the modern NNUE engine without cross-origin isolation, required by GitHub Pages.
-  // The worker redirects the WASM lookup to the pinned CDN companion file.
+  stockfishBootError = "";
+  stockfishEngineName = "Loading";
+  // Stockfish.js officially expects the JS and WASM side by side.
+  // A same-origin Worker avoids CDN/CORS and blob: relative URL issues.
   try {
-    var bootCode = [
-      "var originalFetch = self.fetch.bind(self);",
-      "self.fetch = function(resource, options) {",
-      "  var path = typeof resource === 'string' ? resource : (resource && resource.url) || '';",
-      "  if (/stockfish-19-lite-single\\.wasm/.test(path)) return originalFetch(" + JSON.stringify(STOCKFISH_19_WASM) + ", options);",
-      "  return originalFetch(resource, options);",
-      "};",
-      "self.Module = { locateFile: function(path) {",
-      "  return /\\.wasm/.test(path) ? " + JSON.stringify(STOCKFISH_19_WASM) + " : path;",
-      "} };",
-      "importScripts(" + JSON.stringify(STOCKFISH_19_JS) + ");"
-    ].join("\n");
-    var bootUrl = URL.createObjectURL(new Blob([bootCode], {type:"application/javascript"}));
-    var worker = new Worker(bootUrl);
-    setTimeout(function(){ URL.revokeObjectURL(bootUrl); }, 30000);
+    var worker = new Worker(STOCKFISH_19_JS + "?v=19.0.1");
     attachStockfishWorker(worker, generation, true);
-  } catch(err) {
+  } catch(err){
+    stockfishBootError = "Modern worker creation: " + String(err && err.message || err);
     loadLegacyStockfish(generation);
   }
 }
@@ -4916,9 +4906,10 @@ function attachStockfishWorker(worker, generation, modern){
   stockfishWorker = worker;
   stockfishReady = false;
   stockfishEngineName = modern ? "Stockfish 19 Lite" : "Stockfish (fallback)";
-  function fail(){
+  function fail(reason){
     if(stockfishWorker !== worker || generation !== stockfishBootGeneration) return;
     clearTimeout(stockfishBootTimer);
+    if(modern) stockfishBootError = reason || "Modern engine startup failed";
     try{worker.terminate();}catch(err){}
     stockfishWorker = null;
     stockfishReady = false;
@@ -4931,7 +4922,7 @@ function attachStockfishWorker(worker, generation, modern){
       cb(null);
     }
     if(modern) loadLegacyStockfish(generation);
-    else say("Stockfish could not start. Check the network and reload.", {error:true});
+    else say("Stockfish could not start: " + (reason || stockfishBootError), {error:true});
   }
   worker.onmessage = function(e){
     if(generation !== stockfishBootGeneration || stockfishWorker !== worker) return;
@@ -4940,15 +4931,19 @@ function attachStockfishWorker(worker, generation, modern){
   };
   worker.onerror = function(e){
     if(e && e.preventDefault) e.preventDefault();
-    fail();
+    fail("Worker error: " + ((e && e.message) || "unknown") + (e && e.filename ? " (" + e.filename + ":" + e.lineno + ")" : ""));
   };
-  stockfishBootTimer = setTimeout(function(){ if(!stockfishReady) fail(); }, modern ? 18000 : 15000);
-  worker.postMessage("uci");
+  worker.onmessageerror = function(){ fail("Worker message decoding failed"); };
+  stockfishBootTimer = setTimeout(function(){
+    if(!stockfishReady) fail("Engine initialization timed out waiting for readyok");
+  }, modern ? 25000 : 15000);
+  try{ worker.postMessage("uci"); }
+  catch(err){ fail("Unable to send UCI: " + String(err && err.message || err)); }
 }
 
 function loadLegacyStockfish(generation){
   fetch(STOCKFISH_URL).then(function(response){
-    if(!response.ok) throw new Error("Legacy engine fetch failed");
+    if(!response.ok) throw new Error("Legacy engine HTTP " + response.status);
     return response.text();
   }).then(function(code){
     if(generation !== stockfishBootGeneration) return;
@@ -4957,7 +4952,10 @@ function loadLegacyStockfish(generation){
     setTimeout(function(){ URL.revokeObjectURL(url); }, 30000);
     attachStockfishWorker(worker, generation, false);
   }).catch(function(err){
-    if(generation === stockfishBootGeneration) say("Chess engine unavailable: " + err.message, {error:true});
+    if(generation === stockfishBootGeneration){
+      stockfishBootError += "; fallback failed: " + String(err && err.message || err);
+      say("Chess engine unavailable: " + stockfishBootError, {error:true});
+    }
   });
 }
 
@@ -5235,7 +5233,7 @@ async function runFullAnalysis(runId){
   analysisPositions = positions;
   analysisRunning = false;
   var unrated = moves.filter(function(move){ return move.quality === "unrated"; }).length;
-  $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + "/" + moves.length + " moves · " + stockfishEngineName;
+  $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + "/" + moves.length + " moves · " + stockfishEngineName + (stockfishBootError ? " · Cause: " + stockfishBootError : "");
   renderMoveList();
   renderSummary();
   gotoAnalysisIndex(0);
