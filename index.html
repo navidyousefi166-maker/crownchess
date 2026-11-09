@@ -1474,7 +1474,7 @@ input[type="color"] {
         <div class="lb-head">
           <div>
             <h2>🏆 Kingsfall Leaderboard</h2>
-            <div class="lb-sub">Ranked by wins · trophies · least humiliations</div>
+            <div class="lb-sub">Ranked by wins · trophies · Humiliation score</div>
           </div>
           <button class="lb-refresh" id="lbRefresh" type="button">🔄 Refresh</button>
         </div>
@@ -1483,7 +1483,7 @@ input[type="color"] {
           <span>Player</span>
           <span>Wins</span>
           <span>🏆</span>
-          <span>Humil.</span>
+          <span>Humiliation</span>
           <span title="Blood Tributes wins">BT</span>
         </div>
         <div class="lb-list" id="lbList">
@@ -2322,7 +2322,7 @@ async function loadLeaderboard(){
       '</div>' +
       '<div class="lb-stat wins">' + (row.wins || 0) + '</div>' +
       '<div class="lb-stat trophies">' + (row.tournament_wins || 0) + '</div>' +
-      '<div class="lb-stat humil">' + (row.humiliation_losses || 0) + '</div>' +
+      '<div class="lb-stat humil">' + Number(row.humiliation_losses || 0) + '</div>' +
        '<div class="lb-stat bt" title="Blood Tributes wins">' + Number(row.bt_wins || 0) + '</div>';
     list.appendChild(div);
   }
@@ -6739,7 +6739,7 @@ function renderAdminUsers(){
  $("adminUsers").innerHTML=list.map(function(u){
   var banned=!!u.banned_until&&new Date(u.banned_until)>new Date(),id=adminEscape(u.id);
   return '<article class="admin-user" data-user-id="'+id+'"><div class="admin-user-top"><img src="'+adminEscape(u.avatar_url||defaultAvatar())+'" alt=""><div class="admin-user-ident"><div class="admin-user-name">'+adminEscape(u.username)+'</div><div class="admin-user-meta">'+adminEscape(u.email)+' · '+id+'</div></div><span class="admin-user-state '+(banned?'banned':'')+'">'+(banned?'BANNED':'ACTIVE')+'</span></div>'+
-  '<div class="admin-user-stats"><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="wins" aria-label="Edit wins count">♟ Wins: '+Number(u.wins||0)+'</span><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="tournament_wins" aria-label="Edit trophies count">🏆 Trophies: '+Number(u.tournament_wins||0)+'</span><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="humiliation_losses" aria-label="Edit humiliation losses count">🎭 Humiliation losses: '+Number(u.humiliation_losses||0)+'</span><span class="admin-chip">Joined: '+adminEscape(new Date(u.created_at).toLocaleDateString())+'</span></div>'+
+  '<div class="admin-user-stats"><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="wins" aria-label="Edit wins count">♟ Wins: '+Number(u.wins||0)+'</span><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="tournament_wins" aria-label="Edit trophies count">🏆 Trophies: '+Number(u.tournament_wins||0)+'</span><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="humiliation_losses" aria-label="Edit humiliation losses count">🎭 Humiliation: '+Number(u.humiliation_losses||0)+'</span><span class="admin-chip">Joined: '+adminEscape(new Date(u.created_at).toLocaleDateString())+'</span></div>'+
   '<div class="admin-actions"><button class="btn admin-ban" type="button" data-banned="'+banned+'">'+(banned?'Unban':'Ban')+'</button></div></article>';
  }).join("");
 }
@@ -6755,9 +6755,9 @@ $("adminOverview").addEventListener("click",function(e){if(e.target.closest(".re
 $("adminOverview").addEventListener("keydown",function(e){if(e.target.closest(".registered-users-card")&&(e.key==="Enter"||e.key===" ")){e.preventDefault();showRegisteredUsers();}});
 var adminWinsTargetId=null,adminWinsTargetMetric="wins",adminWinsValue=0,adminWinsDragY=null,adminWinsDragRemainder=0;
 function updateAdminWinsDisplay(){var n=$("adminWinsNumber");n.textContent=adminWinsValue.toLocaleString("en-US");$("adminWinsWheel").setAttribute("aria-valuenow",String(adminWinsValue));}
-function openAdminWinsEditor(userId,metric){var u=adminUsersCache.find(function(x){return x.id===userId;});if(!u)return;var labels={wins:"Wins",tournament_wins:"Trophies",humiliation_losses:"Humiliation losses"};if(!Object.prototype.hasOwnProperty.call(labels,metric))return;adminWinsTargetId=userId;adminWinsTargetMetric=metric;adminWinsValue=Math.max(0,Math.min(100000000,Number(u[metric])||0));$("adminWinsTitle").textContent=labels[metric];$("adminWinsSave").textContent="Save "+labels[metric].toLowerCase();$("adminWinsPlayer").textContent=u.username||"Player";updateAdminWinsDisplay();$("adminWinsEditor").hidden=false;}
+function openAdminWinsEditor(userId,metric){var u=adminUsersCache.find(function(x){return x.id===userId;});if(!u)return;var labels={wins:"Wins",tournament_wins:"Trophies",humiliation_losses:"Humiliation"};if(!Object.prototype.hasOwnProperty.call(labels,metric))return;adminWinsTargetId=userId;adminWinsTargetMetric=metric;adminWinsValue=Math.max(metric==="humiliation_losses"?-100000000:0,Math.min(100000000,Number(u[metric])||0));$("adminWinsTitle").textContent=labels[metric];$("adminWinsSave").textContent="Save "+labels[metric].toLowerCase();$("adminWinsPlayer").textContent=u.username||"Player";updateAdminWinsDisplay();$("adminWinsEditor").hidden=false;}
 function closeAdminWinsEditor(){$("adminWinsEditor").hidden=true;adminWinsTargetId=null;adminWinsDragY=null;adminWinsDragRemainder=0;}
-function changeAdminWins(delta){adminWinsValue=Math.max(0,Math.min(100000000,adminWinsValue+delta));updateAdminWinsDisplay();}
+function changeAdminWins(delta){adminWinsValue=Math.max(adminWinsTargetMetric==="humiliation_losses"?-100000000:0,Math.min(100000000,adminWinsValue+delta));updateAdminWinsDisplay();}
 $("adminUsers").addEventListener("click",function(e){var chip=e.target.closest(".admin-edit-count");if(chip){var userCard=chip.closest(".admin-user");if(userCard)openAdminWinsEditor(userCard.getAttribute("data-user-id"),chip.getAttribute("data-metric"));}});
 $("adminUsers").addEventListener("keydown",function(e){var chip=e.target.closest(".admin-edit-count");if(chip&&(e.key==="Enter"||e.key===" ")){e.preventDefault();var userCard=chip.closest(".admin-user");if(userCard)openAdminWinsEditor(userCard.getAttribute("data-user-id"),chip.getAttribute("data-metric"));}});
 $("adminWinsClose").addEventListener("click",closeAdminWinsEditor);$("adminWinsCancel").addEventListener("click",closeAdminWinsEditor);
@@ -6768,7 +6768,7 @@ $("adminWinsWheel").addEventListener("pointermove",function(e){if(adminWinsDragY
 $("adminWinsWheel").addEventListener("pointerup",function(){adminWinsDragY=null;adminWinsDragRemainder=0;});
 $("adminWinsWheel").addEventListener("pointercancel",function(){adminWinsDragY=null;adminWinsDragRemainder=0;});
 $("adminWinsWheel").addEventListener("keydown",function(e){if(e.key==="ArrowUp"){e.preventDefault();changeAdminWins(1);}if(e.key==="ArrowDown"){e.preventDefault();changeAdminWins(-1);}if(e.key==="PageUp"){e.preventDefault();changeAdminWins(10);}if(e.key==="PageDown"){e.preventDefault();changeAdminWins(-10);}});
-$("adminWinsSave").addEventListener("click",async function(){if(!adminWinsTargetId)return;var btn=this;btn.disabled=true;try{var result=await sb.rpc("kf_admin_update_stats",{p_user_id:adminWinsTargetId,p_metric:adminWinsTargetMetric,p_value:adminWinsValue});if(result.error)throw result.error;var u=adminUsersCache.find(function(x){return x.id===adminWinsTargetId;});if(u)u[adminWinsTargetMetric]=adminWinsValue;renderAdminUsers();closeAdminWinsEditor();say((adminWinsTargetMetric==="wins"?"Wins":adminWinsTargetMetric==="tournament_wins"?"Trophies":"Humiliation losses")+" count updated.",{silentToast:true});}catch(err){say("Could not update wins: "+(err.message||err),{error:true});}finally{btn.disabled=false;}});
+$("adminWinsSave").addEventListener("click",async function(){if(!adminWinsTargetId)return;var btn=this;btn.disabled=true;try{var result=await sb.rpc("kf_admin_update_stats",{p_user_id:adminWinsTargetId,p_metric:adminWinsTargetMetric,p_value:adminWinsValue});if(result.error)throw result.error;var u=adminUsersCache.find(function(x){return x.id===adminWinsTargetId;});if(u)u[adminWinsTargetMetric]=adminWinsValue;renderAdminUsers();closeAdminWinsEditor();say((adminWinsTargetMetric==="wins"?"Wins":adminWinsTargetMetric==="tournament_wins"?"Trophies":"Humiliation")+" count updated.",{silentToast:true});}catch(err){say("Could not update wins: "+(err.message||err),{error:true});}finally{btn.disabled=false;}});
 $("adminUsers").addEventListener("click",async function(e){
  var card=e.target.closest(".admin-user");if(!card)return;var id=card.getAttribute("data-user-id");
  if(e.target.closest(".admin-save-stat")){
