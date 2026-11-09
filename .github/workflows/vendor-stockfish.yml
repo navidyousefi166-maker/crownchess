@@ -1,0 +1,36 @@
+name: Vendor Stockfish 19 Lite
+on:
+  push:
+    paths:
+      - .github/workflows/vendor-stockfish.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download pinned Stockfish 19 lite single-thread engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm pack stockfish@19.0.1 --silent
+          tar -xzf stockfish-19.0.1.tgz
+          mkdir -p engine
+          cp package/bin/stockfish-19-lite-single.js engine/
+          cp package/bin/stockfish-19-lite-single.wasm engine/
+          test -s engine/stockfish-19-lite-single.js
+          test -s engine/stockfish-19-lite-single.wasm
+          file engine/stockfish-19-lite-single.wasm
+          sha256sum engine/stockfish-19-lite-single.*
+      - name: Commit only the engine assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/stockfish-19-lite-single.js engine/stockfish-19-lite-single.wasm
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Vendor pinned Stockfish 19 Lite engine assets"
+          git push
