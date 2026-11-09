@@ -4876,6 +4876,8 @@ var stockfishAnalysisMode = false;
 var stockfishCallback = null;
 var currentAnalyzeScore = null;
 var currentAnalyzeDepth = -1;
+var currentAnalyzeSecond = null;
+var currentAnalyzePV = null;
 var STOCKFISH_URL = "stockfish.js";
 
 var stockfishBootTimer = null;
@@ -4964,15 +4966,22 @@ function handleStockfishMessage(line){
     var depthM = line.match(/\bdepth (\d+)/);
     var cpM = line.match(/\bscore cp (-?\d+)/);
     var mateM = line.match(/\bscore mate (-?\d+)/);
-    if(!/\b(?:lowerbound|upperbound)\b/.test(line) && !/\bmultipv (?!1\b)\d+/.test(line) && (cpM || mateM)){
+    if(!/\b(?:lowerbound|upperbound)\b/.test(line) && (cpM || mateM)){
       var depth = depthM ? parseInt(depthM[1], 10) : 0;
-      if(depth >= currentAnalyzeDepth){
+      var multipvM = line.match(/\bmultipv (\d+)/);
+      var pvNumber = multipvM ? parseInt(multipvM[1], 10) : 1;
+      var score = cpM ? parseInt(cpM[1], 10) : null;
+      if(mateM){
+        var mate = parseInt(mateM[1], 10);
+        score = mate > 0 ? (10000 - mate * 100) : (-10000 - Math.abs(mate) * -100);
+      }
+      var pvM = line.match(/\bpv ([a-h][1-8][a-h][1-8][qrbn]?)(?:\s|$)/);
+      if(pvNumber === 1 && depth >= currentAnalyzeDepth){
         currentAnalyzeDepth = depth;
-        if(cpM) currentAnalyzeScore = parseInt(cpM[1], 10);
-        else {
-          var mate = parseInt(mateM[1], 10);
-          currentAnalyzeScore = mate > 0 ? (10000 - mate * 100) : (-10000 - mate * 100);
-        }
+        currentAnalyzeScore = score;
+        currentAnalyzePV = pvM ? pvM[1] : null;
+      } else if(pvNumber === 2 && (!currentAnalyzeSecond || depth >= currentAnalyzeSecond.depth)){
+        currentAnalyzeSecond = {score:score, depth:depth, uci:pvM ? pvM[1] : null};
       }
     }
     return;
@@ -4994,7 +5003,7 @@ function handleStockfishMessage(line){
     if(stockfishAnalysisMode){
       var analysisCb = stockfishCallback;
       stockfishCallback = null;
-      if(analysisCb) analysisCb({uci: uci && uci !== "(none)" ? uci : null, score: currentAnalyzeScore, depth: currentAnalyzeDepth});
+      if(analysisCb) analysisCb({uci: uci && uci !== "(none)" ? uci : null, score: currentAnalyzeScore, depth: currentAnalyzeDepth, second:currentAnalyzeSecond, pv:currentAnalyzePV});
       return;
     }
     if(!uci || uci === "(none)"){
@@ -5194,39 +5203,81 @@ async function runFullAnalysis(runId){
     if(!stockfishWorker) break;
   }
 
+  // Review scores from the moving player's perspective using a bounded win chance,
+  // not raw centipawn thresholds that exaggerate already won/lost positions.
+  function chance(cp){
+    if(cp == null || !isFinite(cp)) return null;
+    return 1 / (1 + Math.exp(-Math.max(-1500, Math.min(1500, cp)) * 0.0036));
+  }
   var moves = [];
   for(var j=0; j<history.length; j++){
-    var before = posAnalyses[j], after = posAnalyses[j + 1];
+    var before = posAnalyses[j], after = posAnalyses[j+1];
     var playedUci = history[j].from + history[j].to + (history[j].promotion ? String(history[j].promotion).toLowerCase() : "");
     var bestUci = before && before.best ? before.best : null;
     var evalBefore = before && before.score != null ? before.score : null;
     var evalAfter = after && after.score != null ? -after.score : null;
-    var loss = (evalBefore != null && evalAfter != null) ? Math.max(0, evalBefore - evalAfter) : null;
+    var wBefore = chance(evalBefore), wAfter = chance(evalAfter);
+    var loss = evalBefore != null && evalAfter != null ? Math.max(0, evalBefore - evalAfter) : null;
+    var winLoss = wBefore != null && wAfter != null ? Math.max(0, wBefore - wAfter) : null;
+    var depthOk = before && after && before.depth >= 11 && after.depth >= 11;
     var quality = "unrated";
-    // An invalid or very shallow evaluation must never receive a green label.
-    var reliable = before && after && before.depth >= 11 && after.depth >= 11;
-    if(loss != null && reliable){
-      if(bestUci && playedUci === bestUci && loss <= 45) quality = "best";
-      else if(loss <= 45) quality = "excellent";
-      else if(loss <= 110) quality = "good";
-      else if(loss <= 180) quality = "inaccuracy";
-      else if(loss <= 350) quality = "mistake";
+    if(winLoss != null && depthOk){
+      if(bestUci && playedUci === bestUci && winLoss <= 0.04) quality = "best";
+      else if(winLoss <= 0.018) quality = "excellent";
+      else if(winLoss <= 0.045) quality = "good";
+      else if(winLoss <= 0.09) quality = "inaccuracy";
+      else if(winLoss <= 0.18) quality = "mistake";
       else quality = "blunder";
     }
     moves.push({
-      san: history[j].san,
-      color: history[j].color,
-      from: history[j].from,
-      to: history[j].to,
-      quality: quality,
-      evalBefore: evalBefore,
-      evalAfter: evalAfter,
-      loss: loss,
-      beforeDepth: before ? before.depth : -1,
-      afterDepth: after ? after.depth : -1,
-      best: bestUci,
-      fenAfter: positions[j + 1]
+      san:history[j].san, color:history[j].color,
+      from:history[j].from, to:history[j].to,
+      quality:quality, evalBefore:evalBefore, evalAfter:evalAfter,
+      loss:loss, winLoss:winLoss, winBefore:wBefore, winAfter:wAfter,
+      beforeDepth:before ? before.depth : -1,
+      afterDepth:after ? after.depth : -1,
+      best:bestUci, fenAfter:positions[j+1]
     });
+  }
+  // Test only the strongest promising candidates with MultiPV=2.
+  // The second-best line is needed to establish a genuinely unique strong move.
+  var candidates = moves.map(function(m,i){return {m:m,i:i};}).filter(function(x){
+    return x.m.quality === "best" &&
+      x.m.beforeDepth >= 13 && x.m.afterDepth >= 13 &&
+      x.m.winBefore > 0.14 && x.m.winBefore < 0.85 &&
+      x.m.winLoss <= 0.022;
+  }).slice(0, 6);
+  for(var ci=0; ci<candidates.length; ci++){
+    if(!analysisRunning || runId !== analysisRunId) return;
+    var candidate = candidates[ci], mi = candidate.i, mm = candidate.m;
+    $("anProgress").textContent = "Verifying exceptional moves " + (ci+1) + "/" + candidates.length;
+    var multi = await analyzeFenPromise(positions[mi], 2200, runId, 2);
+    if(!analysisRunning || runId !== analysisRunId) return;
+    if(!multi || !multi.second || multi.depth < 13 ||
+       multi.second.depth < 13 || !multi.uci ||
+       multi.uci !== mm.from + mm.to + (history[mi].promotion || "")) continue;
+    var gap = chance(multi.score) - chance(multi.second.score);
+    if(gap < 0.16) continue;
+    // "Great" requires a distinctly better best line, confirmed by a two-line search.
+    mm.quality = "great";
+    mm.alternative = multi.second.uci;
+    mm.alternativeGap = gap;
+    // "Brilliant": a unique, objectively strong move offering a non-pawn piece,
+    // which the engine's preferred reply can actually capture.
+    var piece = history[mi].piece;
+    if(piece === "p" || piece === "k" || !multi.pv) continue;
+    var afterPos = new Chess(positions[mi+1]);
+    var reply = null;
+    try { reply = afterPos.move({
+      from:multi.pv.slice(0,2), to:multi.pv.slice(2,4),
+      promotion:multi.pv.slice(4,5) || "q"
+    }); } catch(e){}
+    var pieceValues = {n:3,b:3,r:5,q:9};
+    if(reply && reply.captured === piece && reply.to === mm.to &&
+       pieceValues[piece] >= 3 && mm.winAfter >= 0.4 &&
+       mm.winLoss <= 0.012 && gap >= 0.22){
+      mm.quality = "brilliant";
+    }
   }
 
   analysisMoves = moves;
@@ -5239,7 +5290,7 @@ async function runFullAnalysis(runId){
   gotoAnalysisIndex(0);
 }
 
-function analyzeFenPromise(fen, moveTime, runId){
+function analyzeFenPromise(fen, moveTime, runId, multiPV){
   return new Promise(function(resolve){
     if(!stockfishWorker || !stockfishReady || runId !== analysisRunId){
       resolve({best: null, score: null, depth: -1});
@@ -5264,17 +5315,22 @@ function analyzeFenPromise(fen, moveTime, runId){
       finish({
         best: result && result.uci ? result.uci : null,
         score: result && result.score != null ? result.score : null,
-        depth: result && result.depth != null ? result.depth : -1
+        depth: result && result.depth != null ? result.depth : -1,
+        second: result && result.second ? result.second : null,
+        pv: result && result.pv ? result.pv : null
       });
     }
 
     currentAnalyzeScore = null;
     currentAnalyzeDepth = -1;
+    currentAnalyzeSecond = null;
+    currentAnalyzePV = null;
     stockfishAnalysisMode = true;
     stockfishThinking = true;
     stockfishCallback = onBestMove;
     workerAtStart.postMessage("setoption name Skill Level value 20");
     workerAtStart.postMessage("setoption name UCI_LimitStrength value false");
+    workerAtStart.postMessage("setoption name MultiPV value " + (multiPV === 2 ? 2 : 1));
     workerAtStart.postMessage("position fen " + fen);
     workerAtStart.postMessage("go movetime " + moveTime);
 
