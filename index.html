@@ -5394,7 +5394,11 @@ async function runFullAnalysis(runId){
       var onlyGoodMove = bestChance != null && nextChance != null &&
                          bestChance >= 0.40 && gap >= 0.12 &&
                          !goodAlternative;
-      if(onlyGoodMove) {
+      // Escaping a check by moving the king is not Great, even when it is
+      // the only good legal response. Keep the normal Best classification.
+      var kingEscapeFromCheck = history[mi].piece === "k" &&
+                                new Chess(positions[mi]).in_check();
+      if(onlyGoodMove && !kingEscapeFromCheck) {
         mm.quality = "great";
         mm.alternative = multi.second.uci;
         mm.alternativeGap = gap;
