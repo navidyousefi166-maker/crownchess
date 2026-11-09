@@ -507,7 +507,6 @@ body.theme-ocean .an-eval-black{background:#0a1628}
 .q-brilliant{background:#26c2a3;color:#fff}
 .q-great{background:#5c8bb0;color:#fff}
 .q-best{background:#81b64c;color:#fff}
-.q-excellent{background:#1688e8;color:#fff}
 .q-good{background:#95b776;color:#fff}
 .q-inaccuracy{background:#f7c631;color:#333}
 .q-mistake{background:#ffa459;color:#333}
@@ -5257,7 +5256,6 @@ async function runFullAnalysis(runId){
     var quality = "unrated";
     if(winLoss != null && depthOk){
       if(bestUci && playedUci === bestUci && winLoss <= 0.04) quality = "best";
-      else if(winLoss <= 0.018) quality = "excellent";
       else if(winLoss <= 0.045) quality = "good";
       else if(winLoss <= 0.09) quality = "inaccuracy";
       else if(winLoss <= 0.18) quality = "mistake";
@@ -5410,7 +5408,6 @@ function qualityMark(q){
   if(q === "brilliant") return "!!";
   if(q === "great") return "!";
   if(q === "best") return "★";
-  if(q === "excellent") return "!";
   if(q === "good") return "✓";
   if(q === "inaccuracy") return "?!";
   if(q === "mistake") return "?";
@@ -5455,7 +5452,7 @@ function renderMoveList(){
 }
 
 function renderSummary(){
-  var counts = {brilliant:0, great:0, best:0, excellent:0, good:0, inaccuracy:0, mistake:0, blunder:0, unrated:0};
+  var counts = {brilliant:0, great:0, best:0, good:0, inaccuracy:0, mistake:0, blunder:0, unrated:0};
   analysisMoves.forEach(function(m){ counts[m.quality]++; });
   var el = $("anSummary");
   el.innerHTML =
@@ -5463,7 +5460,6 @@ function renderSummary(){
     '<div class="stat-row"><span>!! Brilliant</span><span>' + counts.brilliant + '</span></div>' +
     '<div class="stat-row"><span>! Great</span><span>' + counts.great + '</span></div>' +
     '<div class="stat-row"><span>★ Best</span><span>' + counts.best + '</span></div>' +
-    '<div class="stat-row"><span>✓ Excellent</span><span>' + counts.excellent + '</span></div>' +
     '<div class="stat-row"><span>✓ Good</span><span>' + counts.good + '</span></div>' +
     '<div class="stat-row"><span>?! Inaccuracy</span><span>' + counts.inaccuracy + '</span></div>' +
     '<div class="stat-row"><span>? Mistake</span><span>' + counts.mistake + '</span></div>' +
