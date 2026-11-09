@@ -599,6 +599,10 @@ body.theme-ocean .an-eval-black{background:#0a1628}
   border:2px solid var(--gold);border-radius:20px;padding:26px 20px;
   box-shadow:0 0 60px rgba(237,197,107,.3),0 20px 40px rgba(0,0,0,.6);
   text-align:center;
+  box-sizing:border-box;
+  height:310px;
+  max-height:calc(100dvh - 40px);
+  overflow:hidden;
 }
 .jackpot-title{
   font-size:clamp(16px,3.5vw,22px);font-weight:900;color:var(--gold2);
@@ -607,8 +611,8 @@ body.theme-ocean .an-eval-black{background:#0a1628}
   animation:jpPulse 1.5s ease-in-out infinite;
 }
 @keyframes jpPulse{0%,100%{opacity:1}50%{opacity:.7}}
-.jackpot-cols{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px;margin-bottom:18px}
-.jackpot-col-wrap{display:flex;flex-direction:column;gap:6px}
+.jackpot-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.3fr);gap:8px;margin-bottom:18px}
+.jackpot-col-wrap{display:flex;flex-direction:column;gap:6px;min-width:0}
 .jackpot-col-label{
   font-size:9px;color:var(--muted);letter-spacing:1.5px;font-weight:800;
   text-transform:uppercase;
@@ -616,7 +620,7 @@ body.theme-ocean .an-eval-black{background:#0a1628}
 .jackpot-col{
   background:var(--panel-bg2);border:1.5px solid var(--line);border-radius:10px;
   padding:14px 6px;font-size:14px;font-weight:900;color:var(--text);
-  min-height:60px;display:flex;align-items:center;justify-content:center;
+  height:72px;box-sizing:border-box;min-width:0;display:flex;align-items:center;justify-content:center;
   font-variant-numeric:tabular-nums;letter-spacing:.5px;overflow:hidden;
   transition:border-color .2s,background .2s,box-shadow .2s;
   text-align:center;line-height:1.2;
@@ -630,14 +634,14 @@ body.theme-ocean .an-eval-black{background:#0a1628}
 @keyframes jpLock{0%{transform:scale(1.15);box-shadow:0 0 30px rgba(237,197,107,.8)}100%{transform:scale(1);box-shadow:0 0 16px rgba(237,197,107,.35)}}
 .jackpot-result{
   font-size:clamp(14px,3vw,18px);font-weight:900;color:var(--gold2);
-  letter-spacing:1.5px;min-height:24px;margin-top:8px;
+  letter-spacing:1.5px;height:48px;margin-top:8px;overflow:hidden;overflow-wrap:anywhere;
   text-shadow:0 0 12px rgba(237,197,107,.5);
 }
 .jackpot-result.show{animation:jpResult .5s ease-out}
 @keyframes jpResult{0%{opacity:0;transform:translateY(-8px)}100%{opacity:1;transform:translateY(0)}}
 @media(max-width:600px){
-  .jackpot-box{padding:18px 14px}
-  .jackpot-col{font-size:12px;padding:10px 4px;min-height:50px}
+  .jackpot-box{padding:18px 14px;height:280px}
+  .jackpot-col{font-size:12px;padding:10px 4px;height:64px}
 }
 body.game-focus{overflow:hidden}
 body.game-focus .wrap > header,
