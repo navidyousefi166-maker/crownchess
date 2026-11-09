@@ -5093,6 +5093,102 @@ var analysisIndex = 0;
 var analysisRunning = false;
 var analysisRunId = 0;
 
+/* Secondary engine: independent UCI state, never touches the game/primary engine. */
+var analysisAuxEngine = null;
+function createAnalysisAuxEngine(runId){
+  var worker=null, active=null, closed=false, readyResolve, readyDone=false, bootTimer=null;
+  var ready=new Promise(function(resolve){ readyResolve=resolve; });
+  function settleReady(ok){if(!readyDone){readyDone=true;readyResolve(ok);}}
+  function close(){
+    if(closed)return;
+    closed=true;
+    clearTimeout(bootTimer);
+    settleReady(false);
+    if(active){
+      var job=active;active=null;
+      clearTimeout(job.stop);clearTimeout(job.force);
+      job.resolve(null);
+    }
+    if(worker){try{worker.terminate();}catch(err){}worker=null;}
+  }
+  try{
+    worker=new Worker(STOCKFISH_19_JS+"?v=19.0.1");
+    worker.onmessage=function(event){
+      if(closed||runId!==analysisRunId)return;
+      String(event.data||"").split(/\r?\n/).forEach(function(line){
+        if(line.indexOf("uciok")>=0){worker.postMessage("isready");return;}
+        if(line.indexOf("readyok")>=0){clearTimeout(bootTimer);settleReady(true);return;}
+        if(!active)return;
+        if(line.indexOf("info ")===0&&!/\b(lowerbound|upperbound)\b/.test(line)){
+          var depthM=line.match(/\bdepth (\d+)/);
+          var cpM=line.match(/\bscore cp (-?\d+)/);
+          var mateM=line.match(/\bscore mate (-?\d+)/);
+          if(depthM&&(cpM||mateM)&&Number(depthM[1])>=active.depth){
+            var depth=Number(depthM[1]),mate=mateM?Number(mateM[1]):0;
+            active.depth=depth;
+            active.score=cpM?Number(cpM[1]):(mate>0?10000-mate*100:-10000+Math.abs(mate)*100);
+            var pvM=line.match(/\bpv (.+)$/);
+            active.pv=pvM?pvM[1].trim().split(/\s+/).slice(0,12):null;
+          }
+        }
+        if(line.indexOf("bestmove ")===0){
+          var job=active;active=null;
+          clearTimeout(job.stop);clearTimeout(job.force);
+          var uci=line.split(/\s+/)[1];
+          job.resolve({best:uci&&uci!=="(none)"?uci:null,score:job.score,depth:job.depth,pv:job.pv});
+        }
+      });
+    };
+    worker.onerror=close;
+    worker.onmessageerror=close;
+    bootTimer=setTimeout(close,12000);
+    worker.postMessage("uci");
+  }catch(err){close();}
+  // Only one in-flight command sequence per worker.
+  async function analyze(fen,ms,searchMoves){
+    if(closed||runId!==analysisRunId||!await ready)return null;
+    return new Promise(function(resolve){
+      if(closed){resolve(null);return;}
+      var job={resolve:resolve,score:null,depth:-1,pv:null,stop:null,force:null};
+      active=job;
+      try{
+        worker.postMessage("setoption name Skill Level value 20");
+        worker.postMessage("setoption name UCI_LimitStrength value false");
+        worker.postMessage("setoption name MultiPV value 1");
+        worker.postMessage("position fen "+fen);
+        worker.postMessage("go movetime "+ms+(searchMoves&&searchMoves.length?" searchmoves "+searchMoves.join(" "):""));
+        job.stop=setTimeout(function(){
+          if(active!==job)return;
+          try{worker.postMessage("stop");}catch(err){}
+          job.force=setTimeout(function(){if(active===job)close();},1200);
+        },ms+500);
+      }catch(err){close();}
+    });
+  }
+  return {ready:ready,analyze:analyze,close:close,alive:function(){return !closed;}};
+}
+async function runDualAnalysisJobs(items,runId,auxReady,work,retry){
+  var next=0,completed=0,results=new Array(items.length),retryList=[];
+  async function runner(engineIndex){
+    while(analysisRunning&&runId===analysisRunId){
+      var idx=next++;
+      if(idx>=items.length)break;
+      var value=null;
+      try{value=await work(items[idx],engineIndex,idx,items.length);}catch(err){console.warn("Analysis job failed",err);}
+      results[idx]=value;completed++;
+      if(engineIndex===1&&retry&&retry(value))retryList.push(idx);
+    }
+  }
+  await Promise.all([runner(0)].concat(auxReady?[runner(1)]:[]));
+  // Never start two requests simultaneously on the primary UCI channel.
+  for(var j=0;j<retryList.length&&analysisRunning&&runId===analysisRunId;j++){
+    var ix=retryList[j];
+    results[ix]=await work(items[ix],0,ix,items.length);
+  }
+  return results;
+}
+
+
 $("analyze").onclick = function(){
   if(!game || game.history().length < 1){ say("Play some moves first.", {silentToast: true}); return; }
   openAnalysis();
@@ -5100,6 +5196,7 @@ $("analyze").onclick = function(){
 $("analysisClose").onclick = function(){
   analysisRunning = false;
   analysisRunId++;
+  if(analysisAuxEngine){analysisAuxEngine.close();analysisAuxEngine=null;}
   if(stockfishAnalysisMode && stockfishWorker){
     try{ stockfishWorker.terminate(); }catch(err){}
     stockfishWorker = null;
@@ -5117,6 +5214,7 @@ $("anNextBtn").onclick = function(){ gotoAnalysisIndex(analysisIndex + 1); };
 $("anEndBtn").onclick = function(){ gotoAnalysisIndex(analysisMoves.length); };
 
 function openAnalysis(){
+  if(analysisAuxEngine){analysisAuxEngine.close();analysisAuxEngine=null;}
   analysisMoves = [];
   analysisPositions = [];
   analysisIndex = 0;
@@ -5131,6 +5229,7 @@ function openAnalysis(){
   $("anProgress").textContent = "Loading chess engine...";
   $("analysisDialog").showModal();
   if(!stockfishWorker) initStockfish();
+  analysisAuxEngine=createAnalysisAuxEngine(thisRun);
   setTimeout(function(){ runFullAnalysis(thisRun); }, 50);
 }
 
@@ -5175,95 +5274,91 @@ async function runFullAnalysis(runId){
   var posAnalyses = new Array(total);
   var initialAnalyses = new Array(total);
   analysisRunning = true;
-  // One Stockfish worker: interleave bounded critical searches with the first
-  // pass, avoiding simultaneous UCI commands to the same engine.
-  var moveTime = history.length > 80 ? 550 : 850;
-  var initialCache = new Map(), criticalCache = new Map();
-  var queuedCritical = [], criticalQueued = new Set(), criticalDone = new Set();
-  var maxCritical = Math.max(10, Math.ceil(total * 0.65));
-  var earlyBudget = Math.max(1, Math.floor(maxCritical * 0.30));
-  var criticalCount = 0;
-  function positionKey(fen){
-    // Ignore move counters; they do not affect Stockfish evaluation.
-    return fen.split(" ").slice(0, 4).join(" ");
+  var analysisStartedAt=performance.now();
+  // Two engines share the entire position queue, not just exceptional checks.
+  // If the auxiliary engine fails or cannot initialize, use the legacy engine.
+  var auxReady=false;
+  if(analysisAuxEngine){
+    auxReady=await Promise.race([
+      analysisAuxEngine.ready,
+      new Promise(function(resolve){setTimeout(function(){resolve(false);},4500);})
+    ]);
   }
-  function enqueueCritical(index){
-    if(index < 0 || index >= total || criticalQueued.has(index)) return;
-    var old = initialAnalyses[index];
-    if(!old || old.depth === 99) return;
-    criticalQueued.add(index);
-    queuedCritical.push(index);
+  if(!analysisRunning||runId!==analysisRunId)return;
+  var moveTime=history.length>80?550:850;
+  var initialCache=new Map(),criticalCache=new Map();
+  var maxCritical=Math.max(10,Math.ceil(total*0.65));
+  var criticalCount=0,initialCompleted=0;
+  var timeInitialStart=performance.now();
+  function positionKey(fen){return fen.split(" ").slice(0,4).join(" ");}
+  function analyzeWithEngine(fen,ms,engineIndex,searchMoves){
+    return engineIndex===1&&auxReady&&analysisAuxEngine?
+      analysisAuxEngine.analyze(fen,ms,searchMoves):
+      analyzeFenPromise(fen,ms,runId,1,searchMoves);
   }
-  async function checkCritical(at){
-    if(!analysisRunning || runId !== analysisRunId) return false;
-    if(criticalDone.has(at)) return true;
-    criticalDone.add(at);
-    var key = positionKey(positions[at]);
-    var checked = criticalCache.get(key);
-    if(!checked){
-      $("anProgress").textContent = "Checking critical positions " + (criticalCount+1) + " / " + maxCritical;
-      checked = await analyzeFenPromise(positions[at], 2300, runId);
-      if(!analysisRunning || runId !== analysisRunId) return false;
-      if(checked && checked.score != null) criticalCache.set(key, checked);
+  var positionIndices=Array.from({length:total},function(_,i){return i;});
+  var firstResults=await runDualAnalysisJobs(positionIndices,runId,auxReady,
+    async function(p,engineIndex){
+      var fen=positions[p],terminal=new Chess(fen);
+      if(terminal.game_over())
+        return {best:null,score:terminal.in_checkmate()?-10000:0,depth:99};
+      var key=positionKey(fen);
+      if(initialCache.has(key))return initialCache.get(key);
+      var task=analyzeWithEngine(fen,moveTime,engineIndex);
+      initialCache.set(key,task);
+      var result=await task;
+      if(!result||result.score==null)initialCache.delete(key);
+      initialCompleted++;
+      if(analysisRunning&&runId===analysisRunId)
+        $("anProgress").textContent="Analyzing "+initialCompleted+" / "+total;
+      return result;
+    },function(result){return !result||result.score==null;});
+  if(!analysisRunning||runId!==analysisRunId)return;
+  for(var p=0;p<total;p++){
+    posAnalyses[p]=firstResults[p];
+    initialAnalyses[p]=firstResults[p];
+  }
+  if(!stockfishWorker){
+    $("anProgress").textContent="Analysis stopped: engine became unavailable.";
+    analysisRunning=false;
+    if(analysisAuxEngine){analysisAuxEngine.close();analysisAuxEngine=null;}
+    return;
+  }
+  var initialElapsed=performance.now()-timeInitialStart;
+  var queuedCritical=new Set();
+  for(var p=1;p<total;p++){
+    var pre=initialAnalyses[p-1],post=initialAnalyses[p];
+    if(!pre||!post)continue;
+    var shallow=pre.depth<11||post.depth<11;
+    var shift=pre.score!=null&&post.score!=null?Math.abs(pre.score+post.score):0;
+    if(shallow||shift>=75){
+      if(pre.depth!==99)queuedCritical.add(p-1);
+      if(post.depth!==99)queuedCritical.add(p);
     }
-    if(checked && checked.score != null &&
-       checked.depth >= posAnalyses[at].depth) posAnalyses[at] = checked;
-    criticalCount++;
-    return true;
   }
-  for(var p=0; p<total; p++){
-    if(!analysisRunning || runId !== analysisRunId) return;
-    $("anProgress").textContent = "Analyzing " + (p + 1) + " / " + total + " · " + Math.round((p / total) * 100) + "%";
-    var terminal = new Chess(positions[p]);
-    var key = positionKey(positions[p]);
-    var result;
-    if(terminal.game_over()){
-      // A terminal position cannot have a UCI best move.
-      result = {best:null, score:terminal.in_checkmate() ? -10000 : 0, depth:99};
-    } else if(initialCache.has(key)){
-      result = initialCache.get(key);
-    } else {
-      result = await analyzeFenPromise(positions[p], moveTime, runId);
-      if(!analysisRunning || runId !== analysisRunId) return;
-      if(result && result.score != null) initialCache.set(key,result);
-    }
-    posAnalyses[p] = result;
-    initialAnalyses[p] = result;
-    if(p > 0){
-      var pre = initialAnalyses[p-1], post = initialAnalyses[p];
-      if(pre && post){
-        var shallow = pre.depth < 11 || post.depth < 11;
-        var shift = pre.score != null && post.score != null ? Math.abs(pre.score + post.score) : 0;
-        if(shallow || shift >= 75){
-          enqueueCritical(p-1);
-          enqueueCritical(p);
-        }
+  var refineIndices=Array.from(queuedCritical);
+  refineIndices.sort(function(a,b){return initialAnalyses[a].depth-initialAnalyses[b].depth;});
+  refineIndices=refineIndices.slice(0,maxCritical);
+  var timeCriticalStart=performance.now();
+  await runDualAnalysisJobs(refineIndices,runId,auxReady,
+    async function(at,engineIndex){
+      var key=positionKey(positions[at]);
+      var task=criticalCache.get(key);
+      if(!task){
+        task=analyzeWithEngine(positions[at],2300,engineIndex);
+        criticalCache.set(key,task);
       }
-    }
-    // Start a small share of critical work before the first pass finishes.
-    // Reserve most slots for the depth-prioritized second pass to protect accuracy.
-    if(p % 5 === 4 && criticalCount < earlyBudget && queuedCritical.length){
-      var earlyIndex = queuedCritical.shift();
-      if(!await checkCritical(earlyIndex)) return;
-    }
-    if(!stockfishWorker && p < total - 1){
-      $("anProgress").textContent = "Analysis stopped: engine became unavailable.";
-      analysisRunning = false;
-      return;
-    }
-  }
-  // Finish critical checks on the remaining candidates, shallowest first.
-  var refineIndices = Array.from(criticalQueued).filter(function(index){
-    return !criticalDone.has(index);
-  });
-  refineIndices.sort(function(a,b){
-    return initialAnalyses[a].depth - initialAnalyses[b].depth;
-  });
-  var refineLimit = Math.min(refineIndices.length, maxCritical - criticalCount);
-  for(var r=0; r<refineLimit; r++){
-    if(!await checkCritical(refineIndices[r])) return;
-    if(!stockfishWorker) break;
-  }
+      var checked=await task;
+      if(checked&&checked.score!=null&&
+         posAnalyses[at]&&checked.depth>=posAnalyses[at].depth)
+        posAnalyses[at]=checked;
+      criticalCount++;
+      if(analysisRunning&&runId===analysisRunId)
+        $("anProgress").textContent="Checking critical positions "+criticalCount+" / "+refineIndices.length;
+      return checked;
+    },function(result){return !result||result.score==null;});
+  if(!analysisRunning||runId!==analysisRunId)return;
+  var criticalElapsed=performance.now()-timeCriticalStart;
 
   // Review scores from the moving player's perspective using a bounded win chance,
   // not raw centipawn thresholds that exaggerate already won/lost positions.
@@ -5351,41 +5446,42 @@ async function runFullAnalysis(runId){
     return priority(b) - priority(a);
   }).slice(0, 12);
   var greatDiagnostics = {candidates:candidates.length,paired:0,unique:0,alternative:0};
-  var exceptionalTiming = {start:performance.now(),multiMs:0,bestMs:0,secondMs:0,fallbacks:0,pairedDirect:0};
-  for(var ci=0; ci<candidates.length; ci++){
-    if(!analysisRunning || runId !== analysisRunId) return;
-    var candidate = candidates[ci], mi = candidate.i, mm = candidate.m;
-    $("anProgress").textContent = "Verifying exceptional moves " + (ci+1) + "/" + candidates.length;
-    // analyzeFenPromise exposes the primary move as "best", not "uci".
-    // The old MultiPV probe always entered the two single-PV fallback searches.
-    // Skip that redundant 2200ms probe and keep the proven verification path.
-    var multi = null;
-    var playedMoveUci = mm.from + mm.to + (history[mi].promotion || "");
-    exceptionalTiming.fallbacks++;
-      var position = new Chess(positions[mi]);
-      var legalUci = position.moves({verbose:true}).map(function(m){
-        return m.from + m.to + (m.promotion || "");
+  var exceptionalTiming={start:performance.now(),multiMs:0,bestMs:0,secondMs:0,fallbacks:0,pairedDirect:0};
+  var verifiedPairs=await runDualAnalysisJobs(candidates,runId,auxReady,
+    async function(candidate,engineIndex,idx){
+      var mi=candidate.i,mm=candidate.m;
+      if(analysisRunning&&runId===analysisRunId)
+        $("anProgress").textContent="Verifying exceptional moves "+(idx+1)+"/"+candidates.length;
+      var played=mm.from+mm.to+(history[mi].promotion||"");
+      var legal=new Chess(positions[mi]).moves({verbose:true}).map(function(m){
+        return m.from+m.to+(m.promotion||"");
       });
-      if(legalUci.length < 2 || legalUci.indexOf(playedMoveUci) < 0) continue;
-      var bestStarted = performance.now();
-      var verifiedBest = await analyzeFenPromise(positions[mi], 1650, runId, 1);
-      exceptionalTiming.bestMs += performance.now() - bestStarted;
-      if(!analysisRunning || runId !== analysisRunId) return;
-      if(!verifiedBest || verifiedBest.best !== playedMoveUci ||
-         verifiedBest.score == null || verifiedBest.depth < 12) continue;
-      var alternatives = legalUci.filter(function(u){return u !== playedMoveUci;});
-      var secondStarted = performance.now();
-      var verifiedSecond = await analyzeFenPromise(positions[mi], 1650, runId, 1, alternatives);
-      exceptionalTiming.secondMs += performance.now() - secondStarted;
-      if(!analysisRunning || runId !== analysisRunId) return;
-      if(!verifiedSecond || !verifiedSecond.best || verifiedSecond.score == null ||
-         verifiedSecond.depth < 12 || alternatives.indexOf(verifiedSecond.best) < 0) continue;
-      multi = {
-        uci:verifiedBest.best, score:verifiedBest.score, depth:verifiedBest.depth,
-        pv:verifiedBest.pv,
-        second:{uci:verifiedSecond.best,score:verifiedSecond.score,depth:verifiedSecond.depth},
-        paired:true
-      };
+      if(legal.length<2||legal.indexOf(played)<0)return null;
+      var bestStart=performance.now();
+      var best=await analyzeWithEngine(positions[mi],1650,engineIndex);
+      exceptionalTiming.bestMs+=performance.now()-bestStart;
+      if(!best||best.best!==played||best.score==null||best.depth<12)return null;
+      var alternatives=legal.filter(function(u){return u!==played;});
+      var secondStart=performance.now();
+      var second=await analyzeWithEngine(positions[mi],1650,engineIndex,alternatives);
+      exceptionalTiming.secondMs+=performance.now()-secondStart;
+      if(!second||!second.best||second.score==null||second.depth<12||
+         alternatives.indexOf(second.best)<0)return null;
+      return {best:best,second:second};
+    },function(result){return !result&&analysisAuxEngine&&!analysisAuxEngine.alive();});
+  if(!analysisRunning||runId!==analysisRunId)return;
+  for(var ci=0;ci<candidates.length;ci++){
+    var candidate=candidates[ci],mi=candidate.i,mm=candidate.m;
+    var verified=verifiedPairs[ci];
+    if(!verified)continue;
+    var verifiedBest=verified.best,verifiedSecond=verified.second;
+    var playedMoveUci=mm.from+mm.to+(history[mi].promotion||"");
+    var multi={
+      uci:verifiedBest.best,score:verifiedBest.score,depth:verifiedBest.depth,
+      pv:verifiedBest.pv,
+      second:{uci:verifiedSecond.best,score:verifiedSecond.score,depth:verifiedSecond.depth},
+      paired:true
+    };
       greatDiagnostics.alternative++;
     greatDiagnostics.paired++;
     if(multi.uci !== playedMoveUci) continue;
@@ -5460,6 +5556,16 @@ async function runFullAnalysis(runId){
     brilliant:moves.filter(function(m){return m.quality === "brilliant";}).length,
     great:moves.filter(function(m){return m.quality === "great";}).length
   });
+  var totalElapsed=performance.now()-analysisStartedAt;
+  console.info("[Kingsfall dual analysis timing]",{
+    auxiliaryReady:auxReady,
+    firstPassMs:Math.round(initialElapsed),
+    criticalMs:Math.round(criticalElapsed),
+    exceptionalMs:Math.round(performance.now()-exceptionalTiming.start),
+    totalMs:Math.round(totalElapsed),positions:total,
+    critical:refineIndices.length,exceptional:candidates.length
+  });
+  if(analysisAuxEngine){analysisAuxEngine.close();analysisAuxEngine=null;}
   analysisMoves = moves;
   analysisPositions = positions;
   analysisRunning = false;
