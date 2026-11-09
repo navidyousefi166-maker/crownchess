@@ -1575,6 +1575,7 @@ input[type="color"] {
 <div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1 id="adminPageTitle">🛡️ Admin Panel</h1><p id="adminPageSubtitle">Private administration · Owner access only</p></div><div class="admin-heading-actions"><button class="btn" id="adminBackToOverview" type="button" hidden>← Back</button><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div></div>
 <div id="adminOverviewView">
 <div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div></div>
+<section class="admin-section" id="adminRejectedMovesSection"><div class="admin-section-head"><div><h2>🛡️ Rejected Move Reports</h2><p>Illegal move requests rejected by the server · reports are not automatic proof of cheating</p></div></div><div id="adminRejectedMoves" class="admin-users"><div class="admin-loading">Loading reports…</div></div></section>
 <section class="admin-section"><div class="admin-section-head"><div><h2>⚙️ Feature Management</h2><p>Temporarily enable or disable game features</p></div></div><div id="adminFeatures" class="admin-features"><div class="admin-loading">Loading features…</div></div></section>
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
 </div>
@@ -6933,8 +6934,37 @@ async function adminInvoke(body){
  if(!currentUser||currentUser.id!==adminOwnerId)throw Error("Owner access required");
  var r=await sb.functions.invoke("kf-admin",{body:body});if(r.error)throw r.error;if(r.data&&r.data.error)throw Error(r.data.error);return r.data;
 }
+async function loadAdminRejectedMoveReports(){
+ if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
+ var target=$("adminRejectedMoves");if(!target)return;
+ try{
+  var response=await sb.rpc("kf_admin_invalid_move_reports",{p_limit:30});
+  if(response.error)throw response.error;
+  var reports=Array.isArray(response.data)?response.data:[];
+  if(!reports.length){target.innerHTML='<div class="admin-empty">No rejected illegal moves reported.</div>';return;}
+  target.innerHTML=reports.map(function(a){
+    var side=a.player_id===a.white_id?"White":a.player_id===a.black_id?"Black":"Unknown";
+    var name=side==="White"?a.white_username:side==="Black"?a.black_username:"Unknown";
+    var opponent=side==="White"?a.black_username:a.white_username;
+    var move=String(a.move_from||"?")+" → "+String(a.move_to||"?")+(a.promotion?" ("+String(a.promotion)+")":"");
+    var when=a.reported_at?new Date(a.reported_at).toLocaleString():"Unknown time";
+    return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident">'+
+      '<div class="admin-user-name">⚠️ '+adminEscape(name||"Unknown player")+' · '+adminEscape(side)+'</div>'+
+      '<div class="admin-user-meta">Against '+adminEscape(opponent||"Unknown")+' · '+adminEscape(when)+'</div></div></div>'+
+      '<div class="admin-user-stats"><span class="admin-chip">Rejected: '+adminEscape(move)+'</span>'+
+      '<span class="admin-chip">Illegal move request</span></div>'+
+      '<div class="admin-user-meta">Game: '+adminEscape(a.game_id||"")+
+      ' · Account: '+adminEscape(a.player_id||"")+'</div>'+
+      '<div class="admin-user-meta">Position (FEN): '+adminEscape(a.position_fen||"")+'</div>'+
+      '<div class="admin-user-meta">Saved PGN: '+adminEscape(String(a.position_pgn||"").slice(-350)||"—")+'</div></article>';
+  }).join("");
+ }catch(err){
+  target.innerHTML='<div class="admin-empty">Could not load rejected moves: '+adminEscape(err.message||err)+'</div>';
+ }
+}
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
+ loadAdminRejectedMoveReports();
  $("adminUsers").innerHTML='<div class="admin-loading">Loading registered users…</div>';
  $("adminFeatures").innerHTML='<div class="admin-loading">Loading features…</div>';
  $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>Loading…</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div>';
@@ -7074,6 +7104,11 @@ async function loadFeatureFlags(){
 // Realtime normally applies changes immediately; this lightweight fallback also
 // recovers from temporary mobile-network or websocket interruptions.
 setInterval(loadFeatureFlags,30000);
+setInterval(function(){
+ if(currentUser&&currentUser.id===adminOwnerId&&$("pageAdmin").classList.contains("active")&&!$("adminOverviewView").hidden){
+  loadAdminRejectedMoveReports();
+ }
+},30000);
 
 /* ===== NEWS PAGE ===== */
 $("navNews").onclick = function(){ showPage("news"); };
