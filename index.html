@@ -5326,7 +5326,7 @@ async function runFullAnalysis(runId){
     return x.m.quality === "best" &&
       x.m.beforeDepth >= 11 && x.m.afterDepth >= 11 &&
       x.m.winBefore > 0.08 && x.m.winBefore < 0.92 &&
-      x.m.winLoss <= 0.04;
+      x.m.winLoss <= 0.02;
   }).sort(function(a,b){
     // Review tactical candidates before routine opening moves.
     function priority(x){
@@ -5337,11 +5337,14 @@ async function runFullAnalysis(runId){
     return priority(b) - priority(a);
   }).slice(0, 12);
   var greatDiagnostics = {candidates:candidates.length,paired:0,unique:0,alternative:0};
+  var exceptionalTiming = {start:performance.now(),multiMs:0,bestMs:0,secondMs:0,fallbacks:0,pairedDirect:0};
   for(var ci=0; ci<candidates.length; ci++){
     if(!analysisRunning || runId !== analysisRunId) return;
     var candidate = candidates[ci], mi = candidate.i, mm = candidate.m;
     $("anProgress").textContent = "Verifying exceptional moves " + (ci+1) + "/" + candidates.length;
+    var multiStarted = performance.now();
     var multi = await analyzeFenPromise(positions[mi], 2200, runId, 2);
+    exceptionalTiming.multiMs += performance.now() - multiStarted;
     if(!analysisRunning || runId !== analysisRunId) return;
     // Some browser builds produce no synchronized MultiPV pair.
     // Fall back to two restricted single-PV searches to compare the best
@@ -5349,17 +5352,22 @@ async function runFullAnalysis(runId){
     var playedMoveUci = mm.from + mm.to + (history[mi].promotion || "");
     if(!multi || !multi.paired || !multi.second || multi.depth < 12 ||
        multi.second.depth < 12 || !multi.uci){
+      exceptionalTiming.fallbacks++;
       var position = new Chess(positions[mi]);
       var legalUci = position.moves({verbose:true}).map(function(m){
         return m.from + m.to + (m.promotion || "");
       });
       if(legalUci.length < 2 || legalUci.indexOf(playedMoveUci) < 0) continue;
+      var bestStarted = performance.now();
       var verifiedBest = await analyzeFenPromise(positions[mi], 1650, runId, 1);
+      exceptionalTiming.bestMs += performance.now() - bestStarted;
       if(!analysisRunning || runId !== analysisRunId) return;
       if(!verifiedBest || verifiedBest.best !== playedMoveUci ||
          verifiedBest.score == null || verifiedBest.depth < 12) continue;
       var alternatives = legalUci.filter(function(u){return u !== playedMoveUci;});
+      var secondStarted = performance.now();
       var verifiedSecond = await analyzeFenPromise(positions[mi], 1650, runId, 1, alternatives);
+      exceptionalTiming.secondMs += performance.now() - secondStarted;
       if(!analysisRunning || runId !== analysisRunId) return;
       if(!verifiedSecond || !verifiedSecond.best || verifiedSecond.score == null ||
          verifiedSecond.depth < 12 || alternatives.indexOf(verifiedSecond.best) < 0) continue;
@@ -5370,6 +5378,8 @@ async function runFullAnalysis(runId){
         paired:true
       };
       greatDiagnostics.alternative++;
+    } else {
+      exceptionalTiming.pairedDirect++;
     }
     greatDiagnostics.paired++;
     if(multi.uci !== playedMoveUci) continue;
@@ -5431,6 +5441,19 @@ async function runFullAnalysis(runId){
     }
   }
 
+  // Diagnostic-only timing: no changes to Stockfish settings or quality labels.
+  console.info("[Kingsfall exceptional moves]", {
+    candidates:greatDiagnostics.candidates,
+    multiMs:Math.round(exceptionalTiming.multiMs),
+    fallbackBestMs:Math.round(exceptionalTiming.bestMs),
+    fallbackSecondMs:Math.round(exceptionalTiming.secondMs),
+    fallbacks:exceptionalTiming.fallbacks,
+    directPairs:exceptionalTiming.pairedDirect,
+    verified:greatDiagnostics.paired,
+    totalMs:Math.round(performance.now()-exceptionalTiming.start),
+    brilliant:moves.filter(function(m){return m.quality === "brilliant";}).length,
+    great:moves.filter(function(m){return m.quality === "great";}).length
+  });
   analysisMoves = moves;
   analysisPositions = positions;
   analysisRunning = false;
