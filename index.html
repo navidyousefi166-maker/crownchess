@@ -4875,6 +4875,7 @@ var stockfishFallbackTimer = null;
 var stockfishAnalysisMode = false;
 var stockfishCallback = null;
 var currentAnalyzeScore = null;
+var currentAnalyzeDepth = -1;
 var STOCKFISH_URL = "stockfish.js";
 
 function initStockfish(){
@@ -4905,12 +4906,19 @@ function initStockfish(){
 
 function handleStockfishMessage(line){
   if(line.indexOf("info ") === 0 && stockfishAnalysisMode){
+    var depthM = line.match(/\bdepth (\d+)/);
     var cpM = line.match(/\bscore cp (-?\d+)/);
     var mateM = line.match(/\bscore mate (-?\d+)/);
-    if(cpM) currentAnalyzeScore = parseInt(cpM[1], 10);
-    else if(mateM){
-      var mn = parseInt(mateM[1], 10);
-      currentAnalyzeScore = mn > 0 ? (10000 - mn*100) : (-10000 - mn*100);
+    if(!/\b(?:lowerbound|upperbound)\b/.test(line) && (cpM || mateM)){
+      var depth = depthM ? parseInt(depthM[1], 10) : 0;
+      if(depth >= currentAnalyzeDepth){
+        currentAnalyzeDepth = depth;
+        if(cpM) currentAnalyzeScore = parseInt(cpM[1], 10);
+        else {
+          var mate = parseInt(mateM[1], 10);
+          currentAnalyzeScore = mate > 0 ? (10000 - mate * 100) : (-10000 - mate * 100);
+        }
+      }
     }
     return;
   }
@@ -4928,18 +4936,18 @@ function handleStockfishMessage(line){
     clearTimeout(stockfishFallbackTimer);
     stockfishThinking = false;
     var parts = line.split(/\s+/), uci = parts[1];
+    if(stockfishAnalysisMode){
+      var analysisCb = stockfishCallback;
+      stockfishCallback = null;
+      if(analysisCb) analysisCb({uci: uci && uci !== "(none)" ? uci : null, score: currentAnalyzeScore, depth: currentAnalyzeDepth});
+      return;
+    }
     if(!uci || uci === "(none)"){
       computerBusy = false;
       if(stockfishCallback){ var cb0 = stockfishCallback; stockfishCallback = null; cb0(null); }
       return;
     }
     var from = uci.slice(0, 2), to = uci.slice(2, 4), promotion = uci.slice(4, 5) || "q";
-    if(stockfishAnalysisMode){
-      var cb2 = stockfishCallback;
-      stockfishCallback = null;
-      if(cb2) cb2({from: from, to: to, promotion: promotion, uci: uci});
-      return;
-    }
     var m = game.move({from: from, to: to, promotion: promotion});
     if(m) last = {from: m.from, to: m.to};
     computerBusy = false;
@@ -4998,6 +5006,7 @@ var analysisMoves = [];
 var analysisPositions = [];
 var analysisIndex = 0;
 var analysisRunning = false;
+var analysisRunId = 0;
 
 $("analyze").onclick = function(){
   if(!game || game.history().length < 1){ say("Play some moves first.", {silentToast: true}); return; }
@@ -5005,6 +5014,15 @@ $("analyze").onclick = function(){
 };
 $("analysisClose").onclick = function(){
   analysisRunning = false;
+  analysisRunId++;
+  if(stockfishAnalysisMode && stockfishWorker){
+    try{ stockfishWorker.terminate(); }catch(err){}
+    stockfishWorker = null;
+    stockfishReady = false;
+    stockfishThinking = false;
+    stockfishAnalysisMode = false;
+    stockfishCallback = null;
+  }
   $("analysisDialog").close();
   if(pendingAnalysisGame){ game = pendingAnalysisGame; pendingAnalysisGame = null; draw(); }
 };
@@ -5018,75 +5036,90 @@ function openAnalysis(){
   analysisPositions = [];
   analysisIndex = 0;
   analysisRunning = false;
+  analysisRunId++;
+  var thisRun = analysisRunId;
   $("anMoves").innerHTML = "";
   $("anSummary").innerHTML = "";
   $("anEvalWhite").style.height = "50%";
   $("anEvalBlack").style.height = "50%";
   $("anEvalLabel").textContent = "0.0";
-  $("anProgress").textContent = "Preparing analysis...";
+  $("anProgress").textContent = "Loading chess engine...";
   $("analysisDialog").showModal();
   if(!stockfishWorker) initStockfish();
-  setTimeout(runFullAnalysis, 500);
+  setTimeout(function(){ runFullAnalysis(thisRun); }, 50);
 }
 
-async function runFullAnalysis(){
-// 🟢 FIX: صبر کردن برای دانلود انجین (تا 10 ثانیه)
-if(!stockfishWorker){ initStockfish(); }
-var waitWorker = 0;
-while(!stockfishWorker && waitWorker < 10000){
-  await new Promise(function(r){ setTimeout(r, 200); });
-  waitWorker += 200;
-}
+async function runFullAnalysis(runId){
+  var waitStart = Date.now();
+  if(!stockfishWorker) initStockfish();
+  while(!stockfishWorker && Date.now() - waitStart < 12000){
+    if(runId !== analysisRunId) return;
+    await new Promise(function(resolve){ setTimeout(resolve, 100); });
+  }
+  if(runId !== analysisRunId) return;
+  if(!stockfishWorker){
+    $("anProgress").textContent = "Engine unavailable. Please retry.";
+    return;
+  }
+  while(!stockfishReady && Date.now() - waitStart < 12000){
+    if(runId !== analysisRunId) return;
+    await new Promise(function(resolve){ setTimeout(resolve, 100); });
+  }
+  if(runId !== analysisRunId) return;
+  if(!stockfishReady){
+    $("anProgress").textContent = "Engine did not finish loading. Please retry.";
+    return;
+  }
 
-if(!stockfishWorker){ $("anProgress").textContent = "Engine not available. Check stockfish.js"; return; }
-
-var waited = 0;
-while(!stockfishReady && waited < 10000){
-  await new Promise(function(r){ setTimeout(r, 200); });
-  waited += 200;
-}
-if(!stockfishReady){ $("anProgress").textContent = "Engine did not load. Try again later."; return; }
-
-  var history = game.history({verbose: true});
-var header = game.header ? game.header() : {};
-var startFen = (header && header.FEN) ? header.FEN : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-var chess = new Chess(startFen);
-var positions = [chess.fen()];
-for(var i=0;i<history.length;i++){
-    chess.move(history[i]);
+  var sourceGame = game;
+  var history = sourceGame.history({verbose: true});
+  var header = sourceGame.header ? sourceGame.header() : {};
+  var startFen = (header && header.FEN) ? header.FEN : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  var chess = new Chess(startFen);
+  var positions = [chess.fen()];
+  for(var i=0; i<history.length; i++){
+    var replayed = chess.move(history[i]);
+    if(!replayed){
+      $("anProgress").textContent = "Could not replay move " + (i + 1) + ".";
+      return;
+    }
     positions.push(chess.fen());
   }
+
   var total = positions.length;
   var posAnalyses = [];
   analysisRunning = true;
-  for(var i=0;i<total;i++){
-    if(!analysisRunning) return;
-    $("anProgress").textContent = "Analyzing " + (i+1) + " / " + total + " ...";
-    var result = await analyzeFenPromise(positions[i], 15);
+  var moveTime = history.length > 80 ? 150 : 220;
+  for(var p=0; p<total; p++){
+    if(!analysisRunning || runId !== analysisRunId) return;
+    $("anProgress").textContent = "Analyzing " + (p + 1) + " / " + total + " · " + Math.round((p / total) * 100) + "%";
+    var result = await analyzeFenPromise(positions[p], moveTime, runId);
+    if(!analysisRunning || runId !== analysisRunId) return;
     posAnalyses.push(result);
+    if(!stockfishWorker && p < total - 1){
+      $("anProgress").textContent = "Analysis stopped: engine became unavailable.";
+      analysisRunning = false;
+      return;
+    }
   }
 
   var moves = [];
-  for(var j=0;j<history.length;j++){
-    var before = posAnalyses[j], after = posAnalyses[j+1];
-    var playedUci = history[j].from + history[j].to + (((history[j].promotion || "q") + "").toLowerCase());
+  for(var j=0; j<history.length; j++){
+    var before = posAnalyses[j], after = posAnalyses[j + 1];
+    var playedUci = history[j].from + history[j].to + (history[j].promotion ? String(history[j].promotion).toLowerCase() : "");
     var bestUci = before && before.best ? before.best : null;
-    var evalBefore = (before && before.score != null) ? before.score : null;
-var evalAfter = (after && after.score != null) ? -after.score : null;
-var loss = (evalBefore != null && evalAfter != null) ? (evalBefore - evalAfter) : 0;
-    var quality;
-    if(bestUci && playedUci === bestUci){
-      if(history[j].captured || history[j].san.indexOf("+") !== -1 || history[j].san.indexOf("#") !== -1){
-        if(evalBefore > -100 && evalAfter > 150) quality = "brilliant";
-        else quality = "great";
-      } else if(loss === 0 && Math.abs(evalBefore) < 50) quality = "great";
-      else quality = "best";
+    var evalBefore = before && before.score != null ? before.score : null;
+    var evalAfter = after && after.score != null ? -after.score : null;
+    var loss = (evalBefore != null && evalAfter != null) ? Math.max(0, evalBefore - evalAfter) : null;
+    var quality = "unrated";
+    if(loss != null){
+      if(bestUci && playedUci === bestUci && loss <= 10) quality = "best";
+      else if(loss <= 20) quality = "excellent";
+      else if(loss <= 50) quality = "good";
+      else if(loss <= 100) quality = "inaccuracy";
+      else if(loss <= 200) quality = "mistake";
+      else quality = "blunder";
     }
-    else if(loss <= 20) quality = "excellent";
-    else if(loss <= 50) quality = "good";
-    else if(loss <= 120) quality = "inaccuracy";
-    else if(loss <= 300) quality = "mistake";
-    else quality = "blunder";
     moves.push({
       san: history[j].san,
       color: history[j].color,
@@ -5095,45 +5128,74 @@ var loss = (evalBefore != null && evalAfter != null) ? (evalBefore - evalAfter) 
       quality: quality,
       evalBefore: evalBefore,
       evalAfter: evalAfter,
+      loss: loss,
       best: bestUci,
-      fenAfter: positions[j+1]
+      fenAfter: positions[j + 1]
     });
   }
+
   analysisMoves = moves;
   analysisPositions = positions;
   analysisRunning = false;
-  $("anProgress").textContent = "Analysis complete · click moves to review";
+  var unrated = moves.filter(function(move){ return move.quality === "unrated"; }).length;
+  $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + " / " + moves.length + " moves evaluated";
   renderMoveList();
   renderSummary();
   gotoAnalysisIndex(0);
 }
 
-function analyzeFenPromise(fen, depth){
+function analyzeFenPromise(fen, moveTime, runId){
   return new Promise(function(resolve){
+    if(!stockfishWorker || !stockfishReady || runId !== analysisRunId){
+      resolve({best: null, score: null, depth: -1});
+      return;
+    }
     var finished = false;
-    var timeout = setTimeout(function(){
+    var stopTimer = null;
+    var forceTimer = null;
+    var workerAtStart = stockfishWorker;
+
+    function finish(result){
       if(finished) return;
       finished = true;
+      clearTimeout(stopTimer);
+      clearTimeout(forceTimer);
+      if(stockfishCallback === onBestMove) stockfishCallback = null;
       stockfishAnalysisMode = false;
       stockfishThinking = false;
-      stockfishCallback = null;
-      resolve({best: null, score: null});
-    }, 8000);
+      resolve(result);
+    }
+    function onBestMove(result){
+      finish({
+        best: result && result.uci ? result.uci : null,
+        score: result && result.score != null ? result.score : null,
+        depth: result && result.depth != null ? result.depth : -1
+      });
+    }
+
     currentAnalyzeScore = null;
+    currentAnalyzeDepth = -1;
     stockfishAnalysisMode = true;
     stockfishThinking = true;
-    stockfishCallback = function(result){
+    stockfishCallback = onBestMove;
+    workerAtStart.postMessage("setoption name Skill Level value 20");
+    workerAtStart.postMessage("setoption name UCI_LimitStrength value false");
+    workerAtStart.postMessage("position fen " + fen);
+    workerAtStart.postMessage("go movetime " + moveTime);
+
+    stopTimer = setTimeout(function(){
       if(finished) return;
-      finished = true;
-      clearTimeout(timeout);
-      stockfishAnalysisMode = false;
-      stockfishThinking = false;
-      resolve({best: result ? result.uci : null, score: currentAnalyzeScore});
-    };
-    stockfishWorker.postMessage("setoption name Skill Level value 20");
-    stockfishWorker.postMessage("setoption name UCI_LimitStrength value false");
-    stockfishWorker.postMessage("position fen " + fen);
-    stockfishWorker.postMessage("go depth " + depth);
+      try{ workerAtStart.postMessage("stop"); }catch(err){}
+      forceTimer = setTimeout(function(){
+        if(finished) return;
+        try{ workerAtStart.terminate(); }catch(err){}
+        if(stockfishWorker === workerAtStart){
+          stockfishWorker = null;
+          stockfishReady = false;
+        }
+        finish({best: null, score: null, depth: -1});
+      }, 1200);
+    }, 5000);
   });
 }
 
@@ -5186,7 +5248,7 @@ function renderMoveList(){
 }
 
 function renderSummary(){
-  var counts = {brilliant:0, great:0, best:0, excellent:0, good:0, inaccuracy:0, mistake:0, blunder:0};
+  var counts = {brilliant:0, great:0, best:0, excellent:0, good:0, inaccuracy:0, mistake:0, blunder:0, unrated:0};
   analysisMoves.forEach(function(m){ counts[m.quality]++; });
   var el = $("anSummary");
   el.innerHTML =
@@ -5198,7 +5260,8 @@ function renderSummary(){
     '<div class="stat-row"><span>✓ Good</span><span>' + counts.good + '</span></div>' +
     '<div class="stat-row"><span>?! Inaccuracy</span><span>' + counts.inaccuracy + '</span></div>' +
     '<div class="stat-row"><span>? Mistake</span><span>' + counts.mistake + '</span></div>' +
-    '<div class="stat-row"><span>?? Blunder</span><span>' + counts.blunder + '</span></div>';
+    '<div class="stat-row"><span>?? Blunder</span><span>' + counts.blunder + '</span></div>' +
+    '<div class="stat-row"><span>Not evaluated</span><span>' + counts.unrated + '</span></div>';
 }
 
 function gotoAnalysisIndex(idx){
@@ -5243,10 +5306,12 @@ function renderAnalysisBoard(fen, lastMoveInfo){
 
 function updateEvalBar(idx){
   var evalCp = 0;
-  if(idx > 0){
+  if(idx === 0 && analysisMoves.length && analysisMoves[0].evalBefore != null){
+    evalCp = analysisMoves[0].evalBefore * (analysisMoves[0].color === "w" ? 1 : -1);
+  } else if(idx > 0){
     var m = analysisMoves[idx-1];
     var moverColor = m.color === "w" ? 1 : -1;
-    evalCp = (m.evalAfter || 0) * moverColor;
+    evalCp = (m.evalAfter != null ? m.evalAfter : 0) * moverColor;
   }
   var whitePct = 100 / (1 + Math.pow(10, -evalCp/400));
   if(whitePct < 3) whitePct = 3;
