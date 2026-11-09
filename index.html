@@ -5209,6 +5209,40 @@ async function runFullAnalysis(runId){
     if(cp == null || !isFinite(cp)) return null;
     return 1 / (1 + Math.exp(-Math.max(-1500, Math.min(1500, cp)) * 0.0036));
   }
+  // Material is measured in pawn units from the original mover's perspective.
+  // Check every square, not just the moved piece: a tactic can offer a queen/rook
+  // on its original square (e.g. a discovered attack).
+  function materialFor(fen, color){
+    var c = new Chess(fen), value = {p:1,n:3,b:3,r:5,q:9,k:0};
+    var result = 0, squares = "abcdefgh";
+    for(var rank=1; rank<=8; rank++){
+      for(var file=0; file<8; file++){
+        var piece = c.get(squares[file] + rank);
+        if(piece) result += (piece.color === color ? 1 : -1) * value[piece.type];
+      }
+    }
+    return result;
+  }
+  function playUci(c, uci){
+    if(!uci || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(uci)) return null;
+    try {
+      return c.move({from:uci.slice(0,2),to:uci.slice(2,4),promotion:uci.slice(4,5) || "q"});
+    } catch(err){ return null; }
+  }
+  function provenMaterialOffer(index, replyUci, continuation){
+    var mover = history[index].color, c = new Chess(positions[index+1]);
+    var reply = playUci(c, replyUci);
+    // Opponent must actually take a non-pawn piece, whether it moved or not.
+    if(!reply || !reply.captured || !({n:1,b:1,r:1,q:1})[reply.captured]) return null;
+    // Search continuation for an immediate recapture or equal exchange.
+    var line = continuation || [];
+    for(var t=0; t<Math.min(4,line.length); t++){
+      if(!playUci(c,line[t])) break;
+    }
+    var materialCost = materialFor(c.fen(),mover) - materialFor(positions[index],mover);
+    if(materialCost > -2) return null;
+    return {piece:reply.captured, square:reply.to, materialCost:materialCost};
+  }
   var moves = [];
   for(var j=0; j<history.length; j++){
     var before = posAnalyses[j], after = posAnalyses[j+1];
@@ -5265,26 +5299,40 @@ async function runFullAnalysis(runId){
        multi.second.depth < 13 || Math.abs(multi.second.depth - multi.depth) > 1 || !multi.uci ||
        multi.uci !== mm.from + mm.to + (history[mi].promotion || "")) continue;
     var gap = chance(multi.score) - chance(multi.second.score);
-    if(gap < 0.16) continue;
-    // "Great" requires a distinctly better best line, confirmed by a two-line search.
-    mm.quality = "great";
-    mm.alternative = multi.second.uci;
-    mm.alternativeGap = gap;
-    // "Brilliant": a unique, objectively strong move offering a non-pawn piece,
-    // which the engine's preferred reply can actually capture.
-    var piece = history[mi].piece;
-    if(piece === "p" || piece === "k" || !multi.pv || multi.pv.length < 2) continue;
-    var afterPos = new Chess(positions[mi+1]);
-    var reply = null;
-    try { reply = afterPos.move({
-      from:multi.pv[1].slice(0,2), to:multi.pv[1].slice(2,4),
-      promotion:multi.pv[1].slice(4,5) || "q"
-    }); } catch(e){}
-    var pieceValues = {n:3,b:3,r:5,q:9};
-    if(reply && reply.captured === piece && reply.to === mm.to &&
-       pieceValues[piece] >= 3 && mm.winAfter >= 0.4 &&
-       mm.winLoss <= 0.012 && gap >= 0.22){
+    if(!isFinite(gap) || gap < 0.08) continue;
+
+    // Verify an objectively sound sacrifice. A loose piece alone is not enough:
+    // the capture should be the engine's best reply, or a near-best played reply.
+    // This correctly rejects 5.Nxe5 Bxd1 in Legal's Mate when taking the queen
+    // is itself a huge blunder.
+    var offer = null;
+    if(multi.pv && multi.pv.length >= 2 && multi.pv[0] === multi.uci){
+      offer = provenMaterialOffer(mi, multi.pv[1], multi.pv.slice(2));
+    }
+    if(!offer && mi+2 < positions.length && history[mi+1] && history[mi+1].captured){
+      var replyMove = history[mi+1];
+      var postCapture = posAnalyses[mi+2];
+      var bestDefender = posAnalyses[mi+1];
+      var playedReply = replyMove.from + replyMove.to + (replyMove.promotion || "");
+      var replyCost = bestDefender && postCapture && bestDefender.score != null &&
+        postCapture.score != null ?
+        chance(bestDefender.score) - chance(-postCapture.score) : null;
+      if(replyCost != null && replyCost <= 0.045 &&
+         bestDefender.depth >= 13 && postCapture.depth >= 13){
+        offer = provenMaterialOffer(mi, playedReply,
+          postCapture.pv && postCapture.pv.length ? postCapture.pv : []);
+      }
+    }
+    if(offer && mm.winAfter >= 0.40 && mm.winLoss <= 0.015 &&
+       gap >= 0.12 && multi.depth >= 15 &&
+       multi.second.depth >= 15){
       mm.quality = "brilliant";
+      mm.sacrifice = offer;
+    } else if(gap >= 0.16){
+      // "Great" still needs a clearly stronger first line than the alternative.
+      mm.quality = "great";
+      mm.alternative = multi.second.uci;
+      mm.alternativeGap = gap;
     }
   }
 
