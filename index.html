@@ -5349,6 +5349,10 @@ async function runFullAnalysis(runId){
         criticalCache.set(key,task);
       }
       var checked=await task;
+      if((!checked||checked.score==null)&&engineIndex===0&&criticalCache.get(key)===task){
+        criticalCache.delete(key);
+        checked=await analyzeWithEngine(positions[at],2300,0);
+      }
       if(checked&&checked.score!=null&&
          posAnalyses[at]&&checked.depth>=posAnalyses[at].depth)
         posAnalyses[at]=checked;
