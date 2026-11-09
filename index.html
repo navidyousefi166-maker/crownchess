@@ -5342,17 +5342,12 @@ async function runFullAnalysis(runId){
     if(!analysisRunning || runId !== analysisRunId) return;
     var candidate = candidates[ci], mi = candidate.i, mm = candidate.m;
     $("anProgress").textContent = "Verifying exceptional moves " + (ci+1) + "/" + candidates.length;
-    var multiStarted = performance.now();
-    var multi = await analyzeFenPromise(positions[mi], 2200, runId, 2);
-    exceptionalTiming.multiMs += performance.now() - multiStarted;
-    if(!analysisRunning || runId !== analysisRunId) return;
-    // Some browser builds produce no synchronized MultiPV pair.
-    // Fall back to two restricted single-PV searches to compare the best
-    // move with the strongest legal alternative rather than suppressing Great.
+    // analyzeFenPromise exposes the primary move as "best", not "uci".
+    // The old MultiPV probe always entered the two single-PV fallback searches.
+    // Skip that redundant 2200ms probe and keep the proven verification path.
+    var multi = null;
     var playedMoveUci = mm.from + mm.to + (history[mi].promotion || "");
-    if(!multi || !multi.paired || !multi.second || multi.depth < 12 ||
-       multi.second.depth < 12 || !multi.uci){
-      exceptionalTiming.fallbacks++;
+    exceptionalTiming.fallbacks++;
       var position = new Chess(positions[mi]);
       var legalUci = position.moves({verbose:true}).map(function(m){
         return m.from + m.to + (m.promotion || "");
@@ -5378,9 +5373,6 @@ async function runFullAnalysis(runId){
         paired:true
       };
       greatDiagnostics.alternative++;
-    } else {
-      exceptionalTiming.pairedDirect++;
-    }
     greatDiagnostics.paired++;
     if(multi.uci !== playedMoveUci) continue;
     var gap = chance(multi.score) - chance(multi.second.score);
