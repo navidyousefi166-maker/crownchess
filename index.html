@@ -2228,21 +2228,13 @@ function setPlayer(color, player){
 }
 
 /* ===== clocks ===== */
-// Render-only correction after the server acknowledges a move. The real clocks,
-// flag fall and validation always use the unmodified server-authoritative values.
-var kfClockDisplayCorrection = null;
-function kfClockShown(color, seconds){
-  var c = kfClockDisplayCorrection;
-  if(!c || c.color !== color) return seconds;
-  var progress = Math.min(1, (performance.now() - c.startedAt) / 1600);
-  if(progress >= 1){ kfClockDisplayCorrection = null; return seconds; }
-  return seconds + c.delta * (1-progress);
-}
+// Show server-authoritative clock values directly. Do not keep decrementing
+// the stopped player's clock with a post-move visual animation.
 function paintClocks(){
   var colors = ["white", "black"];
   for(var i=0;i<colors.length;i++){
     var color = colors[i];
-    var val = kfClockShown(color, color === "white" ? clockWhite : clockBlack);
+    var val = color === "white" ? clockWhite : clockBlack;
     var ids = [color + "Clock", color + "ClockMobile"];
     for(var j=0;j<ids.length;j++){
       var el = $(ids[j]);
@@ -2260,9 +2252,9 @@ function paintClocks(){
   }
   if(document.body.classList.contains("game-focus")){
     var topColor = fsPlayerColor === "w" ? "black" : "white";
-    var topVal = kfClockShown(topColor, topColor === "white" ? clockWhite : clockBlack);
+    var topVal = topColor === "white" ? clockWhite : clockBlack;
     var botColor = fsPlayerColor === "w" ? "white" : "black";
-    var botVal = kfClockShown(botColor, botColor === "white" ? clockWhite : clockBlack);
+    var botVal = botColor === "white" ? clockWhite : clockBlack;
     var topEl = $("gfsTopClock"), botEl = $("gfsBotClock");
     if(topEl){
       topEl.textContent = fmtClock(topVal);
@@ -2297,7 +2289,6 @@ function anchorClockToServerTime(timestamp){
 }
 
 function resetClocks(){
-  kfClockDisplayCorrection = null;
   clockExpired = false;
   clockClaimPending = false;
   clockStartPending = false;
@@ -5930,7 +5921,6 @@ async function submitMove(m, clientWhite, clientBlack){
   var kfMoveRpcStart = performance.now();
   var kfMoverColor = m.color === "w" ? "white" : "black";
   var kfClockAtTap = kfMoverColor === "white" ? clockWhite : clockBlack;
-  kfClockDisplayCorrection = null;
   // Cancel any polling request that started before this move.
   gameSyncGeneration++;
   try {
@@ -5963,7 +5953,6 @@ async function submitMove(m, clientWhite, clientBlack){
     });
     
     if(res.error){
-      kfClockDisplayCorrection = null;
       game.undo();
       selected = null;
       targets = [];
@@ -6012,11 +6001,8 @@ async function submitMove(m, clientWhite, clientBlack){
     var kfRpcDuration = performance.now() - kfMoveRpcStart;
     var kfConfirmedTime = kfMoverColor === "white" ? clockWhite : clockBlack;
     var kfAdjustment = kfClockAtTap - kfConfirmedTime;
-    // Only soften a small, positive correction to the already-stopped clock.
-    // Never alter clockWhite/clockBlack, timeout decisions or the opponent clock.
-    if(kfAdjustment > 0.05 && kfAdjustment <= 1.5){
-      kfClockDisplayCorrection = {color:kfMoverColor,delta:kfAdjustment,startedAt:performance.now()};
-    }
+    // This difference is diagnostic only. Never animate the stopped clock,
+    // modify authoritative time, or compensate using untrusted client time.
     if(kfRpcDuration >= 150){
       console.debug("[Kingsfall clock] move RPC:",Math.round(kfRpcDuration)+"ms","server adjustment:",Math.round(kfAdjustment*1000)+"ms");
     }
