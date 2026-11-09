@@ -4906,10 +4906,10 @@ function initStockfish(){
 
 function handleStockfishMessage(line){
   if(line.indexOf("info ") === 0 && stockfishAnalysisMode){
-    var depthM = line.match(/\\bdepth (\\d+)/);
-    var cpM = line.match(/\\bscore cp (-?\\d+)/);
-    var mateM = line.match(/\\bscore mate (-?\\d+)/);
-    if(!/\\b(?:lowerbound|upperbound)\\b/.test(line) && (cpM || mateM)){
+    var depthM = line.match(/\bdepth (\d+)/);
+    var cpM = line.match(/\bscore cp (-?\d+)/);
+    var mateM = line.match(/\bscore mate (-?\d+)/);
+    if(!/\b(?:lowerbound|upperbound)\b/.test(line) && (cpM || mateM)){
       var depth = depthM ? parseInt(depthM[1], 10) : 0;
       if(depth >= currentAnalyzeDepth){
         currentAnalyzeDepth = depth;
@@ -4935,7 +4935,7 @@ function handleStockfishMessage(line){
   if(line.indexOf("bestmove ") === 0){
     clearTimeout(stockfishFallbackTimer);
     stockfishThinking = false;
-    var parts = line.split(/\\s+/), uci = parts[1];
+    var parts = line.split(/\s+/), uci = parts[1];
     if(stockfishAnalysisMode){
       var analysisCb = stockfishCallback;
       stockfishCallback = null;
