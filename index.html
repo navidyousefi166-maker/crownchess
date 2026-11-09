@@ -1303,11 +1303,12 @@ input[type="color"] {
 /* Owner-only suspicious-game replay */
 .kf-audit-replay{position:fixed;inset:0;z-index:999999;background:rgba(5,8,18,.88);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto}
 .kf-audit-replay[hidden]{display:none!important}
-.kf-audit-replay-panel{width:min(100%,560px);max-height:96vh;overflow:auto;border:1px solid rgba(255,215,120,.38);border-radius:16px;background:#191b28;color:#f5f2ea;padding:15px;box-sizing:border-box}
+.kf-audit-replay-panel{width:min(100%,500px);max-height:calc(100dvh - 28px);overflow:auto;border:1px solid rgba(255,215,120,.38);border-radius:16px;background:#191b28;color:#f5f2ea;padding:15px;box-sizing:border-box}
 .kf-audit-replay-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:9px}
 .kf-audit-replay-head strong{color:#e9c879;font-size:17px}
-.kf-audit-replay-board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;width:min(100%,410px);margin:12px auto;border:2px solid #88714b;touch-action:manipulation}
-.kf-audit-replay-square{display:flex;align-items:center;justify-content:center;position:relative;font-size:clamp(22px,8vw,43px);line-height:1;font-family:"DejaVu Sans","Segoe UI Symbol",sans-serif;user-select:none}
+.kf-audit-replay-board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));aspect-ratio:1;width:min(100%,360px);box-sizing:border-box;overflow:hidden;margin:12px auto;border:2px solid #88714b;touch-action:manipulation}
+.kf-audit-replay-square{display:flex;align-items:center;justify-content:center;position:relative;min-width:0;min-height:0;aspect-ratio:1;line-height:1;user-select:none}
+.kf-audit-replay-square svg.piece{width:88%;height:88%;display:block;max-width:100%;max-height:100%;pointer-events:none}
 .kf-audit-replay-square.light{background:#eedfc3}.kf-audit-replay-square.dark{background:#a48a68}
 .kf-audit-replay-square.last{box-shadow:inset 0 0 0 3px rgba(255,211,64,.8)}
 .kf-audit-replay-square.suspect{box-shadow:inset 0 0 0 4px rgba(255,57,57,.95)}
@@ -1315,6 +1316,7 @@ input[type="color"] {
 .kf-audit-replay-square .piece-black{color:#161626;text-shadow:0 1px 1px #eee}
 .kf-audit-replay-controls{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin:9px 0}
 .kf-audit-replay-controls .btn{min-width:42px}.kf-audit-replay-status{font-size:13px;line-height:1.6;overflow-wrap:anywhere;margin-top:7px}
+.kf-audit-offender{margin:10px 0;padding:10px 12px;border:1px solid rgba(255,151,94,.55);border-radius:10px;background:rgba(141,52,26,.16);font-size:13px;line-height:1.6;overflow-wrap:anywhere}.kf-audit-offender b{color:#ffcb8d}.kf-audit-offender small{display:block;color:#b8c4d6;font-size:11px}.kf-audit-replay-head>div{min-width:0}.kf-audit-replay-head .btn{flex-shrink:0}@media(max-width:420px){.kf-audit-replay{padding:8px}.kf-audit-replay-panel{padding:12px;max-height:calc(100dvh - 16px)}.kf-audit-replay-board{width:min(100%,330px)}.kf-audit-replay-controls{gap:5px}.kf-audit-replay-controls .btn{min-width:36px;padding:8px}}
 .kf-audit-replay-note{border-left:3px solid #dba559;padding-left:10px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
 </style>
 </head>
@@ -1554,6 +1556,7 @@ input[type="color"] {
 <div id="kfAuditReplay" class="kf-audit-replay" hidden role="dialog" aria-modal="true" aria-labelledby="kfAuditReplayTitle">
 <div class="kf-audit-replay-panel">
 <div class="kf-audit-replay-head"><div><strong id="kfAuditReplayTitle">🛡️ Suspicious Game Review</strong><div id="kfAuditReplayPlayers" class="kf-audit-replay-status"></div></div><button class="btn" type="button" id="kfAuditReplayClose">✕ Close</button></div>
+<div class="kf-audit-offender" id="kfAuditReplayOffender"></div>
 <div class="kf-audit-replay-note" id="kfAuditReplayReason"></div>
 <div id="kfAuditReplayBoard" class="kf-audit-replay-board" aria-label="Read-only board replay"></div>
 <div class="kf-audit-replay-controls">
@@ -6739,7 +6742,6 @@ function kfAuditReplayShow(index){
  if(!kfAuditReplayPositions.length)return;
  kfAuditReplayIndex=Math.max(0,Math.min(kfAuditReplayPositions.length-1,index));
  var state=kfAuditReplayPositions[kfAuditReplayIndex],fen=state.fen||"",parts=fen.split(" "),ranks=(parts[0]||"").split("/");
- var glyph={K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
  var target=$("kfAuditReplayBoard"),html="";
  for(var r=0;r<8;r++){
   var squares=[],rank=ranks[r]||"";
@@ -6747,7 +6749,7 @@ function kfAuditReplayShow(index){
   for(var f=0;f<8;f++){
    var sq="abcdefgh"[f]+(8-r),piece=squares[f]||"",highlight=state.from===sq||state.to===sq;
    var suspect=kfAuditReplayIndex===kfAuditReplayMarkedIndex&&highlight;
-   html+='<div class="kf-audit-replay-square '+((r+f)%2?"dark":"light")+(highlight?" last":"")+(suspect?" suspect":"")+'">'+(piece?'<span class="'+(piece===piece.toUpperCase()?"piece-white":"piece-black")+'">'+(glyph[piece]||"")+'</span>':"")+'</div>';
+   html+='<div class="kf-audit-replay-square '+((r+f)%2?"dark":"light")+(highlight?" last":"")+(suspect?" suspect":"")+'">'+(piece?svg({color:piece===piece.toUpperCase()?"w":"b",type:piece.toLowerCase()}):"")+'</div>';
   }
  }
  target.innerHTML=html;
@@ -6765,6 +6767,7 @@ async function kfAuditReplayOpen(id,trigger){
  kfAuditReplayOriginalFocus=trigger||null;
  $("kfAuditReplay").hidden=false;
  $("kfAuditReplayPlayers").textContent="Loading saved game…";
+ $("kfAuditReplayOffender").textContent="Loading reported account…";
  $("kfAuditReplayReason").textContent="";
  $("kfAuditReplayBoard").innerHTML="";
  $("kfAuditReplayStatus").textContent="";
@@ -6776,6 +6779,10 @@ async function kfAuditReplayOpen(id,trigger){
   if($("kfAuditReplay").hidden)return;
   kfAuditReplayAlert=a;
   $("kfAuditReplayPlayers").textContent=(a.white_username||"White")+" vs "+(a.black_username||"Black");
+  var offenderId=String(a.player_id||a.offender_id||a.user_id||"");
+  var offenderName=(offenderId&&String(a.white_id||a.white_user_id||"")===offenderId)?a.white_username:(offenderId&&String(a.black_id||a.black_user_id||"")===offenderId)?a.black_username:(a.player_username||a.offender_username||a.username||"");
+  var offenderSide=(offenderId&&String(a.white_id||a.white_user_id||"")===offenderId)?"White":(offenderId&&String(a.black_id||a.black_user_id||"")===offenderId)?"Black":"";
+  $("kfAuditReplayOffender").innerHTML="<b>⚠️ Reported account: "+adminEscape(offenderName||offenderId||"Unknown")+"</b>"+(offenderSide?" · "+adminEscape(offenderSide):"")+(offenderId?"<small>Account ID: "+adminEscape(offenderId)+"</small>":"");
   $("kfAuditReplayReason").textContent=(a.verdict==="flagged"?"Flagged: ":"Needs review: ")+(a.detail||"Unknown reason");
   if(typeof Chess!=="function")throw Error("Chess rules library is unavailable.");
   var board=new Chess(),pgn=a.pgn||"",loaded=false;
@@ -6803,6 +6810,7 @@ async function kfAuditReplayOpen(id,trigger){
   if(!loaded)$("kfAuditReplayStatus").textContent+=" · Full PGN unavailable or invalid; available position snapshots shown.";
  }catch(err){
   $("kfAuditReplayPlayers").textContent="Unable to open game";
+  $("kfAuditReplayOffender").textContent="Reported account unavailable";
   $("kfAuditReplayReason").textContent=err.message||String(err);
  }
 }
