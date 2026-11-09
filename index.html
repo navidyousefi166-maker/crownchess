@@ -4095,7 +4095,7 @@ async function submitHumiliation(square, type){
   if(!game.load(res.data)) throw new Error("The server returned an invalid board.");
   onlineGame = Object.assign({}, onlineGame, upd);
   humilApplied = true; humilSelecting = false; last = null; selected = null; targets = [];
-  playWindSound(); updateHumilBadge(); draw();
+  playHumiliationSound(); updateHumilBadge(); draw();
 }
 
 /* Legacy humilDialog (only if some code still calls it) */
@@ -4134,6 +4134,20 @@ $("humilConfirm").onclick = async function(){
   catch(err){ $("humilMsg").textContent = "Error: " + (err.message || err); return; }
   $("humilDialog").close();
 };
+
+/* Random Humiliation SFX. Keep the old synthesized wind sound as a safe
+   fallback until the uploaded MP3 files are present or audio is blocked. */
+var humiliationSounds = ["humiliation-1.mp3", "humiliation-2.mp3", "humiliation-3.mp3"];
+function playHumiliationSound(){
+  try {
+    var file = humiliationSounds[Math.floor(Math.random() * humiliationSounds.length)];
+    var audio = new Audio(file);
+    audio.volume = 0.9;
+    audio.addEventListener("error", function(){ playWindSound(); }, {once:true});
+    var promise = audio.play();
+    if(promise && typeof promise.catch === "function") promise.catch(function(){ playWindSound(); });
+  } catch(e){ playWindSound(); }
+}
 
 /* ===== Sounds ===== */
 function playWindSound(){
