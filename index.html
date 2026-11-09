@@ -1529,6 +1529,7 @@ input[type="color"] {
 <div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1 id="adminPageTitle">🛡️ Admin Panel</h1><p id="adminPageSubtitle">Private administration · Owner access only</p></div><div class="admin-heading-actions"><button class="btn" id="adminBackToOverview" type="button" hidden>← Back</button><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div></div>
 <div id="adminOverviewView">
 <div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div></div>
+<section class="admin-section" id="adminAuditSection"><div class="admin-section-head"><div><h2>🛡️ Move Integrity Alerts</h2><p>Background move validation · alerts are for admin review, never automatic punishment</p></div></div><div id="adminAuditAlerts" class="admin-users"><div class="admin-loading">Loading move checks…</div></div></section>
 <section class="admin-section"><div class="admin-section-head"><div><h2>⚙️ Feature Management</h2><p>Temporarily enable or disable game features</p></div></div><div id="adminFeatures" class="admin-features"><div class="admin-loading">Loading features…</div></div></section>
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
 </div>
@@ -6702,8 +6703,23 @@ async function adminInvoke(body){
  if(!currentUser||currentUser.id!==adminOwnerId)throw Error("Owner access required");
  var r=await sb.functions.invoke("kf-admin",{body:body});if(r.error)throw r.error;if(r.data&&r.data.error)throw Error(r.data.error);return r.data;
 }
+async function loadAdminAuditAlerts(){
+ if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
+ var list=$("adminAuditAlerts");if(!list)return;
+ try{
+  var result=await sb.rpc("kf_admin_move_audit_alerts",{p_limit:30});
+  if(result.error)throw result.error;
+  var alerts=Array.isArray(result.data)?result.data:[];
+  if(!alerts.length){list.innerHTML='<div class="admin-empty">No suspicious moves reported.</div>';return;}
+  list.innerHTML=alerts.map(function(a){
+    var label=a.verdict==="flagged"?"Potentially invalid move":"Needs review",m=a.move_data||{};
+    return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">⚠️ '+adminEscape(label)+'</div><div class="admin-user-meta">Game '+adminEscape(a.game_id||"")+' · Player '+adminEscape(a.player_id||"Unknown")+'</div></div></div><div class="admin-user-stats"><span class="admin-chip">'+adminEscape((m.from||"?")+" → "+(m.to||"?")+" "+(m.san||""))+'</span><span class="admin-chip">'+adminEscape(a.detail||"")+'</span><span class="admin-chip">'+adminEscape(a.detected_at?new Date(a.detected_at).toLocaleString():"")+'</span></div></article>';
+  }).join("");
+ }catch(err){list.innerHTML='<div class="admin-empty">Move-audit reports unavailable: '+adminEscape(err.message||err)+'</div>';}
+}
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
+ loadAdminAuditAlerts();
  $("adminUsers").innerHTML='<div class="admin-loading">Loading registered users…</div>';
  $("adminFeatures").innerHTML='<div class="admin-loading">Loading features…</div>';
  $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>Loading…</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat"><span>Total wins</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div>';
@@ -6756,6 +6772,7 @@ function renderAdminFeatures(rows){
 }
 $("navAdmin").onclick=function(){if(currentUser&&currentUser.id===adminOwnerId)showPage("admin");};
 $("adminRefresh").onclick=loadAdminPanel;$("adminUserSearch").addEventListener("input",renderAdminUsers);
+setInterval(function(){if(currentUser&&currentUser.id===adminOwnerId&&$("pageAdmin").classList.contains("active")&&!$("adminOverviewView").hidden){loadAdminAuditAlerts();}},30000);
 function showRegisteredUsers(){if(!currentUser||currentUser.id!==adminOwnerId)return;$("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=false;$("adminPageTitle").textContent="👥 User Management";$("adminPageSubtitle").textContent="Manage Kingsfall accounts";$("adminBackToOverview").hidden=false;$("adminUserSearch").value="";renderAdminUsers();window.scrollTo({top:0,behavior:"smooth"});}
 function showAdminOverview(){$("adminUserManagementSection").hidden=true;$("adminOverviewView").hidden=false;$("adminPageTitle").textContent="🛡️ Admin Panel";$("adminPageSubtitle").textContent="Private administration · Owner access only";$("adminBackToOverview").hidden=true;window.scrollTo({top:0,behavior:"smooth"});}
 $("adminBackToOverview").addEventListener("click",showAdminOverview);
