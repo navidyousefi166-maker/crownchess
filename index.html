@@ -1409,7 +1409,7 @@ input[type="color"] {
         <div class="player-info">
           <div class="side-label">Black</div>
           <div class="pname" id="blackName">Waiting for opponent</div>
-          <div class="pwins" id="blackWins">— wins</div>
+          <div class="pwins" id="blackWins">— crowns</div>
         </div>
       </div>
       <div class="player-card empty" id="whiteCard">
@@ -1417,7 +1417,7 @@ input[type="color"] {
         <div class="player-info">
           <div class="side-label">White</div>
           <div class="pname" id="whiteName">Waiting for opponent</div>
-          <div class="pwins" id="whiteWins">— wins</div>
+          <div class="pwins" id="whiteWins">— crowns</div>
         </div>
       </div>
     </div>
@@ -1428,7 +1428,7 @@ input[type="color"] {
           <div class="player-info">
             <div class="side-label">Black</div>
             <div class="pname" id="blackNameMobile">Waiting for opponent</div>
-            <div class="pwins" id="blackWinsMobile">— wins</div>
+            <div class="pwins" id="blackWinsMobile">— crowns</div>
           </div>
         </div>
         <div class="player-card empty" id="whiteCardMobile">
@@ -1436,7 +1436,7 @@ input[type="color"] {
           <div class="player-info">
             <div class="side-label">White</div>
             <div class="pname" id="whiteNameMobile">Waiting for opponent</div>
-            <div class="pwins" id="whiteWinsMobile">— wins</div>
+            <div class="pwins" id="whiteWinsMobile">— crowns</div>
           </div>
         </div>
       </div>
@@ -1489,7 +1489,7 @@ input[type="color"] {
         <div class="lb-table-head">
           <span>#</span>
           <span>Player</span>
-          <span>Wins</span>
+          <span>Crowns</span>
           <span>🏆</span>
           <span>Humiliation</span>
           <span title="Blood Tributes wins">BT</span>
@@ -2177,7 +2177,7 @@ function setPlayer(color, player){
   var card = $(prefix + "Card");
   var name = player && player.username ? player.username : "Waiting for opponent";
   var winsRaw = player && player.wins !== undefined ? Number(player.wins) : NaN;
-  var wins = (isFinite(winsRaw) ? winsRaw : "—") + " wins";
+  var wins = (isFinite(winsRaw) ? winsRaw : "—") + " crowns";
   var avatar = (player && player.avatar_url) ? player.avatar_url : defaultAvatar();
   $(prefix + "Name").textContent = name;
   $(prefix + "Wins").textContent = wins;
