@@ -78,6 +78,8 @@ body.theme-ocean .theme-toggle{
 .nav-tab:hover{color:var(--text);background:rgba(255,255,255,.05)}
 .nav-tab.active{color:var(--gold);background:rgba(237,197,107,.1);box-shadow:inset 0 -2px 0 var(--gold)}
 .nav-tab .nt-icon{font-size:16px;line-height:1}
+/* Hidden admin control must stay hidden, including during swipe transitions. */
+#navAdmin[hidden]{display:none!important;visibility:hidden!important;pointer-events:none!important}
 .topnav-right{display:flex;gap:8px;align-items:center;flex:none}
 @media(max-width:700px){
   .topnav-left{gap:10px}
