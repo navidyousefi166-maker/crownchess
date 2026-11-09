@@ -5090,7 +5090,7 @@ async function runFullAnalysis(runId){
   var posAnalyses = [];
   analysisRunning = true;
   // First pass is deliberately short; critical positions are checked more deeply below.
-  var moveTime = history.length > 80 ? 180 : 260;
+  var moveTime = history.length > 80 ? 550 : 850;
   for(var p=0; p<total; p++){
     if(!analysisRunning || runId !== analysisRunId) return;
     $("anProgress").textContent = "Analyzing " + (p + 1) + " / " + total + " · " + Math.round((p / total) * 100) + "%";
@@ -5115,16 +5115,16 @@ async function runFullAnalysis(runId){
   for(var k=0; k<history.length; k++){
     var pre = posAnalyses[k], post = posAnalyses[k+1];
     if(!pre || !post) continue;
-    var shallow = pre.depth < 8 || post.depth < 8;
+    var shallow = pre.depth < 11 || post.depth < 11;
     var shift = pre.score != null && post.score != null ? Math.abs(pre.score + post.score) : 0;
-    if(shallow || shift >= 90){
+    if(shallow || shift >= 75){
       if(pre.depth !== 99) refine[k] = true;
       if(post.depth !== 99) refine[k+1] = true;
     }
   }
   var refineIndices = Object.keys(refine).map(Number);
   // Avoid turning a long mobile game review into an unbounded second search.
-  var refineLimit = Math.min(refineIndices.length, Math.max(8, Math.ceil(total * 0.4)));
+  var refineLimit = Math.min(refineIndices.length, Math.max(10, Math.ceil(total * 0.65)));
   refineIndices.sort(function(a,b){
     var da = posAnalyses[a].depth, db = posAnalyses[b].depth;
     return da - db;
@@ -5133,7 +5133,7 @@ async function runFullAnalysis(runId){
     if(!analysisRunning || runId !== analysisRunId) return;
     var at = refineIndices[r];
     $("anProgress").textContent = "Checking critical positions " + (r+1) + " / " + refineLimit;
-    var checked = await analyzeFenPromise(positions[at], 850, runId);
+    var checked = await analyzeFenPromise(positions[at], 2300, runId);
     if(!analysisRunning || runId !== analysisRunId) return;
     if(checked.score != null && checked.depth >= posAnalyses[at].depth) posAnalyses[at] = checked;
     if(!stockfishWorker) break;
@@ -5149,13 +5149,13 @@ async function runFullAnalysis(runId){
     var loss = (evalBefore != null && evalAfter != null) ? Math.max(0, evalBefore - evalAfter) : null;
     var quality = "unrated";
     // An invalid or very shallow evaluation must never receive a green label.
-    var reliable = before && after && before.depth >= 7 && after.depth >= 7;
+    var reliable = before && after && before.depth >= 11 && after.depth >= 11;
     if(loss != null && reliable){
-      if(bestUci && playedUci === bestUci && loss <= 20) quality = "best";
-      else if(loss <= 20) quality = "excellent";
-      else if(loss <= 50) quality = "good";
-      else if(loss <= 100) quality = "inaccuracy";
-      else if(loss <= 200) quality = "mistake";
+      if(bestUci && playedUci === bestUci && loss <= 45) quality = "best";
+      else if(loss <= 45) quality = "excellent";
+      else if(loss <= 110) quality = "good";
+      else if(loss <= 180) quality = "inaccuracy";
+      else if(loss <= 350) quality = "mistake";
       else quality = "blunder";
     }
     moves.push({
