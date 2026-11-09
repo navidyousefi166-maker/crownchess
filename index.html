@@ -5094,7 +5094,12 @@ var analysisRunning = false;
 var analysisRunId = 0;
 
 /* Secondary engine: independent UCI state, never touches the game/primary engine. */
-var analysisAuxEngine = null;
+var analysisAuxEngines = [];
+var ANALYSIS_EXTRA_WORKERS = 2;
+function closeAnalysisAuxEngines(){
+  analysisAuxEngines.forEach(function(engine){if(engine)engine.close();});
+  analysisAuxEngines=[];
+}
 function createAnalysisAuxEngine(runId){
   var worker=null, active=null, closed=false, readyResolve, readyDone=false, bootTimer=null;
   var ready=new Promise(function(resolve){ readyResolve=resolve; });
@@ -5167,7 +5172,7 @@ function createAnalysisAuxEngine(runId){
   }
   return {ready:ready,analyze:analyze,close:close,alive:function(){return !closed;}};
 }
-async function runDualAnalysisJobs(items,runId,auxReady,work,retry){
+async function runAnalysisWorkerPool(items,runId,readyAuxIndices,work,retry){
   var next=0,completed=0,results=new Array(items.length),retryList=[];
   async function runner(engineIndex){
     while(analysisRunning&&runId===analysisRunId){
@@ -5176,10 +5181,10 @@ async function runDualAnalysisJobs(items,runId,auxReady,work,retry){
       var value=null;
       try{value=await work(items[idx],engineIndex,idx,items.length);}catch(err){console.warn("Analysis job failed",err);}
       results[idx]=value;completed++;
-      if(engineIndex===1&&retry&&retry(value))retryList.push(idx);
+      if(engineIndex>0&&retry&&retry(value,engineIndex))retryList.push(idx);
     }
   }
-  await Promise.all([runner(0)].concat(auxReady?[runner(1)]:[]));
+  await Promise.all([runner(0)].concat(readyAuxIndices.map(function(i){return runner(i+1);})));
   // Never start two requests simultaneously on the primary UCI channel.
   for(var j=0;j<retryList.length&&analysisRunning&&runId===analysisRunId;j++){
     var ix=retryList[j];
@@ -5196,7 +5201,7 @@ $("analyze").onclick = function(){
 $("analysisClose").onclick = function(){
   analysisRunning = false;
   analysisRunId++;
-  if(analysisAuxEngine){analysisAuxEngine.close();analysisAuxEngine=null;}
+  closeAnalysisAuxEngines();
   if(stockfishAnalysisMode && stockfishWorker){
     try{ stockfishWorker.terminate(); }catch(err){}
     stockfishWorker = null;
@@ -5214,7 +5219,7 @@ $("anNextBtn").onclick = function(){ gotoAnalysisIndex(analysisIndex + 1); };
 $("anEndBtn").onclick = function(){ gotoAnalysisIndex(analysisMoves.length); };
 
 function openAnalysis(){
-  if(analysisAuxEngine){analysisAuxEngine.close();analysisAuxEngine=null;}
+  closeAnalysisAuxEngines();
   analysisMoves = [];
   analysisPositions = [];
   analysisIndex = 0;
@@ -5229,7 +5234,9 @@ function openAnalysis(){
   $("anProgress").textContent = "Loading chess engine...";
   $("analysisDialog").showModal();
   if(!stockfishWorker) initStockfish();
-  analysisAuxEngine=createAnalysisAuxEngine(thisRun);
+  analysisAuxEngines=Array.from({length:ANALYSIS_EXTRA_WORKERS},function(){
+    return createAnalysisAuxEngine(thisRun);
+  });
   setTimeout(function(){ runFullAnalysis(thisRun); }, 50);
 }
 
@@ -5275,15 +5282,19 @@ async function runFullAnalysis(runId){
   var initialAnalyses = new Array(total);
   analysisRunning = true;
   var analysisStartedAt=performance.now();
-  // Two engines share the entire position queue, not just exceptional checks.
-  // If the auxiliary engine fails or cannot initialize, use the legacy engine.
-  var auxReady=false;
-  if(analysisAuxEngine){
-    auxReady=await Promise.race([
-      analysisAuxEngine.ready,
+  // Three independent engines share a position queue across every analysis stage.
+  // Failed/slow auxiliary workers are excluded; the primary worker always runs.
+  var readyAuxIndices=[];
+  var readyStatuses=await Promise.all(analysisAuxEngines.map(function(engine){
+    return Promise.race([
+      engine.ready,
       new Promise(function(resolve){setTimeout(function(){resolve(false);},4500);})
     ]);
-  }
+  }));
+  readyStatuses.forEach(function(ok,i){
+    if(ok&&analysisAuxEngines[i]&&analysisAuxEngines[i].alive())
+      readyAuxIndices.push(i);
+  });
   if(!analysisRunning||runId!==analysisRunId)return;
   var moveTime=history.length>80?550:850;
   var initialCache=new Map(),criticalCache=new Map();
@@ -5292,12 +5303,15 @@ async function runFullAnalysis(runId){
   var timeInitialStart=performance.now();
   function positionKey(fen){return fen.split(" ").slice(0,4).join(" ");}
   function analyzeWithEngine(fen,ms,engineIndex,searchMoves){
-    return engineIndex===1&&auxReady&&analysisAuxEngine?
-      analysisAuxEngine.analyze(fen,ms,searchMoves):
-      analyzeFenPromise(fen,ms,runId,1,searchMoves);
+    if(engineIndex>0){
+      var aux=analysisAuxEngines[engineIndex-1];
+      if(aux&&aux.alive())return aux.analyze(fen,ms,searchMoves);
+      return Promise.resolve(null);
+    }
+    return analyzeFenPromise(fen,ms,runId,1,searchMoves);
   }
   var positionIndices=Array.from({length:total},function(_,i){return i;});
-  var firstResults=await runDualAnalysisJobs(positionIndices,runId,auxReady,
+  var firstResults=await runAnalysisWorkerPool(positionIndices,runId,readyAuxIndices,
     async function(p,engineIndex){
       var fen=positions[p],terminal=new Chess(fen);
       if(terminal.game_over())
@@ -5321,7 +5335,7 @@ async function runFullAnalysis(runId){
   if(!stockfishWorker){
     $("anProgress").textContent="Analysis stopped: engine became unavailable.";
     analysisRunning=false;
-    if(analysisAuxEngine){analysisAuxEngine.close();analysisAuxEngine=null;}
+    closeAnalysisAuxEngines();
     return;
   }
   var initialElapsed=performance.now()-timeInitialStart;
@@ -5340,7 +5354,7 @@ async function runFullAnalysis(runId){
   refineIndices.sort(function(a,b){return initialAnalyses[a].depth-initialAnalyses[b].depth;});
   refineIndices=refineIndices.slice(0,maxCritical);
   var timeCriticalStart=performance.now();
-  await runDualAnalysisJobs(refineIndices,runId,auxReady,
+  await runAnalysisWorkerPool(refineIndices,runId,readyAuxIndices,
     async function(at,engineIndex){
       var key=positionKey(positions[at]);
       var task=criticalCache.get(key);
@@ -5451,7 +5465,7 @@ async function runFullAnalysis(runId){
   }).slice(0, 12);
   var greatDiagnostics = {candidates:candidates.length,paired:0,unique:0,alternative:0};
   var exceptionalTiming={start:performance.now(),multiMs:0,bestMs:0,secondMs:0,fallbacks:0,pairedDirect:0};
-  var verifiedPairs=await runDualAnalysisJobs(candidates,runId,auxReady,
+  var verifiedPairs=await runAnalysisWorkerPool(candidates,runId,readyAuxIndices,
     async function(candidate,engineIndex,idx){
       var mi=candidate.i,mm=candidate.m;
       if(analysisRunning&&runId===analysisRunId)
@@ -5472,7 +5486,10 @@ async function runFullAnalysis(runId){
       if(!second||!second.best||second.score==null||second.depth<12||
          alternatives.indexOf(second.best)<0)return null;
       return {best:best,second:second};
-    },function(result){return !result&&analysisAuxEngine&&!analysisAuxEngine.alive();});
+    },function(result,engineIndex){
+      var aux=analysisAuxEngines[engineIndex-1];
+      return !result&&(!aux||!aux.alive());
+    });
   if(!analysisRunning||runId!==analysisRunId)return;
   for(var ci=0;ci<candidates.length;ci++){
     var candidate=candidates[ci],mi=candidate.i,mm=candidate.m;
@@ -5562,14 +5579,15 @@ async function runFullAnalysis(runId){
   });
   var totalElapsed=performance.now()-analysisStartedAt;
   console.info("[Kingsfall dual analysis timing]",{
-    auxiliaryReady:auxReady,
+    activeWorkers:1+readyAuxIndices.length,
+    auxiliaryReady:readyAuxIndices.length,
     firstPassMs:Math.round(initialElapsed),
     criticalMs:Math.round(criticalElapsed),
     exceptionalMs:Math.round(performance.now()-exceptionalTiming.start),
     totalMs:Math.round(totalElapsed),positions:total,
     critical:refineIndices.length,exceptional:candidates.length
   });
-  if(analysisAuxEngine){analysisAuxEngine.close();analysisAuxEngine=null;}
+  closeAnalysisAuxEngines();
   analysisMoves = moves;
   analysisPositions = positions;
   analysisRunning = false;
