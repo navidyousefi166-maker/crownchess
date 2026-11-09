@@ -5158,55 +5158,96 @@ async function runFullAnalysis(runId){
   }
 
   var total = positions.length;
-  var posAnalyses = [];
+  var posAnalyses = new Array(total);
+  var initialAnalyses = new Array(total);
   analysisRunning = true;
-  // First pass is deliberately short; critical positions are checked more deeply below.
+  // One Stockfish worker: interleave bounded critical searches with the first
+  // pass, avoiding simultaneous UCI commands to the same engine.
   var moveTime = history.length > 80 ? 550 : 850;
+  var initialCache = new Map(), criticalCache = new Map();
+  var queuedCritical = [], criticalQueued = new Set(), criticalDone = new Set();
+  var maxCritical = Math.max(10, Math.ceil(total * 0.65));
+  var earlyBudget = Math.max(1, Math.floor(maxCritical * 0.30));
+  var criticalCount = 0;
+  function positionKey(fen){
+    // Ignore move counters; they do not affect Stockfish evaluation.
+    return fen.split(" ").slice(0, 4).join(" ");
+  }
+  function enqueueCritical(index){
+    if(index < 0 || index >= total || criticalQueued.has(index)) return;
+    var old = initialAnalyses[index];
+    if(!old || old.depth === 99) return;
+    criticalQueued.add(index);
+    queuedCritical.push(index);
+  }
+  async function checkCritical(at){
+    if(!analysisRunning || runId !== analysisRunId) return false;
+    if(criticalDone.has(at)) return true;
+    criticalDone.add(at);
+    var key = positionKey(positions[at]);
+    var checked = criticalCache.get(key);
+    if(!checked){
+      $("anProgress").textContent = "Checking critical positions " + (criticalCount+1) + " / " + maxCritical;
+      checked = await analyzeFenPromise(positions[at], 2300, runId);
+      if(!analysisRunning || runId !== analysisRunId) return false;
+      if(checked && checked.score != null) criticalCache.set(key, checked);
+    }
+    if(checked && checked.score != null &&
+       checked.depth >= posAnalyses[at].depth) posAnalyses[at] = checked;
+    criticalCount++;
+    return true;
+  }
   for(var p=0; p<total; p++){
     if(!analysisRunning || runId !== analysisRunId) return;
     $("anProgress").textContent = "Analyzing " + (p + 1) + " / " + total + " · " + Math.round((p / total) * 100) + "%";
-    var result = await analyzeFenPromise(positions[p], moveTime, runId);
-    if(!analysisRunning || runId !== analysisRunId) return;
-    // A terminal position has no UCI best move. Give it the actual game-theoretic score.
     var terminal = new Chess(positions[p]);
+    var key = positionKey(positions[p]);
+    var result;
     if(terminal.game_over()){
+      // A terminal position cannot have a UCI best move.
       result = {best:null, score:terminal.in_checkmate() ? -10000 : 0, depth:99};
+    } else if(initialCache.has(key)){
+      result = initialCache.get(key);
+    } else {
+      result = await analyzeFenPromise(positions[p], moveTime, runId);
+      if(!analysisRunning || runId !== analysisRunId) return;
+      if(result && result.score != null) initialCache.set(key,result);
     }
-    posAnalyses.push(result);
+    posAnalyses[p] = result;
+    initialAnalyses[p] = result;
+    if(p > 0){
+      var pre = initialAnalyses[p-1], post = initialAnalyses[p];
+      if(pre && post){
+        var shallow = pre.depth < 11 || post.depth < 11;
+        var shift = pre.score != null && post.score != null ? Math.abs(pre.score + post.score) : 0;
+        if(shallow || shift >= 75){
+          enqueueCritical(p-1);
+          enqueueCritical(p);
+        }
+      }
+    }
+    // Start a small share of critical work before the first pass finishes.
+    // Reserve most slots for the depth-prioritized second pass to protect accuracy.
+    if(p % 5 === 4 && criticalCount < earlyBudget && queuedCritical.length){
+      var earlyIndex = queuedCritical.shift();
+      if(!await checkCritical(earlyIndex)) return;
+    }
     if(!stockfishWorker && p < total - 1){
       $("anProgress").textContent = "Analysis stopped: engine became unavailable.";
       analysisRunning = false;
       return;
     }
   }
-
-  // Revisit ambiguous positions instead of trusting a shallow, noisy evaluation.
-  // All classifications and the evaluation bar below use these same final scores.
-  var refine = {};
-  for(var k=0; k<history.length; k++){
-    var pre = posAnalyses[k], post = posAnalyses[k+1];
-    if(!pre || !post) continue;
-    var shallow = pre.depth < 11 || post.depth < 11;
-    var shift = pre.score != null && post.score != null ? Math.abs(pre.score + post.score) : 0;
-    if(shallow || shift >= 75){
-      if(pre.depth !== 99) refine[k] = true;
-      if(post.depth !== 99) refine[k+1] = true;
-    }
-  }
-  var refineIndices = Object.keys(refine).map(Number);
-  // Avoid turning a long mobile game review into an unbounded second search.
-  var refineLimit = Math.min(refineIndices.length, Math.max(10, Math.ceil(total * 0.65)));
-  refineIndices.sort(function(a,b){
-    var da = posAnalyses[a].depth, db = posAnalyses[b].depth;
-    return da - db;
+  // Finish critical checks on the remaining candidates, shallowest first.
+  var refineIndices = Array.from(criticalQueued).filter(function(index){
+    return !criticalDone.has(index);
   });
+  refineIndices.sort(function(a,b){
+    return initialAnalyses[a].depth - initialAnalyses[b].depth;
+  });
+  var refineLimit = Math.min(refineIndices.length, maxCritical - criticalCount);
   for(var r=0; r<refineLimit; r++){
-    if(!analysisRunning || runId !== analysisRunId) return;
-    var at = refineIndices[r];
-    $("anProgress").textContent = "Checking critical positions " + (r+1) + " / " + refineLimit;
-    var checked = await analyzeFenPromise(positions[at], 2300, runId);
-    if(!analysisRunning || runId !== analysisRunId) return;
-    if(checked.score != null && checked.depth >= posAnalyses[at].depth) posAnalyses[at] = checked;
+    if(!await checkCritical(refineIndices[r])) return;
     if(!stockfishWorker) break;
   }
 
