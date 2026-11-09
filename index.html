@@ -4904,7 +4904,7 @@ function initStockfish(){
     ].join("\n");
     var bootUrl = URL.createObjectURL(new Blob([bootCode], {type:"application/javascript"}));
     var worker = new Worker(bootUrl);
-    URL.revokeObjectURL(bootUrl);
+    setTimeout(function(){ URL.revokeObjectURL(bootUrl); }, 30000);
     attachStockfishWorker(worker, generation, true);
   } catch(err) {
     loadLegacyStockfish(generation);
@@ -4942,7 +4942,7 @@ function attachStockfishWorker(worker, generation, modern){
     if(e && e.preventDefault) e.preventDefault();
     fail();
   };
-  stockfishBootTimer = setTimeout(function(){ if(!stockfishReady) fail(); }, modern ? 20000 : 15000);
+  stockfishBootTimer = setTimeout(function(){ if(!stockfishReady) fail(); }, modern ? 18000 : 15000);
   worker.postMessage("uci");
 }
 
@@ -4954,7 +4954,7 @@ function loadLegacyStockfish(generation){
     if(generation !== stockfishBootGeneration) return;
     var url = URL.createObjectURL(new Blob([code], {type:"application/javascript"}));
     var worker = new Worker(url);
-    URL.revokeObjectURL(url);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 30000);
     attachStockfishWorker(worker, generation, false);
   }).catch(function(err){
     if(generation === stockfishBootGeneration) say("Chess engine unavailable: " + err.message, {error:true});
@@ -5109,7 +5109,7 @@ function openAnalysis(){
 async function runFullAnalysis(runId){
   var waitStart = Date.now();
   if(!stockfishWorker) initStockfish();
-  while(!stockfishWorker && Date.now() - waitStart < 12000){
+  while(!stockfishWorker && Date.now() - waitStart < 42000){
     if(runId !== analysisRunId) return;
     await new Promise(function(resolve){ setTimeout(resolve, 100); });
   }
@@ -5118,7 +5118,7 @@ async function runFullAnalysis(runId){
     $("anProgress").textContent = "Engine unavailable. Please retry.";
     return;
   }
-  while(!stockfishReady && Date.now() - waitStart < 12000){
+  while(!stockfishReady && Date.now() - waitStart < 42000){
     if(runId !== analysisRunId) return;
     await new Promise(function(resolve){ setTimeout(resolve, 100); });
   }
@@ -5224,6 +5224,8 @@ async function runFullAnalysis(runId){
       evalBefore: evalBefore,
       evalAfter: evalAfter,
       loss: loss,
+      beforeDepth: before ? before.depth : -1,
+      afterDepth: after ? after.depth : -1,
       best: bestUci,
       fenAfter: positions[j + 1]
     });
@@ -5233,7 +5235,7 @@ async function runFullAnalysis(runId){
   analysisPositions = positions;
   analysisRunning = false;
   var unrated = moves.filter(function(move){ return move.quality === "unrated"; }).length;
-  $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + " / " + moves.length + " moves evaluated";
+  $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + "/" + moves.length + " moves · " + stockfishEngineName;
   renderMoveList();
   renderSummary();
   gotoAnalysisIndex(0);
