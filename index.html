@@ -4878,30 +4878,87 @@ var currentAnalyzeScore = null;
 var currentAnalyzeDepth = -1;
 var STOCKFISH_URL = "stockfish.js";
 
+var stockfishBootTimer = null;
+var stockfishBootGeneration = 0;
+var stockfishEngineName = "Loading";
+var STOCKFISH_19_JS = "https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-lite-single.js";
+var STOCKFISH_19_WASM = "https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-lite-single.wasm";
+
 function initStockfish(){
   if(stockfishWorker) return;
-  try{
-    fetch(STOCKFISH_URL).then(function(r){ return r.text(); }).then(function(code){
-      var blob = new Blob([code], {type: "application/javascript"});
-      stockfishWorker = new Worker(URL.createObjectURL(blob));
-      stockfishWorker.onmessage = function(e){ handleStockfishMessage(String(e.data || "")); };
-      stockfishWorker.onerror = function(){
-        try{ if(stockfishWorker) stockfishWorker.terminate(); } catch(err){}
-        stockfishWorker = null;
-        stockfishReady = false;
-        stockfishThinking = false;
-        computerBusy = false;
-        say("Stockfish could not load. Check your internet connection.", {error: true});
-      };
-      stockfishWorker.postMessage("uci");
-    }).catch(function(){
-      stockfishWorker = null;
-      say("Stockfish could not be downloaded.", {error: true});
-    });
-  } catch(err){
-    stockfishWorker = null;
-    say("Stockfish could not start in this browser.", {error: true});
+  var generation = ++stockfishBootGeneration;
+  // Run the modern NNUE engine without cross-origin isolation, required by GitHub Pages.
+  // The worker redirects the WASM lookup to the pinned CDN companion file.
+  try {
+    var bootCode = [
+      "var originalFetch = self.fetch.bind(self);",
+      "self.fetch = function(resource, options) {",
+      "  var path = typeof resource === 'string' ? resource : (resource && resource.url) || '';",
+      "  if (/stockfish-19-lite-single\\.wasm/.test(path)) return originalFetch(" + JSON.stringify(STOCKFISH_19_WASM) + ", options);",
+      "  return originalFetch(resource, options);",
+      "};",
+      "self.Module = { locateFile: function(path) {",
+      "  return /\\.wasm/.test(path) ? " + JSON.stringify(STOCKFISH_19_WASM) + " : path;",
+      "} };",
+      "importScripts(" + JSON.stringify(STOCKFISH_19_JS) + ");"
+    ].join("\n");
+    var bootUrl = URL.createObjectURL(new Blob([bootCode], {type:"application/javascript"}));
+    var worker = new Worker(bootUrl);
+    URL.revokeObjectURL(bootUrl);
+    attachStockfishWorker(worker, generation, true);
+  } catch(err) {
+    loadLegacyStockfish(generation);
   }
+}
+
+function attachStockfishWorker(worker, generation, modern){
+  if(generation !== stockfishBootGeneration){ try{worker.terminate();}catch(e){} return; }
+  stockfishWorker = worker;
+  stockfishReady = false;
+  stockfishEngineName = modern ? "Stockfish 19 Lite" : "Stockfish (fallback)";
+  function fail(){
+    if(stockfishWorker !== worker || generation !== stockfishBootGeneration) return;
+    clearTimeout(stockfishBootTimer);
+    try{worker.terminate();}catch(err){}
+    stockfishWorker = null;
+    stockfishReady = false;
+    stockfishThinking = false;
+    computerBusy = false;
+    if(stockfishAnalysisMode && stockfishCallback){
+      var cb = stockfishCallback;
+      stockfishCallback = null;
+      stockfishAnalysisMode = false;
+      cb(null);
+    }
+    if(modern) loadLegacyStockfish(generation);
+    else say("Stockfish could not start. Check the network and reload.", {error:true});
+  }
+  worker.onmessage = function(e){
+    if(generation !== stockfishBootGeneration || stockfishWorker !== worker) return;
+    String(e.data || "").split(/\r?\n/).forEach(function(line){ if(line) handleStockfishMessage(line); });
+    if(stockfishReady) clearTimeout(stockfishBootTimer);
+  };
+  worker.onerror = function(e){
+    if(e && e.preventDefault) e.preventDefault();
+    fail();
+  };
+  stockfishBootTimer = setTimeout(function(){ if(!stockfishReady) fail(); }, modern ? 20000 : 15000);
+  worker.postMessage("uci");
+}
+
+function loadLegacyStockfish(generation){
+  fetch(STOCKFISH_URL).then(function(response){
+    if(!response.ok) throw new Error("Legacy engine fetch failed");
+    return response.text();
+  }).then(function(code){
+    if(generation !== stockfishBootGeneration) return;
+    var url = URL.createObjectURL(new Blob([code], {type:"application/javascript"}));
+    var worker = new Worker(url);
+    URL.revokeObjectURL(url);
+    attachStockfishWorker(worker, generation, false);
+  }).catch(function(err){
+    if(generation === stockfishBootGeneration) say("Chess engine unavailable: " + err.message, {error:true});
+  });
 }
 
 function handleStockfishMessage(line){
