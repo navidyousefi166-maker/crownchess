@@ -696,6 +696,8 @@ body.game-focus .game-fullscreen{display:flex}
 .gfs-draw:disabled{opacity:.4;cursor:not-allowed}
 .gfs-humil-badge{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:10px;background:linear-gradient(135deg,rgba(74,42,6,.9),rgba(42,20,3,.9));border:1px solid var(--gold);color:var(--gold2);font-weight:800;font-size:10px;letter-spacing:.5px;flex:none;white-space:nowrap}
 .gfs-humil-badge[hidden]{display:flex!important;visibility:hidden!important;pointer-events:none!important}
+/* Roulette removes the badge completely instead of reserving an invisible slot. */
+.gfs-humil-badge.roulette-hidden{display:none!important}
   /* ===== NEW: humiliation badge inactive state (کلیک‌پذیر) ===== */
 .gfs-humil-badge.inactive{
   background:linear-gradient(135deg,rgba(60,60,60,.85),rgba(30,30,30,.85));
@@ -3340,6 +3342,7 @@ function applyOnlineGame(row){
   /* Humiliation badge for opponent */
   var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap))
                || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
+  $("gfsTopHumil").classList.toggle("roulette-hidden", !!row.is_roulette);
   $("gfsTopHumil").hidden = !!row.is_roulette || !oppHadHcp;
 
   /* Clock update: only when new move arrives */
@@ -3767,6 +3770,7 @@ function stopFullscreenNameMarquee(){
                     || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
   humilApplied = !!meHadHandicap;
   humilSelecting = false;
+  $("gfsTopHumil").classList.toggle("roulette-hidden", !!row.is_roulette);
   $("gfsTopHumil").hidden = !!row.is_roulette || !oppHadHandicap;
   updateHumilBadge();
 
@@ -3989,7 +3993,9 @@ function humiliationPlayerHasMoved(color){
 function updateHumilBadge(){
   var badge = $("gfsBotHumil");
   if(!badge) return;
-  if(currentGameIsRoulette || (onlineGame && onlineGame.is_roulette)){
+  var isRouletteGame = !!(currentGameIsRoulette || (onlineGame && onlineGame.is_roulette));
+  badge.classList.toggle("roulette-hidden", isRouletteGame);
+  if(isRouletteGame){
     badge.hidden = true;
     humilSelecting = false;
     return;
