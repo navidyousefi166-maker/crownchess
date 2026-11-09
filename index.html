@@ -3340,7 +3340,7 @@ function applyOnlineGame(row){
   /* Humiliation badge for opponent */
   var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap))
                || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
-  $("gfsTopHumil").hidden = !oppHadHcp;
+  $("gfsTopHumil").hidden = !!row.is_roulette || !oppHadHcp;
 
   /* Clock update: only when new move arrives */
 var hasNewMove = false;
@@ -3767,7 +3767,7 @@ function stopFullscreenNameMarquee(){
                     || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
   humilApplied = !!meHadHandicap;
   humilSelecting = false;
-  $("gfsTopHumil").hidden = !oppHadHandicap;
+  $("gfsTopHumil").hidden = !!row.is_roulette || !oppHadHandicap;
   updateHumilBadge();
 
   $("gfsTopAvatar").src = topAvatar || defaultAvatar();
@@ -3988,7 +3988,13 @@ function humiliationPlayerHasMoved(color){
 
 function updateHumilBadge(){
   var badge = $("gfsBotHumil");
-  if(!badge || !game || !onlineGameId || !onlineGame) return;
+  if(!badge) return;
+  if(currentGameIsRoulette || (onlineGame && onlineGame.is_roulette)){
+    badge.hidden = true;
+    humilSelecting = false;
+    return;
+  }
+  if(!game || !onlineGameId || !onlineGame) return;
   var iHaveMoved = humiliationPlayerHasMoved(fsPlayerColor);
   var canSacrifice = !humilApplied && !iHaveMoved;
   if(humilApplied){
@@ -4008,7 +4014,7 @@ function showHumilBanner(){ /* deprecated — nothing */ }
 function hideHumilBanner(){ var b = $("humilBanner"); if(b) b.remove(); }
 
 $("gfsBotHumil").onclick = function(){
-  if(!onlineGameId || !game || humilApplied) return;
+  if(!onlineGameId || !game || humilApplied || currentGameIsRoulette || (onlineGame && onlineGame.is_roulette)) return;
   if(humiliationPlayerHasMoved(fsPlayerColor)){
     updateHumilBadge();
     return;
@@ -4038,7 +4044,7 @@ function isHumilEligiblePiece(sq){
 }
 
 function enterHumilSelection(){
-  if(!game || humilApplied) return;
+  if(!game || humilApplied || currentGameIsRoulette || (onlineGame && onlineGame.is_roulette)) return;
   
   // Allow sacrifice only before this player's first move.
   if (humiliationPlayerHasMoved(fsPlayerColor)) return;
@@ -4090,6 +4096,7 @@ function applyHandicapToGame(color, type, square){
 
 /* Secure server-side Humiliation RPC: never update kf_games directly. */
 async function submitHumiliation(square, type){
+  if(currentGameIsRoulette || (onlineGame && onlineGame.is_roulette)) throw new Error("Humiliation is unavailable in Roulette.");
   if(!sb || !onlineGameId || !onlineGame || !currentUser || !square || !type) throw new Error("Game or piece selection is missing.");
   var res = await sb.rpc("kf_apply_humiliation", {p_game_id: onlineGameId, p_square: square});
   if(res.error) throw res.error;
@@ -4104,6 +4111,7 @@ async function submitHumiliation(square, type){
 
 /* Legacy humilDialog (only if some code still calls it) */
 function openHumilDialog(){
+  if(currentGameIsRoulette || (onlineGame && onlineGame.is_roulette)) return;
   humilChosenType = null;
   document.querySelectorAll(".humil-piece").forEach(function(el){ el.classList.remove("selected"); });
   $("humilConfirm").disabled = true;
