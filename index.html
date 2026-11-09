@@ -5343,6 +5343,9 @@ async function runFullAnalysis(runId){
     $("anProgress").textContent = "Verifying exceptional moves " + (ci+1) + "/" + candidates.length;
     var multi = await analyzeFenPromise(positions[mi], 2200, runId, 2);
     if(!analysisRunning || runId !== analysisRunId) return;
+    // analyzeFenPromise returns "best"; the exceptional-move checks use "uci".
+    // Normalize once so valid MultiPV pairs do not trigger redundant searches.
+    if(multi) multi.uci = multi.best;
     // Some browser builds produce no synchronized MultiPV pair.
     // Fall back to two restricted single-PV searches to compare the best
     // move with the strongest legal alternative rather than suppressing Great.
@@ -5354,7 +5357,11 @@ async function runFullAnalysis(runId){
         return m.from + m.to + (m.promotion || "");
       });
       if(legalUci.length < 2 || legalUci.indexOf(playedMoveUci) < 0) continue;
-      var verifiedBest = await analyzeFenPromise(positions[mi], 1650, runId, 1);
+      // The primary MultiPV run already computed a first line. Reuse it when
+      // sufficiently deep, instead of repeating the exact same position.
+      var verifiedBest = multi && multi.best === playedMoveUci &&
+        multi.score != null && multi.depth >= 12 && multi.pv && multi.pv.length ?
+        multi : await analyzeFenPromise(positions[mi], 1650, runId, 1);
       if(!analysisRunning || runId !== analysisRunId) return;
       if(!verifiedBest || verifiedBest.best !== playedMoveUci ||
          verifiedBest.score == null || verifiedBest.depth < 12) continue;
