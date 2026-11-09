@@ -4975,11 +4975,11 @@ function handleStockfishMessage(line){
         var mate = parseInt(mateM[1], 10);
         score = mate > 0 ? (10000 - mate * 100) : (-10000 - Math.abs(mate) * -100);
       }
-      var pvM = line.match(/\bpv ([a-h][1-8][a-h][1-8][qrbn]?)(?:\s|$)/);
+      var pvM = line.match(/\bpv ((?:[a-h][1-8][a-h][1-8][qrbn]?(?:\s+|$)){1,6})/);
       if(pvNumber === 1 && depth >= currentAnalyzeDepth){
         currentAnalyzeDepth = depth;
         currentAnalyzeScore = score;
-        currentAnalyzePV = pvM ? pvM[1] : null;
+        currentAnalyzePV = pvM ? pvM[1].trim().split(/\s+/) : null;
       } else if(pvNumber === 2 && (!currentAnalyzeSecond || depth >= currentAnalyzeSecond.depth)){
         currentAnalyzeSecond = {score:score, depth:depth, uci:pvM ? pvM[1] : null};
       }
@@ -5246,7 +5246,15 @@ async function runFullAnalysis(runId){
       x.m.beforeDepth >= 13 && x.m.afterDepth >= 13 &&
       x.m.winBefore > 0.14 && x.m.winBefore < 0.85 &&
       x.m.winLoss <= 0.022;
-  }).slice(0, 6);
+  }).sort(function(a,b){
+    // Review tactical candidates before routine opening moves.
+    function priority(x){
+      var h = history[x.i];
+      return (h.piece !== "p" ? 2 : 0) + (h.captured ? 3 : 0) +
+             (h.san.indexOf("+") >= 0 ? 2 : 0) + (h.san.indexOf("#") >= 0 ? 4 : 0);
+    }
+    return priority(b) - priority(a);
+  }).slice(0, 8);
   for(var ci=0; ci<candidates.length; ci++){
     if(!analysisRunning || runId !== analysisRunId) return;
     var candidate = candidates[ci], mi = candidate.i, mm = candidate.m;
@@ -5254,7 +5262,7 @@ async function runFullAnalysis(runId){
     var multi = await analyzeFenPromise(positions[mi], 2200, runId, 2);
     if(!analysisRunning || runId !== analysisRunId) return;
     if(!multi || !multi.second || multi.depth < 13 ||
-       multi.second.depth < 13 || !multi.uci ||
+       multi.second.depth < 13 || Math.abs(multi.second.depth - multi.depth) > 1 || !multi.uci ||
        multi.uci !== mm.from + mm.to + (history[mi].promotion || "")) continue;
     var gap = chance(multi.score) - chance(multi.second.score);
     if(gap < 0.16) continue;
@@ -5265,12 +5273,12 @@ async function runFullAnalysis(runId){
     // "Brilliant": a unique, objectively strong move offering a non-pawn piece,
     // which the engine's preferred reply can actually capture.
     var piece = history[mi].piece;
-    if(piece === "p" || piece === "k" || !multi.pv) continue;
+    if(piece === "p" || piece === "k" || !multi.pv || multi.pv.length < 2) continue;
     var afterPos = new Chess(positions[mi+1]);
     var reply = null;
     try { reply = afterPos.move({
-      from:multi.pv.slice(0,2), to:multi.pv.slice(2,4),
-      promotion:multi.pv.slice(4,5) || "q"
+      from:multi.pv[1].slice(0,2), to:multi.pv[1].slice(2,4),
+      promotion:multi.pv[1].slice(4,5) || "q"
     }); } catch(e){}
     var pieceValues = {n:3,b:3,r:5,q:9};
     if(reply && reply.captured === piece && reply.to === mm.to &&
