@@ -6713,10 +6713,33 @@ async function loadAdminAuditAlerts(){
   if(!alerts.length){list.innerHTML='<div class="admin-empty">No suspicious moves reported.</div>';return;}
   list.innerHTML=alerts.map(function(a){
     var label=a.verdict==="flagged"?"Potentially invalid move":"Needs review",m=a.move_data||{};
-    return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">⚠️ '+adminEscape(label)+'</div><div class="admin-user-meta">Game '+adminEscape(a.game_id||"")+' · Player '+adminEscape(a.player_id||"Unknown")+'</div></div></div><div class="admin-user-stats"><span class="admin-chip">'+adminEscape((m.from||"?")+" → "+(m.to||"?")+" "+(m.san||""))+'</span><span class="admin-chip">'+adminEscape(a.detail||"")+'</span><span class="admin-chip">'+adminEscape(a.detected_at?new Date(a.detected_at).toLocaleString():"")+'</span></div></article>';
+    return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">⚠️ '+adminEscape(label)+'</div><div class="admin-user-meta">Game '+adminEscape(a.game_id||"")+' · Player '+adminEscape(a.player_id||"Unknown")+'</div></div></div><div class="admin-user-stats"><span class="admin-chip">'+adminEscape((m.from||"?")+" → "+(m.to||"?")+" "+(m.san||""))+'</span><span class="admin-chip">'+adminEscape(a.detail||"")+'</span><span class="admin-chip">'+adminEscape(a.detected_at?new Date(a.detected_at).toLocaleString():"")+'</span></div><div class="admin-actions"><button class="btn admin-audit-delete" type="button" data-alert-id="'+Number(a.id)+'">Delete</button></div></article>';
   }).join("");
  }catch(err){list.innerHTML='<div class="admin-empty">Move-audit reports unavailable: '+adminEscape(err.message||err)+'</div>';}
 }
+$("adminAuditAlerts").addEventListener("click",async function(e){
+ var btn=e.target.closest(".admin-audit-delete");
+ if(!btn||btn.disabled||!currentUser||currentUser.id!==adminOwnerId)return;
+ var id=Number(btn.getAttribute("data-alert-id"));
+ if(!Number.isSafeInteger(id)||id<=0)return;
+ if(!confirm("Permanently delete this reviewed report from Supabase?"))return;
+ btn.disabled=true;
+ btn.textContent="Deleting…";
+ try{
+  var result=await sb.rpc("kf_admin_delete_move_audit_alert",{p_alert_id:id});
+  if(result.error)throw result.error;
+  if(result.data!==true)throw Error("Report no longer exists.");
+  var card=btn.closest(".admin-user");
+  if(card)card.remove();
+  if(!$("adminAuditAlerts").querySelector(".admin-user"))$("adminAuditAlerts").innerHTML='<div class="admin-empty">No suspicious moves reported.</div>';
+  say("Report permanently deleted.",{silentToast:true});
+  loadAdminAuditAlerts();
+ }catch(err){
+  btn.disabled=false;
+  btn.textContent="Delete";
+  say("Could not delete report: "+(err.message||err),{error:true});
+ }
+});
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  loadAdminAuditAlerts();
