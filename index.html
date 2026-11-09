@@ -3354,6 +3354,11 @@ function applyOnlineGame(row){
   /* Humiliation badge for opponent */
   var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap))
                || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
+  var btCaption = row.is_bloodblade ? "BLOOD TRIBUTES" : "HUMILIATION";
+  var topHumilText = $("gfsTopHumil").querySelector("span:last-child");
+  var botHumilText = $("gfsBotHumil").querySelector("span:last-child");
+  if(topHumilText) topHumilText.textContent = btCaption;
+  if(botHumilText) botHumilText.textContent = btCaption;
   $("gfsTopHumil").classList.toggle("roulette-hidden", !!row.is_roulette);
   $("gfsTopHumil").hidden = !!row.is_roulette || !oppHadHcp;
 
@@ -3784,6 +3789,11 @@ function stopFullscreenNameMarquee(){
                     || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
   humilApplied = !!meHadHandicap;
   humilSelecting = false;
+  var btCaption = row.is_bloodblade ? "BLOOD TRIBUTES" : "HUMILIATION";
+  var topHumilText = $("gfsTopHumil").querySelector("span:last-child");
+  var botHumilText = $("gfsBotHumil").querySelector("span:last-child");
+  if(topHumilText) topHumilText.textContent = btCaption;
+  if(botHumilText) botHumilText.textContent = btCaption;
   $("gfsTopHumil").classList.toggle("roulette-hidden", !!row.is_roulette);
   $("gfsTopHumil").hidden = !!row.is_roulette || !oppHadHandicap;
   updateHumilBadge();
