@@ -4877,6 +4877,8 @@ var currentAnalyzeScore = null;
 var currentAnalyzeDepth = -1;
 var currentAnalyzeSecond = null;
 var currentAnalyzePV = null;
+var currentAnalyzeLinesByDepth = {};
+var currentAnalyzePVCount = 1;
 var STOCKFISH_URL = "stockfish.js";
 
 var stockfishBootTimer = null;
@@ -4975,12 +4977,19 @@ function handleStockfishMessage(line){
         score = mate > 0 ? (10000 - mate * 100) : (-10000 - Math.abs(mate) * -100);
       }
       var pvM = line.match(/\bpv ((?:[a-h][1-8][a-h][1-8][qrbn]?(?:\s+|$)){1,6})/);
+      if(currentAnalyzePVCount === 2 && (pvNumber === 1 || pvNumber === 2) && pvM && depth > 0){
+        if(!currentAnalyzeLinesByDepth[depth]) currentAnalyzeLinesByDepth[depth] = {};
+        currentAnalyzeLinesByDepth[depth][pvNumber] = {
+          score:score, depth:depth, uci:pvM[1].trim().split(/\s+/)[0],
+          pv:pvM[1].trim().split(/\s+/)
+        };
+      }
       if(pvNumber === 1 && depth >= currentAnalyzeDepth){
         currentAnalyzeDepth = depth;
         currentAnalyzeScore = score;
         currentAnalyzePV = pvM ? pvM[1].trim().split(/\s+/) : null;
       } else if(pvNumber === 2 && (!currentAnalyzeSecond || depth >= currentAnalyzeSecond.depth)){
-        currentAnalyzeSecond = {score:score, depth:depth, uci:pvM ? pvM[1] : null};
+        currentAnalyzeSecond = {score:score, depth:depth, uci:pvM ? pvM[1].trim().split(/\s+/)[0] : null};
       }
     }
     return;
@@ -5002,7 +5011,25 @@ function handleStockfishMessage(line){
     if(stockfishAnalysisMode){
       var analysisCb = stockfishCallback;
       stockfishCallback = null;
-      if(analysisCb) analysisCb({uci: uci && uci !== "(none)" ? uci : null, score: currentAnalyzeScore, depth: currentAnalyzeDepth, second:currentAnalyzeSecond, pv:currentAnalyzePV});
+      var verifiedPair = null;
+      if(currentAnalyzePVCount === 2){
+        Object.keys(currentAnalyzeLinesByDepth).map(Number).sort(function(a,b){return b-a;}).some(function(d){
+          var pair = currentAnalyzeLinesByDepth[d];
+          if(pair[1] && pair[2] && pair[1].uci && pair[2].uci &&
+             pair[1].uci !== pair[2].uci){
+            verifiedPair = pair; return true;
+          }
+          return false;
+        });
+      }
+      if(analysisCb) analysisCb({
+        uci: verifiedPair ? verifiedPair[1].uci : (uci && uci !== "(none)" ? uci : null),
+        score: verifiedPair ? verifiedPair[1].score : currentAnalyzeScore,
+        depth: verifiedPair ? verifiedPair[1].depth : currentAnalyzeDepth,
+        second: verifiedPair ? verifiedPair[2] : null,
+        pv: verifiedPair ? verifiedPair[1].pv : currentAnalyzePV,
+        paired:!!verifiedPair
+      });
       return;
     }
     if(!uci || uci === "(none)"){
@@ -5275,9 +5302,9 @@ async function runFullAnalysis(runId){
   // The second-best line is needed to establish a genuinely unique strong move.
   var candidates = moves.map(function(m,i){return {m:m,i:i};}).filter(function(x){
     return x.m.quality === "best" &&
-      x.m.beforeDepth >= 13 && x.m.afterDepth >= 13 &&
-      x.m.winBefore > 0.14 && x.m.winBefore < 0.85 &&
-      x.m.winLoss <= 0.022;
+      x.m.beforeDepth >= 11 && x.m.afterDepth >= 11 &&
+      x.m.winBefore > 0.08 && x.m.winBefore < 0.92 &&
+      x.m.winLoss <= 0.04;
   }).sort(function(a,b){
     // Review tactical candidates before routine opening moves.
     function priority(x){
@@ -5286,18 +5313,21 @@ async function runFullAnalysis(runId){
              (h.san.indexOf("+") >= 0 ? 2 : 0) + (h.san.indexOf("#") >= 0 ? 4 : 0);
     }
     return priority(b) - priority(a);
-  }).slice(0, 8);
+  }).slice(0, 12);
+  var greatDiagnostics = {candidates:candidates.length,paired:0,unique:0};
   for(var ci=0; ci<candidates.length; ci++){
     if(!analysisRunning || runId !== analysisRunId) return;
     var candidate = candidates[ci], mi = candidate.i, mm = candidate.m;
     $("anProgress").textContent = "Verifying exceptional moves " + (ci+1) + "/" + candidates.length;
     var multi = await analyzeFenPromise(positions[mi], 2200, runId, 2);
     if(!analysisRunning || runId !== analysisRunId) return;
-    if(!multi || !multi.second || multi.depth < 13 ||
-       multi.second.depth < 13 || Math.abs(multi.second.depth - multi.depth) > 1 || !multi.uci ||
-       multi.uci !== mm.from + mm.to + (history[mi].promotion || "")) continue;
+    if(!multi || !multi.paired || !multi.second || multi.depth < 12 ||
+       multi.second.depth < 12 || !multi.uci) continue;
+    greatDiagnostics.paired++;
+    if(multi.uci !== mm.from + mm.to + (history[mi].promotion || "")) continue;
     var gap = chance(multi.score) - chance(multi.second.score);
     if(!isFinite(gap) || gap < 0.08) continue;
+    if(gap >= 0.12) greatDiagnostics.unique++;
 
     // Verify an objectively sound sacrifice. A loose piece alone is not enough:
     // the capture should be the engine's best reply, or a near-best played reply.
@@ -5326,7 +5356,7 @@ async function runFullAnalysis(runId){
        multi.second.depth >= 15){
       mm.quality = "brilliant";
       mm.sacrifice = offer;
-    } else if(gap >= 0.16){
+    } else if(gap >= 0.12){
       // "Great" still needs a clearly stronger first line than the alternative.
       mm.quality = "great";
       mm.alternative = multi.second.uci;
@@ -5338,7 +5368,7 @@ async function runFullAnalysis(runId){
   analysisPositions = positions;
   analysisRunning = false;
   var unrated = moves.filter(function(move){ return move.quality === "unrated"; }).length;
-  $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + "/" + moves.length + " moves · " + stockfishEngineName + (stockfishBootError ? " · Cause: " + stockfishBootError : "");
+  $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + "/" + moves.length + " moves · " + stockfishEngineName + " · Great checks: " + greatDiagnostics.candidates + "/" + greatDiagnostics.paired + "/" + greatDiagnostics.unique + (stockfishBootError ? " · Cause: " + stockfishBootError : "");
   renderMoveList();
   renderSummary();
   gotoAnalysisIndex(0);
@@ -5371,7 +5401,8 @@ function analyzeFenPromise(fen, moveTime, runId, multiPV){
         score: result && result.score != null ? result.score : null,
         depth: result && result.depth != null ? result.depth : -1,
         second: result && result.second ? result.second : null,
-        pv: result && result.pv ? result.pv : null
+        pv: result && result.pv ? result.pv : null,
+        paired:!!(result && result.paired)
       });
     }
 
@@ -5379,6 +5410,8 @@ function analyzeFenPromise(fen, moveTime, runId, multiPV){
     currentAnalyzeDepth = -1;
     currentAnalyzeSecond = null;
     currentAnalyzePV = null;
+    currentAnalyzeLinesByDepth = {};
+    currentAnalyzePVCount = multiPV === 2 ? 2 : 1;
     stockfishAnalysisMode = true;
     stockfishThinking = true;
     stockfishCallback = onBestMove;
