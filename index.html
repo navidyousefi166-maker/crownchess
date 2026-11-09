@@ -5314,17 +5314,43 @@ async function runFullAnalysis(runId){
     }
     return priority(b) - priority(a);
   }).slice(0, 12);
-  var greatDiagnostics = {candidates:candidates.length,paired:0,unique:0};
+  var greatDiagnostics = {candidates:candidates.length,paired:0,unique:0,alternative:0};
   for(var ci=0; ci<candidates.length; ci++){
     if(!analysisRunning || runId !== analysisRunId) return;
     var candidate = candidates[ci], mi = candidate.i, mm = candidate.m;
     $("anProgress").textContent = "Verifying exceptional moves " + (ci+1) + "/" + candidates.length;
     var multi = await analyzeFenPromise(positions[mi], 2200, runId, 2);
     if(!analysisRunning || runId !== analysisRunId) return;
+    // Some browser builds produce no synchronized MultiPV pair.
+    // Fall back to two restricted single-PV searches to compare the best
+    // move with the strongest legal alternative rather than suppressing Great.
+    var playedMoveUci = mm.from + mm.to + (history[mi].promotion || "");
     if(!multi || !multi.paired || !multi.second || multi.depth < 12 ||
-       multi.second.depth < 12 || !multi.uci) continue;
+       multi.second.depth < 12 || !multi.uci){
+      var position = new Chess(positions[mi]);
+      var legalUci = position.moves({verbose:true}).map(function(m){
+        return m.from + m.to + (m.promotion || "");
+      });
+      if(legalUci.length < 2 || legalUci.indexOf(playedMoveUci) < 0) continue;
+      var verifiedBest = await analyzeFenPromise(positions[mi], 1650, runId, 1);
+      if(!analysisRunning || runId !== analysisRunId) return;
+      if(!verifiedBest || verifiedBest.best !== playedMoveUci ||
+         verifiedBest.score == null || verifiedBest.depth < 12) continue;
+      var alternatives = legalUci.filter(function(u){return u !== playedMoveUci;});
+      var verifiedSecond = await analyzeFenPromise(positions[mi], 1650, runId, 1, alternatives);
+      if(!analysisRunning || runId !== analysisRunId) return;
+      if(!verifiedSecond || !verifiedSecond.best || verifiedSecond.score == null ||
+         verifiedSecond.depth < 12 || alternatives.indexOf(verifiedSecond.best) < 0) continue;
+      multi = {
+        uci:verifiedBest.best, score:verifiedBest.score, depth:verifiedBest.depth,
+        pv:verifiedBest.pv,
+        second:{uci:verifiedSecond.best,score:verifiedSecond.score,depth:verifiedSecond.depth},
+        paired:true
+      };
+      greatDiagnostics.alternative++;
+    }
     greatDiagnostics.paired++;
-    if(multi.uci !== mm.from + mm.to + (history[mi].promotion || "")) continue;
+    if(multi.uci !== playedMoveUci) continue;
     var gap = chance(multi.score) - chance(multi.second.score);
     if(!isFinite(gap) || gap < 0.08) continue;
     if(gap >= 0.12) greatDiagnostics.unique++;
@@ -5368,13 +5394,13 @@ async function runFullAnalysis(runId){
   analysisPositions = positions;
   analysisRunning = false;
   var unrated = moves.filter(function(move){ return move.quality === "unrated"; }).length;
-  $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + "/" + moves.length + " moves · " + stockfishEngineName + " · Great checks: " + greatDiagnostics.candidates + "/" + greatDiagnostics.paired + "/" + greatDiagnostics.unique + (stockfishBootError ? " · Cause: " + stockfishBootError : "");
+  $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + "/" + moves.length + " moves · " + stockfishEngineName + " · Great checks: " + greatDiagnostics.candidates + "/" + greatDiagnostics.paired + "/" + greatDiagnostics.unique + " (alt: " + greatDiagnostics.alternative + ")" + (stockfishBootError ? " · Cause: " + stockfishBootError : "");
   renderMoveList();
   renderSummary();
   gotoAnalysisIndex(0);
 }
 
-function analyzeFenPromise(fen, moveTime, runId, multiPV){
+function analyzeFenPromise(fen, moveTime, runId, multiPV, searchMoves){
   return new Promise(function(resolve){
     if(!stockfishWorker || !stockfishReady || runId !== analysisRunId){
       resolve({best: null, score: null, depth: -1});
@@ -5419,7 +5445,7 @@ function analyzeFenPromise(fen, moveTime, runId, multiPV){
     workerAtStart.postMessage("setoption name UCI_LimitStrength value false");
     workerAtStart.postMessage("setoption name MultiPV value " + (multiPV === 2 ? 2 : 1));
     workerAtStart.postMessage("position fen " + fen);
-    workerAtStart.postMessage("go movetime " + moveTime);
+    workerAtStart.postMessage("go movetime " + moveTime + (searchMoves && searchMoves.length ? " searchmoves " + searchMoves.join(" ") : ""));
 
     stopTimer = setTimeout(function(){
       if(finished) return;
