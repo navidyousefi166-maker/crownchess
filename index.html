@@ -3573,7 +3573,7 @@ function updateFirstMoveDeadlineUI(){
   if(firstMoveAt){ hide(); return; }
 
   // White's deadline starts with the server clock; Black's starts with White's first move.
-  var anchor = isWhite ? (onlineGame.black_first_move_at || onlineGame.clock_started_at) : (onlineGame.white_first_move_at || onlineGame.clock_started_at);
+  var anchor = isWhite ? onlineGame.clock_started_at : (onlineGame.white_first_move_at || onlineGame.last_move_at);
   if(!anchor){ hide(); return; }
   var anchorMs = new Date(anchor).getTime();
   if(!Number.isFinite(anchorMs)){ hide(); return; }
