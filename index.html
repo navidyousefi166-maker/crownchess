@@ -4879,8 +4879,6 @@ var currentAnalyzeSecond = null;
 var currentAnalyzePV = null;
 var currentAnalyzeLinesByDepth = {};
 var currentAnalyzePVCount = 1;
-var STOCKFISH_URL = "stockfish.js";
-
 var stockfishBootTimer = null;
 var stockfishBootGeneration = 0;
 var stockfishEngineName = "Loading";
@@ -4893,26 +4891,27 @@ function initStockfish(){
   var generation = ++stockfishBootGeneration;
   stockfishBootError = "";
   stockfishEngineName = "Loading";
-  // Stockfish.js officially expects the JS and WASM side by side.
-  // A same-origin Worker avoids CDN/CORS and blob: relative URL issues.
   try {
+    // Same-origin JS/WASM engine for game review and computer play.
     var worker = new Worker(STOCKFISH_19_JS + "?v=19.0.1");
-    attachStockfishWorker(worker, generation, true);
+    attachStockfishWorker(worker, generation);
   } catch(err){
-    stockfishBootError = "Modern worker creation: " + String(err && err.message || err);
-    loadLegacyStockfish(generation);
+    stockfishBootError = "Stockfish 19 worker creation failed: " + String(err && err.message || err);
+    stockfishReady = false;
+    computerBusy = false;
+    say(stockfishBootError, {error:true});
   }
 }
 
-function attachStockfishWorker(worker, generation, modern){
+function attachStockfishWorker(worker, generation){
   if(generation !== stockfishBootGeneration){ try{worker.terminate();}catch(e){} return; }
   stockfishWorker = worker;
   stockfishReady = false;
-  stockfishEngineName = modern ? "Stockfish 19 Lite" : "Stockfish (fallback)";
+  stockfishEngineName = "Stockfish 19 Lite";
   function fail(reason){
     if(stockfishWorker !== worker || generation !== stockfishBootGeneration) return;
     clearTimeout(stockfishBootTimer);
-    if(modern) stockfishBootError = reason || "Modern engine startup failed";
+    stockfishBootError = reason || "Stockfish 19 startup failed";
     try{worker.terminate();}catch(err){}
     stockfishWorker = null;
     stockfishReady = false;
@@ -4924,8 +4923,7 @@ function attachStockfishWorker(worker, generation, modern){
       stockfishAnalysisMode = false;
       cb(null);
     }
-    if(modern) loadLegacyStockfish(generation);
-    else say("Stockfish could not start: " + (reason || stockfishBootError), {error:true});
+    say("Stockfish 19 unavailable: " + stockfishBootError, {error:true});
   }
   worker.onmessage = function(e){
     if(generation !== stockfishBootGeneration || stockfishWorker !== worker) return;
@@ -4934,32 +4932,15 @@ function attachStockfishWorker(worker, generation, modern){
   };
   worker.onerror = function(e){
     if(e && e.preventDefault) e.preventDefault();
-    fail("Worker error: " + ((e && e.message) || "unknown") + (e && e.filename ? " (" + e.filename + ":" + e.lineno + ")" : ""));
+    fail("Worker error: " + ((e && e.message) || "unknown") +
+         (e && e.filename ? " (" + e.filename + ":" + e.lineno + ")" : ""));
   };
   worker.onmessageerror = function(){ fail("Worker message decoding failed"); };
   stockfishBootTimer = setTimeout(function(){
     if(!stockfishReady) fail("Engine initialization timed out waiting for readyok");
-  }, modern ? 25000 : 15000);
-  try{ worker.postMessage("uci"); }
-  catch(err){ fail("Unable to send UCI: " + String(err && err.message || err)); }
-}
-
-function loadLegacyStockfish(generation){
-  fetch(STOCKFISH_URL).then(function(response){
-    if(!response.ok) throw new Error("Legacy engine HTTP " + response.status);
-    return response.text();
-  }).then(function(code){
-    if(generation !== stockfishBootGeneration) return;
-    var url = URL.createObjectURL(new Blob([code], {type:"application/javascript"}));
-    var worker = new Worker(url);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 30000);
-    attachStockfishWorker(worker, generation, false);
-  }).catch(function(err){
-    if(generation === stockfishBootGeneration){
-      stockfishBootError += "; fallback failed: " + String(err && err.message || err);
-      say("Chess engine unavailable: " + stockfishBootError, {error:true});
-    }
-  });
+  }, 25000);
+  try{worker.postMessage("uci");}
+  catch(err){fail("Unable to send UCI: " + String(err && err.message || err));}
 }
 
 function handleStockfishMessage(line){
