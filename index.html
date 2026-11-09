@@ -5382,11 +5382,34 @@ async function runFullAnalysis(runId){
        multi.second.depth >= 15){
       mm.quality = "brilliant";
       mm.sacrifice = offer;
-    } else if(gap >= 0.12){
-      // "Great" still needs a clearly stronger first line than the alternative.
-      mm.quality = "great";
-      mm.alternative = multi.second.uci;
-      mm.alternativeGap = gap;
+    } else if(gap >= 0.18 && mm.winLoss <= 0.02 &&
+               multi.depth >= 13 && multi.second.depth >= 13){
+      // A Great move needs more than a large gap: look for a meaningful tactical
+      // or defensive turning point, not a routine recapture or opening exchange.
+      var beforeBoard = new Chess(positions[mi]);
+      var afterBoard = new Chess(positions[mi+1]);
+      var played = history[mi];
+      var lastOpponentMove = mi > 0 ? history[mi-1] : null;
+      var immediateRecapture = !!(played.captured && lastOpponentMove &&
+                                 played.to === lastOpponentMove.to);
+      var givesCheck = afterBoard.in_check();
+      var escapesCheck = beforeBoard.in_check();
+      var isKingCapture = played.piece === "k" && !!played.captured;
+      var isRoutinePawnCapture = played.piece === "p" && !!played.captured && !givesCheck;
+      var vulnerableBefore = mm.winBefore <= 0.45;
+      var alternativeChance = chance(multi.second.score);
+      var savesGame = vulnerableBefore && alternativeChance != null &&
+                      alternativeChance < 0.24 && mm.winAfter >= 0.43;
+      var activeTactic = givesCheck || (played.piece !== "p" && played.piece !== "k" &&
+                        !played.captured && savesGame);
+      var meaningfulDefense = escapesCheck && !isKingCapture &&
+                              alternativeChance != null && alternativeChance < 0.24;
+      if(!immediateRecapture && !isKingCapture && !isRoutinePawnCapture &&
+         (activeTactic || meaningfulDefense)){
+        mm.quality = "great";
+        mm.alternative = multi.second.uci;
+        mm.alternativeGap = gap;
+      }
     }
   }
 
