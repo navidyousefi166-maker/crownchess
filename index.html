@@ -148,7 +148,7 @@ body.theme-ocean .theme-toggle{
 .nav-tabs::after{
   content:"›";
   position:absolute;
-  right:-5px;
+  right:48px;
   top:50%;
   transform:translateY(-50%);
   color:var(--gold);
@@ -157,6 +157,9 @@ body.theme-ocean .theme-toggle{
   line-height:1;
   pointer-events:none;
   animation:swipeHintRight 1.6s ease-in-out infinite;
+}
+.nav-tabs.table-active::after{
+  right:12px;
 }
 .nav-tabs.news-active::after{
   display:none;
