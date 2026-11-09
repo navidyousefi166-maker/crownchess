@@ -1484,7 +1484,7 @@ input[type="color"] {
           <span>Wins</span>
           <span>🏆</span>
           <span>Humil.</span>
-          <span title="Blood Tributes — wins / losses">BT</span>
+          <span title="Blood Tributes wins">BT</span>
         </div>
         <div class="lb-list" id="lbList">
           <div class="lb-loading">Loading leaderboard…</div>
@@ -2323,7 +2323,7 @@ async function loadLeaderboard(){
       '<div class="lb-stat wins">' + (row.wins || 0) + '</div>' +
       '<div class="lb-stat trophies">' + (row.tournament_wins || 0) + '</div>' +
       '<div class="lb-stat humil">' + (row.humiliation_losses || 0) + '</div>' +
-       '<div class="lb-stat bt" title="Blood Tributes: wins / losses">' + Number(row.bt_wins || 0) + ' / ' + Number(row.bt_losses || 0) + '</div>';
+       '<div class="lb-stat bt" title="Blood Tributes wins">' + Number(row.bt_wins || 0) + '</div>';
     list.appendChild(div);
   }
 }
