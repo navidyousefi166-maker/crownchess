@@ -6136,6 +6136,14 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
       return;
     }
 
+    // Capture the optimistic running clock BEFORE replacing it with the
+    // authoritative server snapshot; otherwise the blend starts at zero.
+    var turnBeforeConfirmation=clockPerfTurn;
+    var shownNext=null;
+    if(clockPerfAnchor!=null){
+      var optimisticElapsed=Math.max(0,(performance.now()-clockPerfAnchor)/1000);
+      shownNext=Math.max(0,(turnBeforeConfirmation==="w"?clockPerfBaseWhite:clockPerfBaseBlack)-optimisticElapsed);
+    }
     // ✅ سرور زمان دقیق رو برگردوند، ما هم همون رو ذخیره می‌کنیم
     onlineGame.turn = game.turn();
     onlineGame.white_time_left = res.data.white_time_left;
@@ -6155,8 +6163,6 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
       console.debug("[Kingsfall clock] move RPC:",Math.round(kfRpcDuration)+"ms","server adjustment:",Math.round(kfAdjustment*1000)+"ms");
     }
     // Blend only the newly running side. The stopped mover stays exact.
-    var shownNext=clockPerfTurn==="w"?clockWhite:clockBlack;
-    var turnBeforeConfirmation=clockPerfTurn;
     kfPendingClockMove=false;
     clockPerfBaseWhite=clockWhite;clockPerfBaseBlack=clockBlack;
     clockPerfTurn=onlineGame.turn||"w";
