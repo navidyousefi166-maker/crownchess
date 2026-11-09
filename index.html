@@ -2134,6 +2134,34 @@ var firstMoveDeadlinePerfAnchor = null;
 var clockPerfBaseWhite = 300;
 var clockPerfBaseBlack = 300;
 var clockPerfTurn = "w";
+// Clock V2: monotonic rendering calibrated against the server.
+var kfServerOffsetMs=0, kfServerOffsetKnown=false, kfClockSyncBusy=false;
+var kfClockSyncTimer=null, kfPendingClockMove=false, kfClockBeforeMove=null;
+function kfCalibrateServerTime(iso,start,end){
+  var t=Date.parse(iso),rtt=end-start;
+  if(!Number.isFinite(t)||rtt<0||rtt>1800)return false;
+  var sample=t-(start+end)/2;
+  kfServerOffsetMs=kfServerOffsetKnown?0.3*kfServerOffsetMs+0.7*sample:sample;
+  kfServerOffsetKnown=true;
+  return true;
+}
+async function kfSyncClock(gid){
+  if(!sb||!gid||gid!==onlineGameId||kfClockSyncBusy||submittingMove||kfPendingClockMove)return;
+  kfClockSyncBusy=true;var start=Date.now();
+  try{
+    var res=await sb.rpc("kf_clock_sync",{p_game_id:gid}),end=Date.now();
+    if(gid!==onlineGameId||submittingMove||kfPendingClockMove||res.error||!res.data)return;
+    if(kfCalibrateServerTime(res.data.server_now,start,end)&&onlineGame)
+      anchorClockToServerTime(onlineGame.last_move_at||onlineGame.clock_started_at);
+  }catch(e){console.debug("[Kingsfall clock] sync failed",e);}
+  finally{kfClockSyncBusy=false;}
+}
+function kfStartClockSync(gid){
+  if(kfClockSyncTimer)clearInterval(kfClockSyncTimer);
+  kfClockSyncTimer=null;if(!gid)return;
+  setTimeout(function(){if(gid===onlineGameId)kfSyncClock(gid);},0);
+  kfClockSyncTimer=setInterval(function(){if(gid===onlineGameId)kfSyncClock(gid);},30000);
+}
 var clockExpired = false;
 var clockClaimPending = false;
 var clockStartPending = false;
@@ -2324,7 +2352,7 @@ function anchorClockToServerTime(timestamp){
     clockPerfAnchor = perfNow;
     return;
   }
-  var wallNow = Date.now() + (currentGameIsRoulette ? rouletteServerClockOffsetMs : 0);
+  var wallNow = Date.now() + (kfServerOffsetKnown ? kfServerOffsetMs : (currentGameIsRoulette ? rouletteServerClockOffsetMs : 0));
   clockPerfAnchor = perfNow - (wallNow - serverTimeMs);
 }
 
@@ -2334,8 +2362,10 @@ function resetClocks(){
   clockStartPending = false;
   clockReadySent = false;
   lastClockAt = Date.now();
-  clockPerfAnchor = null;
-  firstMoveDeadlineAnchor = null;
+  clockPerfAnchor=null;
+  kfPendingClockMove=false;kfClockBeforeMove=null;
+  kfServerOffsetKnown=false;kfServerOffsetMs=0;
+  firstMoveDeadlineAnchor=null;
   firstMoveDeadlinePerfAnchor = null;
   
   if(onlineGame){
@@ -3046,6 +3076,7 @@ async function joinTournamentGame(gameId, skipIntro){
   onlineGameId = gameId;
   onlineGame = data;
   resetClocks();
+  kfStartClockSync(gameId);
   lastClockAt = Date.now();
   humilApplied = false;
   humilChosenType = null;
@@ -3134,6 +3165,7 @@ async function reloadGameState(gameId){
 document.addEventListener("visibilitychange", function(){
   if (document.visibilityState === "visible" && onlineGameId && navigator.onLine) {
     reloadGameState(onlineGameId);
+    kfSyncClock(onlineGameId);
   }
 });
 async function handleTournamentTimeout(loserColor){
@@ -3173,8 +3205,9 @@ async function leaveOnlineState(){
   stopGamePolling();
   if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   onlineGameId = null;
-  onlineGame = null;
-  submittingMove = false;
+  onlineGame=null;submittingMove=false;
+  kfPendingClockMove=false;kfClockBeforeMove=null;
+  if(kfClockSyncTimer){clearInterval(kfClockSyncTimer);kfClockSyncTimer=null;}
   tournActiveMatch = null;
   document.body.classList.remove("online", "computer-mode", "game-focus");
   hideCelebration();
@@ -3283,6 +3316,7 @@ async function loadOnlineGame(id, skipIntro){
   onlineGameId = id;
   onlineGame = data;
   resetClocks();
+  kfStartClockSync(id);
   lastClockAt = Date.now();
   humilApplied = false;
   humilChosenType = null;
@@ -3342,6 +3376,8 @@ if(currentGameIsRoulette){
   }
   var serverOffsetMs = Number.isFinite(serverNowMs) ? serverNowMs - Date.now() : 0;
   rouletteServerClockOffsetMs = serverOffsetMs;
+  kfServerOffsetMs=serverOffsetMs;
+  kfServerOffsetKnown=Number.isFinite(serverNowMs);
   var openingStartMs = clockStartMs - (4800 + opening.moves.length * 800);
 
   if(onlineGame){
@@ -3423,7 +3459,7 @@ function applyOnlineGame(row){
   if(rouletteOpeningAnimating) return;
   // Do not let realtime/reload snapshots rewind the optimistic board mid-move.
   // A fresh server sync runs immediately after the submission finishes.
-  if(submittingMove) return;
+  if(submittingMove || kfPendingClockMove) return;
 
   // Realtime events can arrive out of order; never apply an older move snapshot.
   var incomingMoveTime = row.last_move_at ? Date.parse(row.last_move_at) : 0;
@@ -3593,7 +3629,7 @@ if(row.is_tournament){
   }
   }
 function tickClock(){
-  if(computerMode || !game || game.game_over() || clockExpired){ paintClocks(); return; }
+  if(computerMode || !game || (game.game_over() && !kfPendingClockMove) || clockExpired){ paintClocks(); return; }
   if(!onlineGameId || !onlineGame || onlineGame.status !== "active"){ paintClocks(); return; }
 
   // The server clock starts at clock_started_at, independently of player
@@ -6027,6 +6063,14 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
     }
     
     if(res.error){
+      if(kfClockBeforeMove){
+        clockPerfBaseWhite=kfClockBeforeMove.white;
+        clockPerfBaseBlack=kfClockBeforeMove.black;
+        clockPerfAnchor=kfClockBeforeMove.anchor;
+        clockPerfTurn=kfClockBeforeMove.perfTurn;
+        if(onlineGame)onlineGame.turn=kfClockBeforeMove.turn;
+      }
+      kfPendingClockMove=false;tickClock();
       game.undo();
       selected = null;
       targets = [];
@@ -6080,17 +6124,16 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
     if(kfRpcDuration >= 150){
       console.debug("[Kingsfall clock] move RPC:",Math.round(kfRpcDuration)+"ms","server adjustment:",Math.round(kfAdjustment*1000)+"ms");
     }
-    clockPerfBaseWhite = clockWhite;
-    clockPerfBaseBlack = clockBlack;
-    clockPerfTurn = onlineGame.turn || "w";
-    anchorClockToServerTime(onlineGame.last_move_at || onlineGame.clock_started_at);
-    lastClockAt = Date.now();
-    paintClocks();
+    kfPendingClockMove=false;
+    clockPerfBaseWhite=clockWhite;clockPerfBaseBlack=clockBlack;
+    clockPerfTurn=onlineGame.turn||"w";
+    anchorClockToServerTime(onlineGame.last_move_at||onlineGame.clock_started_at);
+    lastClockAt=Date.now();tickClock();
 
   } finally {
     if(optimisticPaint != null) clearTimeout(optimisticPaint);
     if(kfMoveTrace === trace) kfMoveTrace = null;
-    submittingMove = false;
+    submittingMove=false;kfPendingClockMove=false;kfClockBeforeMove=null;
     // Reconcile once with the server after ignored in-flight/realtime snapshots.
     if(onlineGameId === submittedGameId){
       setTimeout(function(){ syncGameState(submittedGameId); }, 120);
@@ -6614,6 +6657,12 @@ if(m){
 // (tickClock هر ۲۵۰ms از anchor محاسبه می‌کند؛ اینجا فقط
 //  مقدار فعلی را فریز می‌کنیم و نوبت را عوض می‌کنیم تا پرش رخ نده)
 if(onlineGameId) {
+  kfClockBeforeMove={
+    turn:onlineGame?onlineGame.turn:m.color,
+    white:clockPerfBaseWhite,black:clockPerfBaseBlack,
+    anchor:clockPerfAnchor,perfTurn:clockPerfTurn
+  };
+  kfPendingClockMove=true;
   if(clockPerfAnchor != null){
     var perfNow = performance.now();
     var elapsedFromAnchor = Math.max(0, (perfNow - clockPerfAnchor) / 1000);
