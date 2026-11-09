@@ -1299,6 +1299,23 @@ input[type="color"] {
 .admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-stat strong{font-size:21px}.admin-heading{align-items:flex-start}.admin-section{padding:11px}
 }
 @media(min-width:701px){.admin-wrap{padding:0 8px}}
+
+/* Owner-only suspicious-game replay */
+.kf-audit-replay{position:fixed;inset:0;z-index:999999;background:rgba(5,8,18,.88);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto}
+.kf-audit-replay[hidden]{display:none!important}
+.kf-audit-replay-panel{width:min(100%,560px);max-height:96vh;overflow:auto;border:1px solid rgba(255,215,120,.38);border-radius:16px;background:#191b28;color:#f5f2ea;padding:15px;box-sizing:border-box}
+.kf-audit-replay-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:9px}
+.kf-audit-replay-head strong{color:#e9c879;font-size:17px}
+.kf-audit-replay-board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;width:min(100%,410px);margin:12px auto;border:2px solid #88714b;touch-action:manipulation}
+.kf-audit-replay-square{display:flex;align-items:center;justify-content:center;position:relative;font-size:clamp(22px,8vw,43px);line-height:1;font-family:"DejaVu Sans","Segoe UI Symbol",sans-serif;user-select:none}
+.kf-audit-replay-square.light{background:#eedfc3}.kf-audit-replay-square.dark{background:#a48a68}
+.kf-audit-replay-square.last{box-shadow:inset 0 0 0 3px rgba(255,211,64,.8)}
+.kf-audit-replay-square.suspect{box-shadow:inset 0 0 0 4px rgba(255,57,57,.95)}
+.kf-audit-replay-square .piece-white{color:#fff;text-shadow:0 2px 2px #000,0 -1px 2px #555}
+.kf-audit-replay-square .piece-black{color:#161626;text-shadow:0 1px 1px #eee}
+.kf-audit-replay-controls{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin:9px 0}
+.kf-audit-replay-controls .btn{min-width:42px}.kf-audit-replay-status{font-size:13px;line-height:1.6;overflow-wrap:anywhere;margin-top:7px}
+.kf-audit-replay-note{border-left:3px solid #dba559;padding-left:10px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
 </style>
 </head>
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
@@ -1534,6 +1551,20 @@ input[type="color"] {
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
 </div>
 <section class="admin-section" id="adminUserManagementSection" hidden><div class="admin-section-head"><div><h2>👥 User Management</h2><p>Search accounts, edit records, and manage access</p></div></div><input class="admin-search" id="adminUserSearch" type="search" placeholder="Search by username or email…"><div id="adminUsers" class="admin-users"><div class="admin-loading">Loading users…</div></div></section>
+<div id="kfAuditReplay" class="kf-audit-replay" hidden role="dialog" aria-modal="true" aria-labelledby="kfAuditReplayTitle">
+<div class="kf-audit-replay-panel">
+<div class="kf-audit-replay-head"><div><strong id="kfAuditReplayTitle">🛡️ Suspicious Game Review</strong><div id="kfAuditReplayPlayers" class="kf-audit-replay-status"></div></div><button class="btn" type="button" id="kfAuditReplayClose">✕ Close</button></div>
+<div class="kf-audit-replay-note" id="kfAuditReplayReason"></div>
+<div id="kfAuditReplayBoard" class="kf-audit-replay-board" aria-label="Read-only board replay"></div>
+<div class="kf-audit-replay-controls">
+<button class="btn" type="button" id="kfAuditReplayFirst" aria-label="First position">⏮</button>
+<button class="btn" type="button" id="kfAuditReplayPrev" aria-label="Previous move">◀</button>
+<span id="kfAuditReplayCounter" style="min-width:85px;text-align:center">—</span>
+<button class="btn" type="button" id="kfAuditReplayNext" aria-label="Next move">▶</button>
+<button class="btn" type="button" id="kfAuditReplayLast" aria-label="Last position">⏭</button>
+</div>
+<div id="kfAuditReplayStatus" class="kf-audit-replay-status"></div>
+</div></div>
 <div class="admin-wins-overlay" id="adminWinsEditor" hidden><div class="admin-wins-dialog" role="dialog" aria-modal="true" aria-labelledby="adminWinsTitle"><button class="admin-wins-close" id="adminWinsClose" type="button" aria-label="Close">×</button><div class="kicker">PLAYER RECORD</div><h2 id="adminWinsTitle">Wins</h2><div class="admin-wins-player" id="adminWinsPlayer"></div><div class="admin-wins-hint">Swipe up or down to change the number</div><div class="admin-wins-wheel" id="adminWinsWheel" tabindex="0" role="slider" aria-label="Wins count" aria-valuemin="0" aria-valuemax="100000000"><div class="admin-wins-number" id="adminWinsNumber">0</div><div class="admin-wins-arrows">▲<br>▼</div></div><div class="admin-wins-actions"><button class="btn" id="adminWinsCancel" type="button">Cancel</button><button class="btn gold" id="adminWinsSave" type="button">Save wins</button></div></div></div>
   <footer>
     <div class="foot-brand">♛ Kingsfall · Every King Can Fall.</div>
@@ -6703,6 +6734,86 @@ async function adminInvoke(body){
  if(!currentUser||currentUser.id!==adminOwnerId)throw Error("Owner access required");
  var r=await sb.functions.invoke("kf-admin",{body:body});if(r.error)throw r.error;if(r.data&&r.data.error)throw Error(r.data.error);return r.data;
 }
+var kfAuditReplayPositions=[],kfAuditReplayIndex=0,kfAuditReplayAlert=null,kfAuditReplayMarkedIndex=-1,kfAuditReplayOriginalFocus=null;
+function kfAuditReplayShow(index){
+ if(!kfAuditReplayPositions.length)return;
+ kfAuditReplayIndex=Math.max(0,Math.min(kfAuditReplayPositions.length-1,index));
+ var state=kfAuditReplayPositions[kfAuditReplayIndex],fen=state.fen||"",parts=fen.split(" "),ranks=(parts[0]||"").split("/");
+ var glyph={K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
+ var target=$("kfAuditReplayBoard"),html="";
+ for(var r=0;r<8;r++){
+  var squares=[],rank=ranks[r]||"";
+  for(var j=0;j<rank.length;j++){var ch=rank[j];if(/[1-8]/.test(ch)){for(var n=0;n<Number(ch);n++)squares.push("");}else squares.push(ch);}
+  for(var f=0;f<8;f++){
+   var sq="abcdefgh"[f]+(8-r),piece=squares[f]||"",highlight=state.from===sq||state.to===sq;
+   var suspect=kfAuditReplayIndex===kfAuditReplayMarkedIndex&&highlight;
+   html+='<div class="kf-audit-replay-square '+((r+f)%2?"dark":"light")+(highlight?" last":"")+(suspect?" suspect":"")+'">'+(piece?'<span class="'+(piece===piece.toUpperCase()?"piece-white":"piece-black")+'">'+(glyph[piece]||"")+'</span>':"")+'</div>';
+  }
+ }
+ target.innerHTML=html;
+ $("kfAuditReplayCounter").textContent=kfAuditReplayIndex+" / "+(kfAuditReplayPositions.length-1);
+ $("kfAuditReplayStatus").textContent=(state.label||"Start position")+(kfAuditReplayIndex===kfAuditReplayMarkedIndex?" · ⚠️ Reported move":"");
+ $("kfAuditReplayFirst").disabled=$("kfAuditReplayPrev").disabled=kfAuditReplayIndex===0;
+ $("kfAuditReplayNext").disabled=$("kfAuditReplayLast").disabled=kfAuditReplayIndex===kfAuditReplayPositions.length-1;
+}
+function kfAuditReplayClose(){
+ $("kfAuditReplay").hidden=true;kfAuditReplayPositions=[];kfAuditReplayAlert=null;
+ if(kfAuditReplayOriginalFocus&&kfAuditReplayOriginalFocus.isConnected)kfAuditReplayOriginalFocus.focus();
+}
+async function kfAuditReplayOpen(id,trigger){
+ if(!currentUser||currentUser.id!==adminOwnerId)return;
+ kfAuditReplayOriginalFocus=trigger||null;
+ $("kfAuditReplay").hidden=false;
+ $("kfAuditReplayPlayers").textContent="Loading saved game…";
+ $("kfAuditReplayReason").textContent="";
+ $("kfAuditReplayBoard").innerHTML="";
+ $("kfAuditReplayStatus").textContent="";
+ $("kfAuditReplayCounter").textContent="—";
+ try{
+  var res=await sb.rpc("kf_admin_move_audit_replay",{p_alert_id:id});
+  if(res.error)throw res.error;
+  var a=res.data;if(!a)throw Error("Report not found.");
+  if($("kfAuditReplay").hidden)return;
+  kfAuditReplayAlert=a;
+  $("kfAuditReplayPlayers").textContent=(a.white_username||"White")+" vs "+(a.black_username||"Black");
+  $("kfAuditReplayReason").textContent=(a.verdict==="flagged"?"Flagged: ":"Needs review: ")+(a.detail||"Unknown reason");
+  if(typeof Chess!=="function")throw Error("Chess rules library is unavailable.");
+  var board=new Chess(),pgn=a.pgn||"",loaded=false;
+  if(pgn){try{loaded=board.load_pgn(pgn,{sloppy:true});}catch(_e){}}
+  if(!loaded&&a.after_pgn){board=new Chess();try{loaded=board.load_pgn(a.after_pgn,{sloppy:true});}catch(_e){}}
+  var history=loaded?board.history({verbose:true}):[],replay=new Chess();
+  kfAuditReplayPositions=[{fen:replay.fen(),label:"Start position",from:null,to:null}];
+  var suspect=a.move_data||{},suspectFrom=suspect.from||"",suspectTo=suspect.to||"",suspectSan=String(suspect.san||"").replace(/[+#?!]/g,"");
+  kfAuditReplayMarkedIndex=-1;
+  for(var i=0;i<history.length;i++){
+   var move=history[i],m=replay.move(move.san);
+   if(!m)break;
+   kfAuditReplayPositions.push({fen:replay.fen(),from:m.from,to:m.to,label:(Math.floor(i/2)+1)+(i%2?"... ":". ")+m.san});
+   if(kfAuditReplayMarkedIndex<0&&suspectFrom===m.from&&suspectTo===m.to&&(!suspectSan||suspectSan===m.san.replace(/[+#?!]/g,"")))kfAuditReplayMarkedIndex=i+1;
+  }
+  // A suspicious move may be illegal, so it cannot occur in a legally replayed PGN.
+  // In that case use the authoritative before/after FEN snapshots rather than inventing moves.
+  if(kfAuditReplayMarkedIndex<0&&a.before_fen){
+   kfAuditReplayPositions.push({fen:a.before_fen,label:"⚠️ Position before reported move",from:null,to:null});
+   kfAuditReplayPositions.push({fen:a.after_fen||a.before_fen,label:"⚠️ Submitted position after reported move",from:suspectFrom,to:suspectTo});
+   kfAuditReplayMarkedIndex=kfAuditReplayPositions.length-1;
+  }
+  var i0=kfAuditReplayMarkedIndex>0?kfAuditReplayMarkedIndex:Math.max(0,kfAuditReplayPositions.length-1);
+  kfAuditReplayShow(i0);
+  if(!loaded)$("kfAuditReplayStatus").textContent+=" · Full PGN unavailable or invalid; available position snapshots shown.";
+ }catch(err){
+  $("kfAuditReplayPlayers").textContent="Unable to open game";
+  $("kfAuditReplayReason").textContent=err.message||String(err);
+ }
+}
+$("kfAuditReplayClose").addEventListener("click",kfAuditReplayClose);
+$("kfAuditReplayFirst").addEventListener("click",function(){kfAuditReplayShow(0);});
+$("kfAuditReplayPrev").addEventListener("click",function(){kfAuditReplayShow(kfAuditReplayIndex-1);});
+$("kfAuditReplayNext").addEventListener("click",function(){kfAuditReplayShow(kfAuditReplayIndex+1);});
+$("kfAuditReplayLast").addEventListener("click",function(){kfAuditReplayShow(kfAuditReplayPositions.length-1);});
+$("kfAuditReplay").addEventListener("click",function(e){if(e.target===$("kfAuditReplay"))kfAuditReplayClose();});
+document.addEventListener("keydown",function(e){if(!$("kfAuditReplay").hidden&&e.key==="Escape")kfAuditReplayClose();});
+$("adminAuditAlerts").addEventListener("click",function(e){var btn=e.target.closest(".admin-audit-open");if(btn){var id=Number(btn.getAttribute("data-alert-id"));if(Number.isSafeInteger(id)&&id>0)kfAuditReplayOpen(id,btn);}});
 async function loadAdminAuditAlerts(){
  if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
  var list=$("adminAuditAlerts");if(!list)return;
@@ -6713,7 +6824,7 @@ async function loadAdminAuditAlerts(){
   if(!alerts.length){list.innerHTML='<div class="admin-empty">No suspicious moves reported.</div>';return;}
   list.innerHTML=alerts.map(function(a){
     var label=a.verdict==="flagged"?"Potentially invalid move":"Needs review",m=a.move_data||{};
-    return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">⚠️ '+adminEscape(label)+'</div><div class="admin-user-meta">Game '+adminEscape(a.game_id||"")+' · Player '+adminEscape(a.player_id||"Unknown")+'</div></div></div><div class="admin-user-stats"><span class="admin-chip">'+adminEscape((m.from||"?")+" → "+(m.to||"?")+" "+(m.san||""))+'</span><span class="admin-chip">'+adminEscape(a.detail||"")+'</span><span class="admin-chip">'+adminEscape(a.detected_at?new Date(a.detected_at).toLocaleString():"")+'</span></div><div class="admin-actions"><button class="btn admin-audit-delete" type="button" data-alert-id="'+Number(a.id)+'">Delete</button></div></article>';
+    return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">⚠️ '+adminEscape(label)+'</div><div class="admin-user-meta">Game '+adminEscape(a.game_id||"")+' · Player '+adminEscape(a.player_id||"Unknown")+'</div></div></div><div class="admin-user-stats"><span class="admin-chip">'+adminEscape((m.from||"?")+" → "+(m.to||"?")+" "+(m.san||""))+'</span><span class="admin-chip">'+adminEscape(a.detail||"")+'</span><span class="admin-chip">'+adminEscape(a.detected_at?new Date(a.detected_at).toLocaleString():"")+'</span></div><div class="admin-actions"><button class="btn admin-audit-open" type="button" data-alert-id="'+Number(a.id)+'">View Game</button><button class="btn admin-audit-delete" type="button" data-alert-id="'+Number(a.id)+'">Delete</button></div></article>';
   }).join("");
  }catch(err){list.innerHTML='<div class="admin-empty">Move-audit reports unavailable: '+adminEscape(err.message||err)+'</div>';}
 }
