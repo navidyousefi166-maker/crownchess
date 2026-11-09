@@ -139,7 +139,7 @@ body.theme-ocean .theme-toggle{
   pointer-events:none;
 }
 .nav-tabs.news-active .nav-tab[data-page="news"]{
-  transform:translate(-50%,-50%) translateX(0) scale(1);
+  transform:translate(-50%,-50%) translateX(-30px) scale(1);
   opacity:1;
   pointer-events:auto;
 }
@@ -177,6 +177,9 @@ body.theme-ocean .theme-toggle{
   line-height:1;
   pointer-events:none;
   animation:swipeHintLeft 1.6s ease-in-out infinite;
+}
+.nav-tabs.news-active::before{
+  left:24px;
 }
 @keyframes swipeHintRight{
   0%,100%{transform:translateY(-50%) translateX(0);opacity:.4}
