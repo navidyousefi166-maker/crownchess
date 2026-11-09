@@ -3685,7 +3685,7 @@ function tickClock(){
     clockWhite = Math.max(0, clockPerfBaseWhite);
   }
 
-  if((clockWhite <= 0 || clockBlack <= 0) && !clockClaimPending){
+  if((clockWhite <= 0 || clockBlack <= 0) && !clockClaimPending && !kfPendingClockMove){
     clockExpired = true;
     var loser = clockWhite <= 0 ? "White" : "Black";
     say(loser + " ran out of time. Checking the official result…", {silentToast: true});
@@ -3723,7 +3723,7 @@ function updateFirstMoveDeadlineUI(){
   // Keep a separate monotonic anchor so optimistic clock updates cannot reset this countdown.
   if(anchor !== firstMoveDeadlineAnchor || firstMoveDeadlinePerfAnchor == null){
     firstMoveDeadlineAnchor = anchor;
-    firstMoveDeadlinePerfAnchor = performance.now() - (Date.now() - anchorMs);
+    firstMoveDeadlinePerfAnchor = performance.now() - (Date.now() + (kfServerOffsetKnown ? kfServerOffsetMs : 0) - anchorMs);
   }
 
   var elapsedSeconds = Math.max(0, (performance.now() - firstMoveDeadlinePerfAnchor) / 1000);
@@ -6130,6 +6130,21 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
     anchorClockToServerTime(onlineGame.last_move_at||onlineGame.clock_started_at);
     lastClockAt=Date.now();tickClock();
 
+  } catch(err) {
+    // Network failures must not leave the clock with a fake confirmed turn.
+    if(kfClockBeforeMove){
+      clockPerfBaseWhite=kfClockBeforeMove.white;
+      clockPerfBaseBlack=kfClockBeforeMove.black;
+      clockPerfAnchor=kfClockBeforeMove.anchor;
+      clockPerfTurn=kfClockBeforeMove.perfTurn;
+      if(onlineGame)onlineGame.turn=kfClockBeforeMove.turn;
+    }
+    if(game && m)game.undo();
+    kfPendingClockMove=false;
+    tickClock();
+    draw();
+    say("Move confirmation failed. Reconnecting…",{error:true});
+    console.warn("[Kingsfall clock] move request failed",err);
   } finally {
     if(optimisticPaint != null) clearTimeout(optimisticPaint);
     if(kfMoveTrace === trace) kfMoveTrace = null;
