@@ -5279,8 +5279,8 @@ async function runFullAnalysis(runId){
       best:bestUci, fenAfter:positions[j+1]
     });
   }
-  // Test only the strongest promising candidates with MultiPV=2.
-  // The second-best line is needed to establish a genuinely unique strong move.
+  // Review promising best moves for sound sacrifices (Brilliant) and
+  // independently compare the second-best move for uniqueness (Great).
   var candidates = moves.map(function(m,i){return {m:m,i:i};}).filter(function(x){
     return x.m.quality === "best" &&
       x.m.beforeDepth >= 11 && x.m.afterDepth >= 11 &&
@@ -5333,8 +5333,7 @@ async function runFullAnalysis(runId){
     greatDiagnostics.paired++;
     if(multi.uci !== playedMoveUci) continue;
     var gap = chance(multi.score) - chance(multi.second.score);
-    if(!isFinite(gap) || gap < 0.08) continue;
-    if(gap >= 0.12) greatDiagnostics.unique++;
+    if(isFinite(gap) && gap >= 0.12) greatDiagnostics.unique++;
 
     // Verify an objectively sound sacrifice. A loose piece alone is not enough:
     // the capture should be the engine's best reply, or a near-best played reply.
@@ -5358,12 +5357,13 @@ async function runFullAnalysis(runId){
           postCapture.pv && postCapture.pv.length ? postCapture.pv : []);
       }
     }
+    // Brilliant: a verified, objectively sound material sacrifice. Unlike Great,
+    // the sacrifice need not be the only good move in the position.
     if(offer && mm.winAfter >= 0.40 && mm.winLoss <= 0.015 &&
-       gap >= 0.12 && multi.depth >= 15 &&
-       multi.second.depth >= 15){
+       multi.depth >= 15){
       mm.quality = "brilliant";
       mm.sacrifice = offer;
-    } else if(mm.winLoss <= 0.02 && multi.depth >= 13 &&
+    } else if(isFinite(gap) && mm.winLoss <= 0.02 && multi.depth >= 13 &&
                multi.second.depth >= 13) {
       // Great = the only good move: the strongest alternative must be meaningfully
       // worse and itself fail the Good threshold relative to the best continuation.
