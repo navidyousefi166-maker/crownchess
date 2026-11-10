@@ -1247,6 +1247,9 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 .admin-report-row:last-child{border-bottom:0}.admin-report-row strong{color:var(--gold2)}
 .admin-report-row small{display:block;color:var(--muted);font-size:12px;margin-top:5px}
 .admin-report-row code{font-size:11px;word-break:break-all;user-select:text}
+.admin-report-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 5px}
+.admin-report-actions .btn{font-size:12px;padding:8px 10px}
+.admin-report-details{font-size:12px;color:var(--muted);overflow-wrap:anywhere;line-height:1.5;padding-top:4px}
 /* PRIVATE ADMIN PANEL */
 .admin-wrap{max-width:1180px;margin:22px auto 36px}
 .admin-heading-actions{display:flex;align-items:center;gap:8px}
@@ -5356,6 +5359,7 @@ var analysisPositions = [];
 var analysisIndex = 0;
 var analysisRunning = false;
 var analysisRunId = 0;
+var adminReviewedPlayer = null;
 
 /* Secondary engine: independent UCI state, never touches the game/primary engine. */
 var analysisAuxEngines = [];
@@ -5476,6 +5480,7 @@ $("analysisClose").onclick = function(){
   }
   $("analysisDialog").close();
   if(pendingAnalysisGame){ game = pendingAnalysisGame; pendingAnalysisGame = null; draw(); }
+  adminReviewedPlayer=null;
 };
 $("anStartBtn").onclick = function(){ gotoAnalysisIndex(0); };
 $("anPrevBtn").onclick = function(){ gotoAnalysisIndex(analysisIndex - 1); };
@@ -5976,7 +5981,18 @@ function renderSummary(){
   var counts = {brilliant:0, great:0, best:0, good:0, inaccuracy:0, mistake:0, blunder:0, unrated:0};
   analysisMoves.forEach(function(m){ counts[m.quality]++; });
   var el = $("anSummary");
-  el.innerHTML =
+  var playerScore = "";
+  if(adminReviewedPlayer){
+    var relevant = analysisMoves.filter(function(move){return move.color===adminReviewedPlayer.color && move.quality!=="unrated" && Number.isFinite(Number(move.winLoss));});
+    if(relevant.length){
+      var avg = relevant.reduce(function(total,move){
+        return total + Math.max(0,100-200*Math.max(0,Number(move.winLoss)));
+      },0) / relevant.length;
+      playerScore = '<div class="stat-row"><strong>Estimated move accuracy · '+adminReviewedPlayer.name.replace(/[&<>"\x27]/g,function(ch){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","\x27":"&#39;"}[ch]||ch;})+'</strong><strong>'+avg.toFixed(1)+'%</strong></div>'+
+        '<div style="font-size:11px;margin:5px 0 10px">Kingsfall estimate from '+relevant.length+' evaluated moves. Not a Chess.com score or proof of cheating.</div>';
+    }else playerScore='<div class="stat-row">Not enough evaluated moves for an accuracy estimate.</div>';
+  }
+  el.innerHTML = playerScore +
     '<div style="font-weight:800;margin-bottom:6px;">Move quality</div>' +
     '<div class="stat-row"><span>!! Brilliant</span><span>' + counts.brilliant + '</span></div>' +
     '<div class="stat-row"><span>! Great</span><span>' + counts.great + '</span></div>' +
@@ -7086,9 +7102,65 @@ async function loadAdminPlayerReports(){
  '<small>Accused player ID: <code>'+adminEscape(x.reported_id)+'</code></small>'+
  '<small>Reporter ID: <code>'+adminEscape(x.reporter_id)+'</code></small>'+
  '<small>Game ID: <code>'+adminEscape(x.game_id)+'</code></small>'+
- '<small>Position FEN: <code>'+adminEscape(x.position_fen||"Unavailable")+'</code></small></article>';}).join("");
+ '<small>Position FEN: <code>'+adminEscape(x.position_fen||"Unavailable")+'</code></small>'+
+ '<div class="admin-report-actions">'+
+ '<button class="btn" type="button" data-report-action="review" data-report-id="'+adminEscape(x.id)+'">Review moves</button>'+
+ (x.reason==="stockfish"?'<button class="btn gold" type="button" data-report-action="analyze" data-report-id="'+adminEscape(x.id)+'">Stockfish analysis</button>':"")+
+ (x.reason==="clock_manipulation"?'<button class="btn" type="button" data-report-action="clock" data-report-id="'+adminEscape(x.id)+'">Clock details</button>':"")+
+ '</div><div class="admin-report-details" data-report-details="'+adminEscape(x.id)+'"></div></article>';}).join("");
  }catch(err){target.innerHTML='<div class="admin-empty">Could not load player reports: '+adminEscape(err.message||err)+'</div>';}
 }
+// Admin-only report retrieval; the server validates owner identity before sharing game details.
+$("adminPlayerReportsList").addEventListener("click",async function(event){
+ var button=event.target.closest("button[data-report-action]");
+ if(!button||!currentUser||currentUser.id!==adminOwnerId)return;
+ var id=button.getAttribute("data-report-id"),action=button.getAttribute("data-report-action");
+ var details=Array.prototype.find.call(this.querySelectorAll(".admin-report-details"),function(x){return x.getAttribute("data-report-details")===id;});
+ button.disabled=true;
+ try{
+  var r=await sb.rpc("kf_admin_player_report_game",{p_report_id:id});
+  if(r.error)throw r.error;
+  var record=Array.isArray(r.data)?r.data[0]:null;
+  if(!record)throw Error("Game not found");
+  if(action==="clock"){
+    if(details)details.textContent="Server clock snapshot at last recorded state — White: "+(record.white_time_left==null?"unknown":Number(record.white_time_left).toFixed(1)+"s")+
+      ", Black: "+(record.black_time_left==null?"unknown":Number(record.black_time_left).toFixed(1)+"s")+
+      ". Clock start: "+(record.clock_started_at||"not recorded")+
+      ". Last move: "+(record.last_move_at||"not recorded")+
+      ". These values alone cannot prove clock manipulation; historical move-by-move server timing is not available in this report.";
+    return;
+  }
+  if(!record.pgn||!String(record.pgn).trim()){
+    if(details)details.textContent="No replay data is stored for this game. The recorded FEN cannot reconstruct earlier moves.";
+    return;
+  }
+  var replay=new Chess();
+  var loaded=replay.load_pgn(record.pgn);
+  if(!loaded||!replay.history().length)throw Error("PGN could not be replayed");
+  adminReviewedPlayer=action==="analyze"?{color:record.reported_id===record.white_id?"w":"b",name:record.reported_username||"Reported player"}:null;
+  pendingAnalysisGame=game;
+  game=replay;
+  if(action==="analyze"){
+    openAnalysis();
+  }else{
+    analysisRunning=false;analysisRunId++;closeAnalysisAuxEngines();
+    analysisMoves=[];analysisPositions=[];
+    var chess=new Chess(),history=replay.history({verbose:true});
+    var headers=replay.header?replay.header():{};
+    if(headers&&headers.FEN)chess.load(headers.FEN);
+    analysisPositions.push(chess.fen());
+    history.forEach(function(m){
+      var played=chess.move(m);
+      if(played){analysisMoves.push({san:played.san,color:played.color,from:played.from,to:played.to,quality:"unrated",fenAfter:chess.fen(),evalAfter:null});analysisPositions.push(chess.fen());}
+    });
+    $("anMoves").innerHTML="";$("anSummary").innerHTML="";
+    $("anProgress").textContent="Game replay · "+analysisMoves.length+" moves · Engine analysis not running";
+    $("analysisDialog").showModal();
+    renderMoveList();gotoAnalysisIndex(0);
+  }
+ }catch(err){if(details)details.textContent="Could not load game: "+(err.message||err);}
+ finally{button.disabled=false;}
+});
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  loadAdminRejectedMoveReports();
