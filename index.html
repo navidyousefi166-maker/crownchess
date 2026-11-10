@@ -1383,8 +1383,6 @@ body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark
   </header>
   <div class="page" id="pageVip">
     <section class="vip-studio">
-      <div class="vip-studio-head"><div><div class="vip-eyebrow">♛ KINGSFALL VIP</div><h2>VIP STYLE STUDIO</h2><p>Personalize your pieces and chessboard. Preview your choices below.</p></div><button class="btn" id="vipBack" type="button">← Back</button></div>
-      <div class="vip-studio-note">Style preview is available during setup. VIP membership and payment verification are not active yet.</div>
       <h3>Exclusive chessboard themes</h3>
       <div id="vipBoardChoices" class="vip-choices" role="group" aria-label="Chessboard themes"></div>
       <h3>Piece shapes</h3>
@@ -2137,7 +2135,7 @@ function vipInit(){
   vipApplyAppearance(vipSelectedBoard,vipSelectedPiece,vipSelectedColor);
   vipRenderStudio();
 }
-$("vipBack").onclick=function(){showPage("home");};
+
 $("vipApply").onclick=function(){
   vipApplyAppearance(vipSelectedBoard,vipSelectedPiece,vipSelectedColor);
   try{
