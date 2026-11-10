@@ -3946,7 +3946,7 @@ async function renderFullscreenStats(){
       myTrophyWins = Number(myStatsRes.data.tournament_wins || 0);
     }
   } catch(e){ console.warn("Could not load own profile stats:", e); }
-  $("gfsBotStats").innerHTML = '<span class="gfs-stat">🏆 ' + myTrophyWins + '</span><span class="gfs-stat">' + myWins + ' wins</span>';
+  $("gfsBotStats").innerHTML = '<span class="gfs-stat">🏆 ' + myTrophyWins + '</span><span class="gfs-stat">' + myWins + ' crowns</span>';
 
   if(oppId){
     try{
@@ -3959,7 +3959,7 @@ async function renderFullscreenStats(){
   }
   // Avoid an older async request painting stats over a newly opened game.
   if(!onlineGame || onlineGame.id !== gameSnapshot.id || !currentUser || currentUser.id !== gameSnapshot[myIsWhite ? "white_id" : "black_id"]) return;
-  $("gfsTopStats").innerHTML = '<span class="gfs-stat">🏆 ' + oppTrophyWins + '</span><span class="gfs-stat">' + oppWins + ' wins</span>';
+  $("gfsTopStats").innerHTML = '<span class="gfs-stat">🏆 ' + oppTrophyWins + '</span><span class="gfs-stat">' + oppWins + ' crowns</span>';
 }
 
 function exitFullscreenGame(){
