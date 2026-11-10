@@ -2495,7 +2495,7 @@ function vipRoseVectorSvg(p,colorOverride){
   var label=(white?"White ":"Black ")+names[p.type];
   var sprite="assets/vip-rose-pieces.svg#vip-rose-"+p.type;
   // Keep each Rose piece centered while enlarging its drawing only.
-  var tune={k:[0,1,1.11],q:[7,1,1.11],r:[-9,1,1.11],b:[9,1,1.11],n:[-7,1,1.12],p:[0,1,1.11]}[p.type]||[0,1,1.11];
+  var tune={k:[-4,1,1.11],q:[7,1,1.11],r:[-9,1,1.11],b:[14,1,1.11],n:[-7,1,1.12],p:[0,1,1.11]}[p.type]||[0,1,1.11];
   return '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" style="color:'+pair[0]+';filter:drop-shadow(0 1px 1px '+pair[1]+')" xmlns="http://www.w3.org/2000/svg">'
     +'<g transform="translate('+(50+tune[0])+' '+(50+tune[1])+') scale('+tune[2]+') translate(-50 -50)">'
     +'<use href="'+sprite+'" xlink:href="'+sprite+'" x="0" y="0" width="100" height="100" xmlns:xlink="http://www.w3.org/1999/xlink"></use></g></svg>';
