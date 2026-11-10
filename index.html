@@ -2039,7 +2039,8 @@ var vipPieceStyles = [
   {id:"classic",name:"Classic"},
   {id:"royal",name:"Royal Gold"},
   {id:"outline",name:"Ivory Outline"},
-  {id:"neon",name:"Neon"}
+  {id:"neon",name:"Neon"},
+  {id:"heritage",name:"Heritage 2D"}
 ];
 var vipSelectedBoard = "default", vipSelectedPiece = "classic";
 function vipGetSaved(key,allowed,fallback){
@@ -2367,10 +2368,49 @@ function fmtTimeLocal(iso){
 function sq(r,c){ return files[c] + (8-r); }
   /* ===== SVG pieces (with cache) ===== */
 var _svgCache = {};
+/* Original, lightweight outlined chess silhouettes for the VIP Heritage collection. */
+function vipHeritageSvg(p){
+  var white=p.color==="w";
+  var fill=white?"#fffefd":"#080808";
+  var outline=white?"#090909":"#fff7ea";
+  var detail=white?"#161616":"#fffdf8";
+  var outer='fill="'+fill+'" stroke="'+outline+'" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"';
+  var line='fill="none" stroke="'+outline+'" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"';
+  var accent='fill="none" stroke="'+detail+'" stroke-width="3.2" stroke-linecap="round"';
+  var body="", extras="";
+  switch(p.type){
+    case "p":
+      body='<circle cx="50" cy="24" r="12" '+outer+'/><path d="M42 35 Q28 47 32 62 Q23 68 22 85 L78 85 Q77 68 68 62 Q72 47 58 35 Z" '+outer+'/>';
+      break;
+    case "r":
+      body='<path d="M16 20 V12 H31 V20 H42 V12 H58 V20 H69 V12 H84 V28 H78 V34 H22 V28 H16 Z" '+outer+'/><path d="M27 35 H73 L68 72 H32 Z" '+outer+'/><path d="M25 72 H75 L80 82 H20 Z" '+outer+'/><path d="M16 84 H84 V91 H16 Z" '+outer+'/>';
+      extras='<path d="M27 40 H73 M30 66 H70 M23 79 H77" '+accent+'/>';
+      break;
+    case "n":
+      body='<path d="M26 85 L30 65 Q23 56 22 47 Q16 44 18 36 L28 19 L41 12 Q63 11 73 27 Q82 43 81 85 Z" '+outer+'/><path d="M29 19 Q48 22 53 40 Q60 52 61 85" '+line+'/>';
+      extras='<ellipse cx="33" cy="38" rx="4" ry="5" fill="'+detail+'"/><path d="M21 46 Q27 52 36 47" '+accent+'/>';
+      break;
+    case "b":
+      body='<path d="M50 8 C62 8 65 22 57 29 Q71 41 65 53 L75 66 H25 L35 53 Q29 41 43 29 C35 22 38 8 50 8 Z" '+outer+'/><path d="M27 71 H73 L79 81 H21 Z" '+outer+'/><path d="M16 86 Q50 73 84 86 L88 91 H12 Z" '+outer+'/>';
+      extras='<path d="M43 26 L57 44 M35 63 H65 M25 78 H75" '+accent+'/><path d="M50 35 V45 M45 40 H55" '+accent+'/>';
+      break;
+    case "q":
+      body='<circle cx="13" cy="22" r="5" '+outer+'/><circle cx="31" cy="14" r="5" '+outer+'/><circle cx="50" cy="12" r="5" '+outer+'/><circle cx="69" cy="14" r="5" '+outer+'/><circle cx="87" cy="22" r="5" '+outer+'/><path d="M13 28 L27 61 L31 29 L43 61 L50 24 L57 61 L69 29 L73 61 L87 28 L76 73 H24 Z" '+outer+'/><path d="M25 74 H75 L80 83 Q50 92 20 83 Z" '+outer+'/><path d="M19 88 Q50 81 81 88 L83 93 H17 Z" '+outer+'/>';
+      extras='<path d="M25 76 Q50 83 75 76 M23 85 Q50 92 77 85" '+accent+'/>';
+      break;
+    case "k":
+      body='<path d="M50 7 V29 M40 17 H60" '+line+'/><path d="M36 31 Q28 24 20 32 Q11 40 21 51 Q27 59 37 63 H63 Q73 59 79 51 Q89 40 80 32 Q72 24 64 31 Q58 24 50 26 Q42 24 36 31 Z" '+outer+'/><path d="M33 59 H67 L76 79 H24 Z" '+outer+'/><path d="M20 83 Q50 75 80 83 L84 91 H16 Z" '+outer+'/>';
+      extras='<path d="M27 38 Q37 35 50 53 Q63 35 73 38 M28 78 H72 M22 86 Q50 80 78 86" '+accent+'/>';
+      break;
+  }
+  var label=(white?"White ":"Black ")+names[p.type];
+  return '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg"><g>'+body+extras+'</g></svg>';
+}
 function svg(p,styleOverride){
   var style=styleOverride||window.kfVipPieceStyle||"classic";
   var key=style+":"+p.color+p.type;
   if(_svgCache[key])return _svgCache[key];
+  if(style==="heritage"){var original=vipHeritageSvg(p);_svgCache[key]=original;return original;}
   var w=p.color==="w";
   var solid={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
   var hollow={k:"♔",q:"♕",r:"♖",b:"♗",n:"♘",p:"♙"};
