@@ -54,19 +54,10 @@ header.topnav{
 }
 .brand-text{white-space:nowrap;line-height:1}
 .brand-tag{font-size:9px;color:var(--muted);letter-spacing:1.5px;display:block;line-height:1}
-.theme-toggle{
-  width:24px;height:24px;border-radius:50%;
-  background:linear-gradient(135deg,#1e4d8c 50%,var(--gold) 50%);
-  border:2px solid var(--gold);cursor:pointer;flex:none;padding:0;
-  box-shadow:0 0 8px rgba(237,197,107,.4);
-  margin-left:4px;
-  transform:rotate(var(--rot,0deg));
-  transition:transform .4s cubic-bezier(.4,0,.2,1),background .3s ease;
-}
-body.theme-ocean .theme-toggle{
-  background:linear-gradient(135deg,#571124 50%,var(--gold) 50%);
-}
-.theme-toggle:hover{transform:rotate(var(--rot,0deg)) scale(1.15)}  
+.brand-crown{border:0;padding:0;font-family:inherit;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.brand-crown:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.brand-crown .crown-glyph{display:inline-block;transform:rotate(var(--crown-rotation,0deg));transition:transform .5s cubic-bezier(.2,.75,.3,1);will-change:transform}
+@media(prefers-reduced-motion:reduce){.brand-crown .crown-glyph{transition:none}}
   .nav-tabs{display:flex;gap:4px;align-items:center}
 .nav-tab{
   display:flex;align-items:center;gap:6px;
@@ -1148,7 +1139,6 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
   header.topnav{padding:10px 0}
   .brand{font-size:15px}
   .brand-crown{width:32px;height:32px;font-size:17px}
-  .theme-toggle{width:22px;height:22px}
   .topnav-right{gap:4px;flex-wrap:wrap;justify-content:flex-end}
   .layout{grid-template-columns:1fr;gap:10px}
   .board-panel{order:1;padding:8px}
@@ -1323,13 +1313,12 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
   <header class="topnav">
     <div class="topnav-left">
       <div class="brand">
-        <span class="brand-crown">♛</span>
+        <button class="brand-crown" id="themeToggle" type="button" title="Switch theme" aria-label="Switch theme"><span class="crown-glyph" aria-hidden="true">♛</span></button>
         <div>
           <span class="brand-text">KINGSFALL</span>
           <span class="brand-tag">EVERY KING CAN FALL</span>
         </div>
       </div>
-      <button class="theme-toggle" id="themeToggle" type="button" title="Switch theme" aria-label="Switch theme"></button>
       <nav class="nav-tabs">
         <button class="nav-tab active" id="navHome" type="button" data-page="home">
           <span class="nt-icon">🏠</span>
@@ -2000,8 +1989,8 @@ $("themeToggle").onclick = function(){
   document.body.classList.toggle("theme-ocean");
   var isOcean = document.body.classList.contains("theme-ocean");
   try { localStorage.setItem("kf_theme", isOcean ? "ocean" : "burgundy"); } catch(e){}
-  _themeRotation += 180;
-  this.style.setProperty("--rot", _themeRotation + "deg");
+  _themeRotation += 360;
+  this.style.setProperty("--crown-rotation", _themeRotation + "deg");
 };
 
 /* ===== NAV / PAGES ===== */
