@@ -104,9 +104,9 @@ body.theme-ocean .theme-toggle{
   transition:transform .45s cubic-bezier(.4,0,.2,1), opacity .3s ease;
 }
 
-/* مخفی کردن Table و News در حالت پیش‌فرض */
+/* مخفی کردن Table و Honors در حالت پیش‌فرض */
 .nav-tabs .nav-tab[data-page="table"],
-.nav-tabs .nav-tab[data-page="news"]{
+.nav-tabs .nav-tab[data-page="honors"]{
   transform:translate(-50%,-50%) translateX(30px);
   opacity:0;
   pointer-events:none;
@@ -123,24 +123,24 @@ body.theme-ocean .theme-toggle{
   opacity:1;
   pointer-events:auto;
 }
-.nav-tabs.table-active .nav-tab[data-page="news"]{
+.nav-tabs.table-active .nav-tab[data-page="honors"]{
   transform:translate(-50%,-50%) translateX(90px) scale(.65);
   opacity:0;
   pointer-events:none;
 }
 
-/* حالت News فعال */
-.nav-tabs.news-active .nav-tab[data-page="home"]{
+/* حالت Honors فعال */
+.nav-tabs.honors-active .nav-tab[data-page="home"]{
   transform:translate(-50%,-50%) translateX(-90px) scale(.65);
   opacity:0;
   pointer-events:none;
 }
-.nav-tabs.news-active .nav-tab[data-page="table"]{
+.nav-tabs.honors-active .nav-tab[data-page="table"]{
   transform:translate(-50%,-50%) translateX(-90px) scale(.65);
   opacity:0;
   pointer-events:none;
 }
-.nav-tabs.news-active .nav-tab[data-page="news"]{
+.nav-tabs.honors-active .nav-tab[data-page="honors"]{
   transform:translate(-50%,-50%) translateX(-30px) scale(1);
   opacity:1;
   pointer-events:auto;
@@ -163,11 +163,11 @@ body.theme-ocean .theme-toggle{
 .nav-tabs.table-active::after{
   right:48px;
 }
-.nav-tabs.news-active::after{
+.nav-tabs.honors-active::after{
   display:none;
 }
 .nav-tabs.table-active::before,
-.nav-tabs.news-active::before{
+.nav-tabs.honors-active::before{
   content:"‹";
   position:absolute;
   left:-5px;
@@ -180,7 +180,7 @@ body.theme-ocean .theme-toggle{
   pointer-events:none;
   animation:swipeHintLeft 1.6s ease-in-out infinite;
 }
-.nav-tabs.news-active::before{
+.nav-tabs.honors-active::before{
   left:24px;
 }
 @keyframes swipeHintRight{
@@ -1207,98 +1207,11 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
   .vs-player.left { transform: translateX(80px) scale(0.5); }
   .vs-player.right { transform: translateX(-80px) scale(0.5); }
 }
-  /* ===== NEWS PAGE ===== */
-.news-container {
-  width: min(900px, 100%);
-  margin: 20px auto;
-  background: var(--panel-bg1);
-  border: 1px solid var(--line2);
-  border-radius: 12px;
-  box-shadow: 0 14px 34px rgba(0,0,0,.35);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.news-toolbar {
-  background: var(--panel-bg2);
-  padding: 12px 16px;
-  display: flex;
-  gap: 16px;
-  border-bottom: 1px solid var(--line);
-  flex-wrap: wrap;
-  align-items: center;
-}
-/* The owner-only toolbar must stay hidden for every other account. */
-.news-toolbar[hidden] { display: none !important; }
-.nt-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.nt-btn {
-  background: var(--btn-bg);
-  border: 1px solid var(--line);
-  color: var(--text);
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 800;
-  font-size: 14px;
-  transition: 0.2s;
-}
-.nt-btn:hover {
-  background: var(--btn-hover);
-  border-color: var(--gold);
-}
-.nt-color-label {
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  color: var(--muted);
-}
-input[type="color"] {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  cursor: pointer;
-  background: transparent;
-}
-.news-editor {
-  padding: 24px;
-  min-height: 500px;
-  outline: none;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--text);
-  overflow-y: auto;
-}
-.news-editor:empty::before {
-  content: "Start typing your news here...";
-  color: var(--muted);
-  pointer-events: none;
-}
-/* News editor: inline text wrapping, movable and resizable images */
-.news-editor { overflow-wrap: anywhere; }
-.news-editor img {
-  width: 38%; max-width: 100%; height: auto;
-  border-radius: 8px; display: inline-block; vertical-align: top;
-  margin: 6px 12px 10px 0; border: 1px solid var(--line2);
-  cursor: grab; resize: both; overflow: auto; box-sizing: border-box;
-}
-.news-editor img.news-image-left { float: left; margin: 6px 16px 12px 0; }
-.news-editor img.news-image-right { float: right; margin: 6px 0 12px 16px; }
-.news-editor img.news-image-center { display: block; float: none; width: min(70%, 100%); margin: 12px auto; }
-.news-editor img:active { cursor: grabbing; }
-#newsImageBtn { position: relative; z-index: 2; min-height: 36px; }
-#newsImageBtn * { pointer-events: none; }
-@media(max-width: 600px) {
-  .news-toolbar { gap: 10px; justify-content: center; }
-  .news-editor { padding: 16px; min-height: 400px; }
-  .news-editor img { width: 44%; }
-}
+  /* ===== HONORS PAGE ===== */
+.honors-container{width:min(900px,100%);margin:20px auto;padding:24px;border:1px solid var(--line2);border-radius:12px;background:var(--panel-bg1);box-shadow:0 14px 34px rgba(0,0,0,.35);min-height:350px}
+.honors-container h1{margin:0;color:var(--gold2);font-size:clamp(22px,5vw,32px)}
+.honors-container p{color:var(--muted);margin:10px 0}
+@media(max-width:600px){.honors-container{padding:18px;min-height:280px}}
 .kf-evidence{display:flex;gap:15px;flex-wrap:wrap;align-items:flex-start;margin:12px 0}.kf-evidence>div:first-child{flex:0 1 330px;min-width:0;width:min(100%,330px)}
 .kf-evidence-board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));position:relative;border:3px solid #765739;border-radius:5px;overflow:hidden;box-sizing:border-box}
 .kf-evidence-square{position:relative;display:flex;justify-content:center;align-items:center;min-width:0;min-height:0}.kf-evidence-square.light{background:#e8d7b8;color:#54402e}.kf-evidence-square.dark{background:#937656;color:#f4e8d4}
@@ -1344,13 +1257,13 @@ input[type="color"] {
 .admin-feature{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:8px;padding:11px 12px;background:rgba(0,0,0,.12)}
 .admin-feature strong{display:block;font-size:13px}.admin-feature small{display:block;color:var(--muted);font-size:11px}.admin-toggle{width:46px;height:26px;flex:none;accent-color:var(--gold);cursor:pointer}
 .admin-loading,.admin-empty{padding:18px;text-align:center;color:var(--muted);font-size:13px}.admin-footnote{color:var(--muted);font-size:10px;text-align:center;margin:14px}
-.nav-tabs.admin-active .nav-tab[data-page="home"],.nav-tabs.admin-active .nav-tab[data-page="table"],.nav-tabs.admin-active .nav-tab[data-page="news"]{transform:translate(-50%,-50%) translateX(-90px) scale(.65);opacity:0;pointer-events:none}
+.nav-tabs.admin-active .nav-tab[data-page="home"],.nav-tabs.admin-active .nav-tab[data-page="table"],.nav-tabs.admin-active .nav-tab[data-page="honors"]{transform:translate(-50%,-50%) translateX(-90px) scale(.65);opacity:0;pointer-events:none}
 .nav-tabs.admin-active .nav-tab[data-page="admin"]{transform:translate(-50%,-50%) translateX(0) scale(1);opacity:1;pointer-events:auto}
 .nav-tabs.admin-active::after{display:none}
 @media(max-width:700px){
 .nav-tabs .nav-tab[data-page="admin"]{transform:translate(-50%,-50%) translateX(30px);opacity:0;pointer-events:none}
-.nav-tabs.news-active .nav-tab[data-page="admin"]{transform:translate(-50%,-50%) translateX(90px) scale(.65);opacity:1;pointer-events:auto}
-.nav-tabs.admin-active .nav-tab[data-page="news"]{transform:translate(-50%,-50%) translateX(-90px) scale(.65);opacity:1;pointer-events:auto}
+.nav-tabs.honors-active .nav-tab[data-page="admin"]{transform:translate(-50%,-50%) translateX(90px) scale(.65);opacity:1;pointer-events:auto}
+.nav-tabs.admin-active .nav-tab[data-page="honors"]{transform:translate(-50%,-50%) translateX(-90px) scale(.65);opacity:1;pointer-events:auto}
 .admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-stat strong{font-size:21px}.admin-heading{align-items:flex-start}.admin-section{padding:11px}
 }
 @media(min-width:701px){.admin-wrap{padding:0 8px}}
@@ -1397,9 +1310,9 @@ input[type="color"] {
           <span class="nt-icon">📊</span>
           <span class="nt-label">Table</span>
         </button>
-        <button class="nav-tab" id="navNews" type="button" data-page="news">
-  <span class="nt-icon">📰</span>
-  <span class="nt-label">News</span>
+        <button class="nav-tab" id="navHonors" type="button" data-page="honors">
+  <span class="nt-icon">🏅</span>
+  <span class="nt-label">Honors</span>
         </button>
         <button class="nav-tab" id="navAdmin" type="button" data-page="admin" hidden><span class="nt-icon">🛡️</span><span class="nt-label">Admin</span></button>
       </nav>
@@ -1585,30 +1498,11 @@ input[type="color"] {
       </div>
     </section>
   </div>
-<div class="page" id="pageNews">
-  <div class="news-container">
-    <div class="news-toolbar">
-      <div class="nt-group">
-        <button class="nt-btn" id="newsFontSizeUp" title="Increase Font Size">A+</button>
-        <button class="nt-btn" id="newsFontSizeDown" title="Decrease Font Size">A-</button>
-      </div>
-      <div class="nt-group">
-        <label for="newsColorPicker" class="nt-color-label" title="Text Color">🎨 Color</label>
-        <input type="color" id="newsColorPicker" value="#f8edf0">
-      </div>
-      <div class="nt-group">
-        <button class="nt-btn" id="newsImageBtn" title="Insert Image">🖼️ Add Image</button>
-        <input type="file" id="newsImageUpload" accept="image/*" style="display:none">
-      </div>
-      <div class="nt-group">
-        <button class="nt-btn" id="newsSaveBtn" type="button" title="Save and publish news">💾 Save</button>
-      </div>
-    </div>
-    <div id="newsEditor" contenteditable="true" class="news-editor">
-      <h1 style="color: var(--gold);">Kingsfall News</h1>
-      <p>Welcome to the official news page. You can type anything here, change the font size, color, and add images.</p>
-    </div>
-  </div>
+<div class="page" id="pageHonors">
+  <section class="honors-container">
+    <h1>🏅 Kingsfall Honors</h1>
+    <p>The Hall of Honors is coming soon.</p>
+  </section>
 </div>
 <div class="page" id="pageAdmin"><div class="admin-wrap">
 <div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1 id="adminPageTitle">🛡️ Admin Panel</h1><p id="adminPageSubtitle">Private administration · Owner access only</p></div><div class="admin-heading-actions"><button class="btn" id="adminBackToOverview" type="button" hidden>← Back</button><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div></div>
@@ -2083,7 +1977,7 @@ function showPage(name){
   if(tabEl) tabEl.classList.add("active");
   var navTabsEl = document.querySelector(".nav-tabs");
   if(navTabsEl) navTabsEl.classList.toggle("table-active", name === "table");
-  if(navTabsEl) navTabsEl.classList.toggle("news-active", name === "news");
+  if(navTabsEl) navTabsEl.classList.toggle("honors-active", name === "honors");
   if(navTabsEl) navTabsEl.classList.toggle("admin-active", name === "admin");
   if(name === "table") loadLeaderboard();
   if(name === "admin") loadAdminPanel();
@@ -2118,12 +2012,12 @@ $("navTable").onclick = function(){ showPage("table"); };
     if(Math.abs(dx) < Math.abs(dy) * 1.5) return;
     var current = document.querySelector(".page.active");
     if(!current) return;
-    // Ordered mobile navigation: Home → Table → News → Admin
+    // Ordered mobile navigation: Home → Table → Honors → Admin
     if(dx < 0 && current.id === "pageHome") showPage("table");
-    else if(dx < 0 && current.id === "pageTable") showPage("news");
-    else if(dx < 0 && current.id === "pageNews" && currentUser && currentUser.id === adminOwnerId) showPage("admin");
-    else if(dx > 0 && current.id === "pageAdmin" && currentUser && currentUser.id === adminOwnerId) showPage("news");
-    else if(dx > 0 && current.id === "pageNews") showPage("table");
+    else if(dx < 0 && current.id === "pageTable") showPage("honors");
+    else if(dx < 0 && current.id === "pageHonors" && currentUser && currentUser.id === adminOwnerId) showPage("admin");
+    else if(dx > 0 && current.id === "pageAdmin" && currentUser && currentUser.id === adminOwnerId) showPage("honors");
+    else if(dx > 0 && current.id === "pageHonors") showPage("table");
     else if(dx > 0 && current.id === "pageTable") showPage("home");
   }, {passive:true});
 })();
@@ -6478,7 +6372,6 @@ function applyAuthUser(user){
   $("signIn").hidden = !!user;
   $("signUp").hidden = !!user;
   $("signOut").hidden = !user;
-  configureNewsAccess(user);
   configureAdminAccess(user);
   loadFeatureFlags();
   // Ban lookup is deliberately detached from the authentication/UI path.
@@ -7268,141 +7161,8 @@ setInterval(function(){
  }
 },30000);
 
-/* ===== NEWS PAGE ===== */
-$("navNews").onclick = function(){ showPage("news"); };
-
-// تغییر سایز فونت
-var currentFontSize = 4;
-$("newsFontSizeUp").onclick = function(){
-  document.execCommand("styleWithCSS", false, true);
-  currentFontSize = Math.min(currentFontSize + 1, 7);
-  document.execCommand("fontSize", false, currentFontSize);
-};
-$("newsFontSizeDown").onclick = function(){
-  document.execCommand("styleWithCSS", false, true);
-  currentFontSize = Math.max(currentFontSize - 1, 1);
-  document.execCommand("fontSize", false, currentFontSize);
-};
-
-// تغییر رنگ فونت
-$("newsColorPicker").oninput = function() {
-  document.execCommand("styleWithCSS", false, true);
-  document.execCommand("foreColor", false, this.value);
-};
-
-// News image insertion: preserve editor cursor and make the entire button clickable.
-var newsSavedRange = null;
-var newsEditor = $("newsEditor");
-var newsLoadToken = 0;
-var newsOwnerId = "cc80cc38-f476-4edd-8efc-45e2722f3c4f";
-
-function configureNewsAccess(user){
-  if(!newsEditor) return;
-  var canWrite = !!(user && user.id === newsOwnerId);
-  newsEditor.contentEditable = canWrite ? "true" : "false";
-  newsEditor.setAttribute("aria-readonly", canWrite ? "false" : "true");
-  var toolbar = document.querySelector(".news-toolbar");
-  if(toolbar) toolbar.hidden = !canWrite;
-  newsEditor.classList.toggle("news-readonly", !canWrite);
-  loadNewsContent(++newsLoadToken);
-}
-
-async function loadNewsContent(token){
-  if(!sb || !newsEditor) return;
-  try{
-    var res = await sb.from("kf_news").select("content_html").eq("id", 1).maybeSingle();
-    if(token !== newsLoadToken) return;
-    if(res.error) throw res.error;
-    if(res.data && typeof res.data.content_html === "string"){
-      newsEditor.innerHTML = res.data.content_html;
-    }
-  } catch(e){
-    console.warn("Could not load Kingsfall News:", e);
-    say("News could not be loaded. Please refresh the page.", {error:true});
-  }
-}
-
-async function saveNewsNow(){
-  if(!currentUser || currentUser.id !== newsOwnerId || !sb) {
-    say("Only the Kingsfall owner can publish news.", {error:true});
-    return;
-  }
-  var saveBtn = $("newsSaveBtn");
-  if(saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Saving..."; }
-  try{
-    var res = await sb.from("kf_news").upsert(
-      {id:1, content_html:newsEditor.innerHTML, updated_at:new Date().toISOString()},
-      {onConflict:"id"}
-    );
-    if(res.error) throw res.error;
-    if(saveBtn) saveBtn.textContent = "✓ Saved";
-    say("News saved and published.", {silentToast:true});
-    setTimeout(function(){
-      if(saveBtn && saveBtn.isConnected) { saveBtn.textContent = "💾 Save"; saveBtn.disabled = false; }
-    }, 1600);
-  } catch(e){
-    console.error("News save failed:",e);
-    say("Could not save news. Please try again.", {error:true});
-    if(saveBtn) { saveBtn.textContent = "💾 Save"; saveBtn.disabled = false; }
-  }
-}
-
-// News is saved only when the owner explicitly presses the Save button.
-$("newsSaveBtn").addEventListener("click", saveNewsNow);
-newsEditor.addEventListener("keyup", saveNewsRange);
-newsEditor.addEventListener("mouseup", saveNewsRange);
-newsEditor.addEventListener("input", saveNewsRange);
-newsEditor.addEventListener("focus", saveNewsRange);
-function saveNewsRange(){
-  var sel = window.getSelection();
-  if(sel && sel.rangeCount && newsEditor.contains(sel.anchorNode)) newsSavedRange = sel.getRangeAt(0).cloneRange();
-}
-$("newsImageBtn").addEventListener("click", function(e){
-  e.preventDefault(); e.stopPropagation();
-  $("newsImageUpload").click();
-});
-$("newsImageUpload").addEventListener("change", function(e) {
-  var file = e.target.files && e.target.files[0];
-  if(!file) return;
-  if(!file.type || !file.type.startsWith("image/")) { this.value = ""; return; }
-  var reader = new FileReader();
-  reader.onload = function(event) {
-    var img = document.createElement("img");
-    img.src = event.target.result;
-    img.alt = file.name || "News image";
-    img.className = "news-image-left";
-    img.setAttribute("draggable", "true");
-    var range = newsSavedRange;
-    if(!range || !newsEditor.contains(range.commonAncestorContainer)) {
-      range = document.createRange(); range.selectNodeContents(newsEditor); range.collapse(false);
-    }
-    range.deleteContents(); range.insertNode(img);
-    var spacer = document.createTextNode(" ");
-    img.parentNode.insertBefore(spacer, img.nextSibling);
-    range.setStartAfter(spacer); range.collapse(true);
-    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-    newsSavedRange = range.cloneRange();
-    newsEditor.focus();
-    newsEditor.dispatchEvent(new Event("input", {bubbles:true}));
-  };
-  reader.readAsDataURL(file);
-  this.value = "";
-});
-// Drag images to reposition them inside the news editor.
-var draggedNewsImage = null;
-newsEditor.addEventListener("dragstart", function(e){
-  if(e.target && e.target.tagName === "IMG") { draggedNewsImage = e.target; e.dataTransfer.effectAllowed = "move"; }
-});
-newsEditor.addEventListener("dragover", function(e){ if(draggedNewsImage) e.preventDefault(); });
-newsEditor.addEventListener("drop", function(e){
-  if(!draggedNewsImage) return;
-  e.preventDefault();
-  var range = null, sel = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX,e.clientY) : null;
-  if(sel && newsEditor.contains(sel.startContainer)) range = sel;
-  if(range) { range.insertNode(draggedNewsImage); }
-  draggedNewsImage = null; saveNewsRange();
-});
-newsEditor.addEventListener("dragend", function(){ draggedNewsImage = null; });
+/* ===== HONORS PAGE ===== */
+$("navHonors").onclick = function(){ showPage("honors"); };
 
 initApp();
 
