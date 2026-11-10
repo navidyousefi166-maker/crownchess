@@ -1254,6 +1254,14 @@ input[type="color"] {
   .news-editor { padding: 16px; min-height: 400px; }
   .news-editor img { width: 44%; }
 }
+.kf-evidence{display:flex;gap:15px;flex-wrap:wrap;align-items:flex-start;margin:12px 0}.kf-evidence>div:first-child{flex:0 1 330px;min-width:0;width:min(100%,330px)}
+.kf-evidence-board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));position:relative;border:3px solid #765739;border-radius:5px;overflow:hidden;box-sizing:border-box}
+.kf-evidence-square{position:relative;display:flex;justify-content:center;align-items:center;min-width:0;min-height:0}.kf-evidence-square.light{background:#e8d7b8;color:#54402e}.kf-evidence-square.dark{background:#937656;color:#f4e8d4}
+.kf-evidence-square.from{box-shadow:inset 0 0 0 3px #38bdf8}.kf-evidence-square.to{box-shadow:inset 0 0 0 4px #f43f5e}
+.kf-evidence-square svg.piece{width:90%;height:90%;display:block;pointer-events:none}.kf-evidence-square small{position:absolute;font-size:9px;font-weight:800;line-height:1;z-index:2}.kf-evidence-square .rank{top:2px;left:3px}.kf-evidence-square .file{right:3px;bottom:2px}
+.kf-evidence-arrow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}.kf-evidence-caption{font-size:12px;color:var(--muted);margin-top:6px}
+.kf-evidence-info{flex:1 1 180px;font-size:13px;line-height:1.5;min-width:160px}.kf-evidence-info strong{color:var(--gold2)}.kf-evidence-info p{margin:8px 0}.kf-evidence-warning{color:#fda4af}
+.kf-evidence-details{border-top:1px solid var(--line);padding-top:9px}.kf-evidence-details summary{cursor:pointer;color:var(--gold2);font-size:12px;margin-bottom:8px}.kf-evidence-details .admin-user-meta{margin-top:5px;word-break:break-word}
 /* PRIVATE ADMIN PANEL */
 .admin-wrap{max-width:1180px;margin:22px auto 36px}
 .admin-heading-actions{display:flex;align-items:center;gap:8px}
@@ -6948,6 +6956,27 @@ async function adminInvoke(body){
  if(!currentUser||currentUser.id!==adminOwnerId)throw Error("Owner access required");
  var r=await sb.functions.invoke("kf-admin",{body:body});if(r.error)throw r.error;if(r.data&&r.data.error)throw Error(r.data.error);return r.data;
 }
+function adminIllegalBoard(a){
+ var fen=String(a.position_fen||"");if(fen==="startpos")fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+ var ranks=fen.split(" ")[0].split("/"),pieces={};
+ if(ranks.length!==8)return '<p>Board position unavailable</p>';
+ for(var r=0;r<8;r++){var f=0;for(var i=0;i<ranks[r].length;i++){var k=ranks[r][i];if(/^[1-8]$/.test(k))f+=Number(k);else if(/^[a-zA-Z]$/.test(k)&&f<8){pieces["abcdefgh"[f]+(8-r)]={type:k.toLowerCase(),color:k===k.toUpperCase()?"w":"b"};f++;}else return '<p>Invalid board data</p>';}if(f!==8)return '<p>Invalid board data</p>';}
+ var flipped=a.player_id===a.black_id,fs=flipped?"hgfedcba":"abcdefgh",rs=flipped?"12345678":"87654321",from=String(a.move_from||""),to=String(a.move_to||"");
+ var html='<div class="kf-evidence"><div><div class="kf-evidence-board">';
+ for(var y=0;y<8;y++)for(var x=0;x<8;x++){
+  var s=fs[x]+rs[y],p=pieces[s],light=(("abcdefgh".indexOf(s[0])+8-Number(s[1]))%2===0);
+  html+='<div class="kf-evidence-square '+(light?"light":"dark")+(s===from?" from":"")+(s===to?" to":"")+'" title="'+s+'">'+(p?svg(p):"")+(x===0?'<small class="rank">'+s[1]+'</small>':"")+(y===7?'<small class="file">'+s[0]+'</small>':"")+'</div>';
+ }
+ if(/^[a-h][1-8]$/.test(from)&&/^[a-h][1-8]$/.test(to)&&from!==to){
+  var ax=(fs.indexOf(from[0])+.5)*100,ay=(rs.indexOf(from[1])+.5)*100,bx=(fs.indexOf(to[0])+.5)*100,by=(rs.indexOf(to[1])+.5)*100,dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy);
+  var id="kf-evidence-arrow-"+String(a.id).replace(/[^0-9]/g,"");
+  html+='<svg class="kf-evidence-arrow" viewBox="0 0 800 800" aria-hidden="true"><defs><marker id="'+id+'" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5 Z" fill="#f43f5e"/></marker></defs><path d="M'+ax+' '+ay+' L'+(bx-18*dx/len)+' '+(by-18*dy/len)+'" stroke="#f43f5e" stroke-width="9" stroke-linecap="round" fill="none" marker-end="url(#'+id+')"/></svg>';
+ }
+ html+='</div><div class="kf-evidence-caption">🔴 Rejected move: '+adminEscape(from)+' → '+adminEscape(to)+'</div></div>';
+ var p=pieces[from],q=pieces[to];var description=p?(p.color==="w"?"White ":"Black ")+names[p.type]:"No piece at starting square";
+ html+='<div class="kf-evidence-info"><strong>Position before the illegal move</strong><p>'+adminEscape(description)+' attempted '+adminEscape(from)+' → '+adminEscape(to)+'</p><p>'+(q?'Target occupied by '+adminEscape((q.color==="w"?"White ":"Black ")+names[q.type]):'Target square empty')+'</p><p class="kf-evidence-warning">The move was rejected; pieces did not move.</p></div></div>';
+ return html;
+}
 async function loadAdminRejectedMoveReports(){
  if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
  var target=$("adminRejectedMoves");if(!target)return;
@@ -6957,24 +6986,15 @@ async function loadAdminRejectedMoveReports(){
   var reports=Array.isArray(response.data)?response.data:[];
   if(!reports.length){target.innerHTML='<div class="admin-empty">No rejected illegal moves reported.</div>';return;}
   target.innerHTML=reports.map(function(a){
-    var side=a.player_id===a.white_id?"White":a.player_id===a.black_id?"Black":"Unknown";
-    var name=side==="White"?a.white_username:side==="Black"?a.black_username:"Unknown";
-    var opponent=side==="White"?a.black_username:a.white_username;
-    var move=String(a.move_from||"?")+" → "+String(a.move_to||"?")+(a.promotion?" ("+String(a.promotion)+")":"");
-    var when=a.reported_at?new Date(a.reported_at).toLocaleString():"Unknown time";
-    return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident">'+
-      '<div class="admin-user-name">⚠️ '+adminEscape(name||"Unknown player")+' · '+adminEscape(side)+'</div>'+
-      '<div class="admin-user-meta">Against '+adminEscape(opponent||"Unknown")+' · '+adminEscape(when)+'</div></div></div>'+
-      '<div class="admin-user-stats"><span class="admin-chip">Rejected: '+adminEscape(move)+'</span>'+
-      '<span class="admin-chip">Illegal move request</span></div>'+
-      '<div class="admin-user-meta">Game: '+adminEscape(a.game_id||"")+
-      ' · Account: '+adminEscape(a.player_id||"")+'</div>'+
-      '<div class="admin-user-meta">Position (FEN): '+adminEscape(a.position_fen||"")+'</div>'+
-      '<div class="admin-user-meta">Saved PGN: '+adminEscape(String(a.position_pgn||"").slice(-350)||"—")+'</div></article>';
+   var side=a.player_id===a.white_id?"White":a.player_id===a.black_id?"Black":"Unknown";
+   var name=side==="White"?a.white_username:side==="Black"?a.black_username:"Unknown";
+   var opponent=side==="White"?a.black_username:a.white_username;
+   var when=a.reported_at?new Date(a.reported_at).toLocaleString():"Unknown time";
+   return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">⚠️ '+adminEscape(name||"Unknown player")+' · '+side+'</div><div class="admin-user-meta">Against '+adminEscape(opponent||"Unknown")+' · '+adminEscape(when)+'</div></div></div>'+
+    adminIllegalBoard(a)+
+    '<details class="kf-evidence-details"><summary>Technical details (FEN, PGN, IDs)</summary><div class="admin-user-meta">Game: '+adminEscape(a.game_id||"")+' · Account: '+adminEscape(a.player_id||"")+'</div><div class="admin-user-meta">FEN: '+adminEscape(a.position_fen||"")+'</div><div class="admin-user-meta">PGN: '+adminEscape(String(a.position_pgn||"").slice(-1000)||"—")+'</div></details></article>';
   }).join("");
- }catch(err){
-  target.innerHTML='<div class="admin-empty">Could not load rejected moves: '+adminEscape(err.message||err)+'</div>';
- }
+ }catch(err){target.innerHTML='<div class="admin-empty">Could not load rejected moves: '+adminEscape(err.message||err)+'</div>';}
 }
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
