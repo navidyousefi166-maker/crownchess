@@ -1313,6 +1313,30 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 .kf-audit-replay-controls .btn{min-width:42px}.kf-audit-replay-status{font-size:13px;line-height:1.6;overflow-wrap:anywhere;margin-top:7px}
 .kf-audit-offender{margin:10px 0;padding:10px 12px;border:1px solid rgba(255,151,94,.55);border-radius:10px;background:rgba(141,52,26,.16);font-size:13px;line-height:1.6;overflow-wrap:anywhere}.kf-audit-offender b{color:#ffcb8d}.kf-audit-offender small{display:block;color:#b8c4d6;font-size:11px}.kf-audit-replay-head>div{min-width:0}.kf-audit-replay-head .btn{flex-shrink:0}@media(max-width:420px){.kf-audit-replay{padding:8px}.kf-audit-replay-panel{padding:12px;max-height:calc(100dvh - 16px)}.kf-audit-replay-board{width:min(100%,330px)}.kf-audit-replay-controls{gap:5px}.kf-audit-replay-controls .btn{min-width:36px;padding:8px}}
 .kf-audit-replay-note{border-left:3px solid #dba559;padding-left:10px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+/* VIP style studio */
+.vip-studio{max-width:840px;margin:18px auto 40px;padding:20px;border:1px solid var(--line2);border-radius:18px;background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2));color:var(--text)}
+.vip-studio-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.vip-studio-head h2{font-size:clamp(21px,4vw,32px);margin:5px 0;color:var(--gold2);letter-spacing:1px}
+.vip-studio-head p{font-size:13px;color:var(--muted);line-height:1.5;margin:7px 0 10px}
+.vip-eyebrow{font-weight:800;letter-spacing:2px;color:var(--gold);font-size:12px}
+.vip-studio h3{color:var(--gold2);font-size:16px;margin:22px 0 12px}
+.vip-studio-note{font-size:12px;color:var(--muted);line-height:1.5}
+.vip-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:10px}
+.vip-choice{min-width:0;border:1px solid var(--line2);border-radius:12px;padding:12px 6px;background:var(--btn-bg);color:var(--text);font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;min-height:98px}
+.vip-choice strong{font-size:12px}
+.vip-choice.selected{border:2px solid var(--gold);background:rgba(237,197,107,.12);box-shadow:0 0 12px rgba(237,197,107,.16)}
+.vip-swatch{display:block;width:65px;height:53px;border-radius:6px;background:conic-gradient(var(--swatch-light) 25%,var(--swatch-dark) 0 50%,var(--swatch-light) 0 75%,var(--swatch-dark) 0);background-size:26px 26px;border:1px solid #ffffff50}
+.vip-piece-sample{display:flex;height:55px;align-items:center;justify-content:center;gap:2px}
+.vip-piece-sample svg{height:51px;width:43px}
+.vip-preview-board{display:grid;grid-template-columns:repeat(4,1fr);width:min(100%,316px);aspect-ratio:1;border:6px solid var(--board-border);border-radius:8px;overflow:hidden;margin:auto}
+.vip-preview-square{display:grid;place-items:center;min-width:0;min-height:0}
+.vip-preview-square svg{width:90%;height:90%}
+.vip-studio-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:22px 0 14px}
+body.vip-board-emerald{--board-light1:#d9edcc;--board-light2:#bde0b2;--board-dark1:#34836c;--board-dark2:#236754;--board-border:#236754}
+body.vip-board-amethyst{--board-light1:#eae0fa;--board-light2:#d9c5ed;--board-dark1:#77519f;--board-dark2:#58357e;--board-border:#58357e}
+body.vip-board-midnight{--board-light1:#adc1d9;--board-light2:#8da9c8;--board-dark1:#243d60;--board-dark2:#152941;--board-border:#152941}
+body.vip-board-rose{--board-light1:#f4dacb;--board-light2:#e9c1b2;--board-dark1:#af6e78;--board-dark2:#8c4a60;--board-border:#8c4a60}
+@media(max-width:600px){.vip-studio{padding:14px}.vip-choices{grid-template-columns:repeat(3,minmax(0,1fr))}.vip-studio-head .btn{padding:8px}}
 </style>
 </head>
 <body>
@@ -1352,6 +1376,20 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
       <button class="btn" id="signOut" hidden>Sign Out</button>
     </div>
   </header>
+  <div class="page" id="pageVip">
+    <section class="vip-studio">
+      <div class="vip-studio-head"><div><div class="vip-eyebrow">♛ KINGSFALL VIP</div><h2>VIP STYLE STUDIO</h2><p>Personalize your pieces and chessboard. Preview your choices below.</p></div><button class="btn" id="vipBack" type="button">← Back</button></div>
+      <div class="vip-studio-note">Style preview is available during setup. VIP membership and payment verification are not active yet.</div>
+      <h3>Exclusive chessboard themes</h3>
+      <div id="vipBoardChoices" class="vip-choices" role="group" aria-label="Chessboard themes"></div>
+      <h3>Piece collections</h3>
+      <div id="vipPieceChoices" class="vip-choices" role="group" aria-label="Chess piece styles"></div>
+      <h3>Live preview</h3>
+      <div id="vipPreviewBoard" class="vip-preview-board" aria-label="Preview of selected pieces and board theme"></div>
+      <div class="vip-studio-actions"><button class="btn gold" id="vipApply" type="button">Apply my style</button><button class="btn" id="vipReset" type="button">Reset to default</button></div>
+      <p class="vip-studio-note">Choices are saved on this device only. They affect appearance, not moves, clocks, or match results.</p>
+    </section>
+  </div>
   <div class="page active" id="pageHome">
   <div class="champion-banner" id="championBanner">
     <span class="champion-trophy">🏆</span>
@@ -1987,7 +2025,81 @@ function say(msg, opts){
   }
 }
 
-$("getVipBtn").onclick = function(){ toast("VIP is coming soon!", "info"); };
+$("getVipBtn").onclick = function(){ showPage("vip"); window.scrollTo(0,0); };
+
+/* ===== VIP STYLE STUDIO (client-side preview, no paid access yet) ===== */
+var vipBoardThemes = [
+  {id:"default",name:"Classic",light:"#f0dfc6",dark:"#7a5745"},
+  {id:"emerald",name:"Emerald",light:"#d9edcc",dark:"#34836c"},
+  {id:"amethyst",name:"Amethyst",light:"#eae0fa",dark:"#77519f"},
+  {id:"midnight",name:"Midnight",light:"#adc1d9",dark:"#243d60"},
+  {id:"rose",name:"Rose Gold",light:"#f4dacb",dark:"#af6e78"}
+];
+var vipPieceStyles = [
+  {id:"classic",name:"Classic"},
+  {id:"royal",name:"Royal Gold"},
+  {id:"outline",name:"Ivory Outline"},
+  {id:"neon",name:"Neon"}
+];
+var vipSelectedBoard = "default", vipSelectedPiece = "classic";
+function vipGetSaved(key,allowed,fallback){
+  try {var val=localStorage.getItem(key);return allowed.some(function(a){return a.id===val;})?val:fallback;}catch(e){return fallback;}
+}
+function vipApplyAppearance(board,piece){
+  var allowedBoard=vipBoardThemes.some(function(t){return t.id===board;});
+  var allowedPiece=vipPieceStyles.some(function(t){return t.id===piece;});
+  board=allowedBoard?board:"default";piece=allowedPiece?piece:"classic";
+  vipBoardThemes.forEach(function(t){document.body.classList.remove("vip-board-"+t.id);});
+  if(board!=="default")document.body.classList.add("vip-board-"+board);
+  window.kfVipPieceStyle=piece;
+  if(typeof _svgCache!=="undefined")_svgCache={};
+  if(typeof game!=="undefined"&&game&&typeof draw==="function")draw();
+}
+function vipRenderStudio(){
+  var boards=$("vipBoardChoices"),pieces=$("vipPieceChoices"),preview=$("vipPreviewBoard");
+  if(!boards||!pieces||!preview)return;
+  boards.innerHTML="";
+  vipBoardThemes.forEach(function(t){
+    var b=document.createElement("button");b.type="button";b.className="vip-choice"+(t.id===vipSelectedBoard?" selected":"");
+    b.setAttribute("aria-pressed",String(t.id===vipSelectedBoard));
+    b.innerHTML='<span class="vip-swatch" style="--swatch-light:'+t.light+';--swatch-dark:'+t.dark+'"></span><strong>'+t.name+'</strong>';
+    b.onclick=function(){vipSelectedBoard=t.id;vipRenderStudio();};boards.appendChild(b);
+  });
+  pieces.innerHTML="";
+  vipPieceStyles.forEach(function(t){
+    var b=document.createElement("button");b.type="button";b.className="vip-choice"+(t.id===vipSelectedPiece?" selected":"");
+    b.setAttribute("aria-pressed",String(t.id===vipSelectedPiece));
+    b.innerHTML='<span class="vip-piece-sample">'+svg({color:"w",type:"n"},t.id)+svg({color:"b",type:"k"},t.id)+'</span><strong>'+t.name+'</strong>';
+    b.onclick=function(){vipSelectedPiece=t.id;vipRenderStudio();};pieces.appendChild(b);
+  });
+  var chosen=vipBoardThemes.find(function(t){return t.id===vipSelectedBoard;})||vipBoardThemes[0];
+  preview.innerHTML="";
+  var samples=["br","bn","bb","bq","bp",null,"wp","wk","wr","wn",null,"wp",null,"wb","wq","wr"];
+  for(var i=0;i<16;i++){
+    var cell=document.createElement("div");cell.className="vip-preview-square";
+    cell.style.background=(((Math.floor(i/4)+i%4)%2)===0?chosen.light:chosen.dark);
+    if(samples[i])cell.innerHTML=svg({color:samples[i][0],type:samples[i][1]},vipSelectedPiece);
+    preview.appendChild(cell);
+  }
+}
+function vipInit(){
+  vipSelectedBoard=vipGetSaved("kf_vip_board",vipBoardThemes,"default");
+  vipSelectedPiece=vipGetSaved("kf_vip_piece",vipPieceStyles,"classic");
+  vipApplyAppearance(vipSelectedBoard,vipSelectedPiece);
+  vipRenderStudio();
+}
+$("vipBack").onclick=function(){showPage("home");};
+$("vipApply").onclick=function(){
+  vipApplyAppearance(vipSelectedBoard,vipSelectedPiece);
+  try{localStorage.setItem("kf_vip_board",vipSelectedBoard);localStorage.setItem("kf_vip_piece",vipSelectedPiece);}catch(e){}
+  toast("Your board and pieces have been updated.","info");
+};
+$("vipReset").onclick=function(){
+  vipSelectedBoard="default";vipSelectedPiece="classic";
+  vipApplyAppearance(vipSelectedBoard,vipSelectedPiece);
+  try{localStorage.removeItem("kf_vip_board");localStorage.removeItem("kf_vip_piece");}catch(e){}
+  vipRenderStudio();toast("Default style restored.","info");
+};
 
 /* ===== THEME ===== */
 (function initTheme(){
@@ -2003,6 +2115,8 @@ $("themeToggle").onclick = function(){
   _themeRotation += 360;
   this.style.setProperty("--crown-rotation", _themeRotation + "deg");
 };
+
+vipInit();
 
 /* ===== NAV / PAGES ===== */
 function showPage(name){
@@ -2255,26 +2369,25 @@ function fmtTimeLocal(iso){
 function sq(r,c){ return files[c] + (8-r); }
   /* ===== SVG pieces (with cache) ===== */
 var _svgCache = {};
-function svg(p){
-  var key = p.color + p.type;
-  if(_svgCache[key]) return _svgCache[key];
-  var w = p.color === "w";
-  var glyphMap = {k:"♚", q:"♛", r:"♜", b:"♝", n:"♞", p:"♟"};
-  var glyph = glyphMap[p.type];
-  var fill = w ? "#fffdf7" : "#20100d";
-  var stroke = w ? "#2a1810" : "#f0d8a8";
-  var strokeW = w ? "2.6" : "1.4";
-  var fontSizes = {k:112, q:100, r:100, b:106, n:108, p:106};
-  var fontSize = fontSizes[p.type] || 100;
-  var yPos = 88;
-  var label = (w ? "White " : "Black ") + names[p.type];
-  var result = '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="' + label + '" xmlns="http://www.w3.org/2000/svg">'
-    + '<text x="50" y="' + yPos + '" text-anchor="middle" '
-    + 'font-family="DejaVu Sans,Arial Unicode MS,Segoe UI Symbol,serif" '
-    + 'font-size="' + fontSize + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + strokeW + '" '
-    + 'paint-order="stroke fill" filter="drop-shadow(0 2px 2px #0008)">' + glyph + '</text></svg>';
-  _svgCache[key] = result;
-  return result;
+function svg(p,styleOverride){
+  var style=styleOverride||window.kfVipPieceStyle||"classic";
+  var key=style+":"+p.color+p.type;
+  if(_svgCache[key])return _svgCache[key];
+  var w=p.color==="w";
+  var solid={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
+  var hollow={k:"♔",q:"♕",r:"♖",b:"♗",n:"♘",p:"♙"};
+  var glyph=style==="outline"?hollow[p.type]:solid[p.type];
+  var fill=w?"#fffdf7":"#20100d",stroke=w?"#2a1810":"#f0d8a8",strokeW=w?"2.6":"1.4",shadow="drop-shadow(0 2px 2px #0008)";
+  if(style==="royal"){fill=w?"#fff0b2":"#9b6825";stroke=w?"#80531b":"#f6d889";strokeW="2.4";shadow="drop-shadow(0 2px 3px #5e371b99)";}
+  if(style==="outline"){fill=w?"#fffdf3":"#283247";stroke=w?"#65513a":"#e7d8c9";strokeW="1.8";shadow="drop-shadow(0 1px 1px #0005)";}
+  if(style==="neon"){fill=w?"#d7ffff":"#421349";stroke=w?"#20f5e2":"#ff66da";strokeW="3";shadow=w?"drop-shadow(0 0 5px #3dfbea)":"drop-shadow(0 0 5px #ff53df)";}
+  var fontSizes={k:112,q:100,r:100,b:106,n:108,p:106};
+  var label=(w?"White ":"Black ")+names[p.type];
+  var result='<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg">'
+    +'<text x="50" y="88" text-anchor="middle" font-family="DejaVu Sans,Arial Unicode MS,Segoe UI Symbol,serif" '
+    +'font-size="'+(fontSizes[p.type]||100)+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+strokeW+'" '
+    +'paint-order="stroke fill" filter="'+shadow+'">'+glyph+'</text></svg>';
+  _svgCache[key]=result;return result;
 }
 
 /* ===== setPlayer ===== */
