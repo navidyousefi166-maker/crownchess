@@ -1538,11 +1538,12 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
   </section>
 </div>
 <div class="page" id="pageAdmin"><div class="admin-wrap">
-<div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1 id="adminPageTitle">🛡️ Admin Panel</h1><p id="adminPageSubtitle">Private administration · Owner access only</p></div><div class="admin-heading-actions"><button class="btn" id="adminBackToOverview" type="button" hidden>← Back</button><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div></div>
+<div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1 id="adminPageTitle">🛡️ Admin Panel</h1><p id="adminPageSubtitle">Private administration · Owner access only</p></div><div class="admin-heading-actions"><button class="btn" id="adminBackToOverview" type="button" hidden>← Back</button><button class="btn gold" id="adminClockDiagOpen" type="button">⏱ Clock Test</button><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div></div>
 <div id="adminOverviewView">
+<section class="admin-section" id="adminClockDiagnosticsSection"><div class="admin-section-head"><div><h2>⏱ Clock Diagnostics (TEMP)</h2><p>30 latest admin moves · remove after testing</p></div><button type="button" class="btn" id="adminClockDiagRefresh">Refresh</button></div><div id="adminClockDiagList" class="admin-users">No measurements yet.</div></section>
 <div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div><div class="admin-stat suspicious-players-card" role="button" tabindex="0"><span>Suspicious Players</span><strong>—</strong></div></div>
 <section class="admin-section" id="adminRejectedMovesSection"><div class="admin-section-head"><div><h2>🛡️ Rejected Move Reports</h2><p>Illegal move requests rejected by the server · reports are not automatic proof of cheating</p></div></div><div id="adminRejectedMoves" class="admin-users"><div class="admin-loading">Loading reports…</div></div></section>
-<section class="admin-section" id="adminClockDiagnosticsSection"><div class="admin-section-head"><div><h2>⏱ Clock Diagnostics (TEMP)</h2><p>30 latest admin moves · remove after testing</p></div><button type="button" class="btn" id="adminClockDiagRefresh">Refresh</button></div><div id="adminClockDiagList" class="admin-users">No measurements yet.</div></section>
+
 <section class="admin-section"><div class="admin-section-head"><div><h2>⚙️ Feature Management</h2><p>Temporarily enable or disable game features</p></div></div><div id="adminFeatures" class="admin-features"><div class="admin-loading">Loading features…</div></div></section>
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
 </div>
@@ -7208,6 +7209,11 @@ async function loadAdminClockDiagnostics(){
  }catch(e){el.textContent="Clock diagnostics error: "+(e.message||e);}
 }
 $("adminClockDiagRefresh").onclick=loadAdminClockDiagnostics;
+$("adminClockDiagOpen").onclick=function(){
+ showAdminOverview();
+ loadAdminClockDiagnostics();
+ $("adminClockDiagnosticsSection").scrollIntoView({behavior:"smooth",block:"start"});
+};
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  loadAdminClockDiagnostics();
