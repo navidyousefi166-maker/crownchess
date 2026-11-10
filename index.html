@@ -2116,8 +2116,6 @@ $("themeToggle").onclick = function(){
   this.style.setProperty("--crown-rotation", _themeRotation + "deg");
 };
 
-vipInit();
-
 /* ===== NAV / PAGES ===== */
 function showPage(name){
   document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
@@ -2389,6 +2387,7 @@ function svg(p,styleOverride){
     +'paint-order="stroke fill" filter="'+shadow+'">'+glyph+'</text></svg>';
   _svgCache[key]=result;return result;
 }
+vipInit();
 
 /* ===== setPlayer ===== */
 function setPlayer(color, player){
