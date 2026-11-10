@@ -1320,36 +1320,7 @@ input[type="color"] {
 .kf-audit-replay-note{border-left:3px solid #dba559;padding-left:10px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
 </style>
 </head>
-<!-- Optional debugging console is loaded only when explicitly requested.
-     Do not block the initial page on a third-party debugging CDN. -->
-<script>
-(function () {
-  var loading = false;
-  function enableConsole() {
-    if (window.eruda) { window.eruda.init(); return; }
-    if (loading) return;
-    loading = true;
-    var button = document.getElementById("kfDebugConsoleButton");
-    if (button) { button.disabled = true; button.title = "Loading console…"; }
-    var script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/eruda";
-    script.async = true;
-    script.onload = function () {
-      loading = false;
-      if (button) { button.disabled = false; button.title = "Open debug console"; }
-      if (window.eruda) window.eruda.init();
-    };
-    script.onerror = function () {
-      loading = false;
-      if (button) { button.disabled = false; button.title = "Console unavailable - tap to retry"; }
-    };
-    document.head.appendChild(script);
-  }
-  window.kfEnableDebugConsole = enableConsole;
-})();
-</script>
 <body>
-<button id="kfDebugConsoleButton" type="button" title="Open debug console" aria-label="Open debug console" onclick="window.kfEnableDebugConsole()" style="position:fixed;top:2px;right:2px;z-index:2147483646;background:#2b0710;color:#edc56b;border:1px solid #5d1d2b;border-radius:6px;font-size:11px;padding:2px 5px;line-height:1.2;opacity:.65">⌘</button>
 <div id="kfToastWrap"></div>
 <div class="wrap">
   <header class="topnav">
