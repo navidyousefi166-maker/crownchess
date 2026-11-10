@@ -412,7 +412,8 @@ h3{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:upperca
 .hist-result-badge.loss{background:rgba(58,14,14,.8);color:#ff9b8b;border:1px solid var(--danger)}
 .hist-result-badge.draw{background:rgba(58,52,14,.8);color:#f7c631;border:1px solid #f7c631}
 .hist-analyze{font-size:11px;padding:5px 10px;border-radius:8px;background:var(--btn-bg);color:var(--text);border:1px solid var(--line);cursor:pointer;font-weight:800;flex:none}
-.hist-analyze:hover{background:var(--btn-hover);border-color:var(--gold)}
+.hist-analyze:hover:not(:disabled){background:var(--btn-hover);border-color:var(--gold)}
+.hist-analyze:disabled{cursor:default;opacity:.65;font-weight:600;white-space:normal;max-width:125px;line-height:1.25}
 @media(max-width:600px){
   .history-section{padding:12px}
   .hist-row{padding:8px 10px;gap:8px}
@@ -4904,14 +4905,18 @@ function renderHistory(){
       var ana = document.createElement("button");
       ana.className = "hist-analyze";
       ana.type = "button";
-      ana.textContent = "Analyze";
-      ana.onclick = function(e){ e.stopPropagation(); startAnalysisFromHistory(g); };
+      var hasReplay = typeof g.pgn === "string" && g.pgn.trim().length > 0;
+      ana.textContent = hasReplay ? "Analyze" : "No moves to analyze";
+      ana.disabled = !hasReplay;
+      if(hasReplay){
+        ana.onclick = function(e){ e.stopPropagation(); startAnalysisFromHistory(g); };
+        row.onclick = function(){ startAnalysisFromHistory(g); };
+      }
       row.appendChild(outcomeEl);
       row.appendChild(img);
       row.appendChild(info);
       row.appendChild(badge);
       row.appendChild(ana);
-      row.onclick = function(){ startAnalysisFromHistory(g); };
       list.appendChild(row);
     })(historyData[i]);
   }
