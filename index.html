@@ -1208,10 +1208,19 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
   .vs-player.right { transform: translateX(-80px) scale(0.5); }
 }
   /* ===== HONORS PAGE ===== */
-.honors-container{width:min(900px,100%);margin:20px auto;padding:24px;border:1px solid var(--line2);border-radius:12px;background:var(--panel-bg1);box-shadow:0 14px 34px rgba(0,0,0,.35);min-height:350px}
-.honors-container h1{margin:0;color:var(--gold2);font-size:clamp(22px,5vw,32px)}
-.honors-container p{color:var(--muted);margin:10px 0}
-@media(max-width:600px){.honors-container{padding:18px;min-height:280px}}
+.honors-container{width:min(900px,100%);margin:20px auto;padding:22px;border:1px solid var(--line2);border-radius:12px;background:var(--panel-bg1);box-shadow:0 14px 34px rgba(0,0,0,.35);min-height:350px}
+.honors-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+.honors-container h1{margin:0;color:var(--gold2);font-size:clamp(22px,5vw,30px)}
+.honors-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.honors-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px 12px;align-items:start}
+.honors-champion{display:flex;min-width:0;align-items:center;flex-direction:column;gap:4px;text-align:center}
+.honors-avatar{width:clamp(65px,9vw,94px);height:clamp(65px,9vw,94px);object-fit:cover;border-radius:50%;border:3px solid var(--gold);background:var(--panel-bg2);box-shadow:0 3px 14px rgba(0,0,0,.38)}
+.honors-champion:first-child .honors-avatar{border-color:var(--gold2);box-shadow:0 0 16px rgba(237,197,107,.42)}
+.honors-name{font-size:13px;font-weight:800;color:var(--text);max-width:100%;overflow-wrap:anywhere;line-height:1.3;margin-top:5px}
+.honors-date{font-size:11px;line-height:1.3;color:var(--muted);font-variant-numeric:tabular-nums}
+.honors-state{text-align:center;color:var(--muted);padding:45px 10px;font-size:13px}
+@media(max-width:600px){.honors-container{padding:16px 12px;min-height:280px}.honors-head{margin-bottom:18px}.honors-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px}.honors-avatar{width:88px;height:88px}.honors-name{font-size:13px}.honors-date{font-size:11px}}
+@media(min-width:601px) and (max-width:800px){.honors-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .kf-evidence{display:flex;gap:15px;flex-wrap:wrap;align-items:flex-start;margin:12px 0}.kf-evidence>div:first-child{flex:0 1 330px;min-width:0;width:min(100%,330px)}
 .kf-evidence-board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));position:relative;border:3px solid #765739;border-radius:5px;overflow:hidden;box-sizing:border-box}
 .kf-evidence-square{position:relative;display:flex;justify-content:center;align-items:center;min-width:0;min-height:0}.kf-evidence-square.light{background:#e8d7b8;color:#54402e}.kf-evidence-square.dark{background:#937656;color:#f4e8d4}
@@ -1500,8 +1509,12 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
   </div>
 <div class="page" id="pageHonors">
   <section class="honors-container">
-    <h1>🏅 Kingsfall Honors</h1>
-    <p>The Hall of Honors is coming soon.</p>
+    <div class="honors-head">
+      <div><h1>🏅 Kingsfall Honors</h1><div class="honors-sub">50 most recent tournament champions</div></div>
+      <button class="lb-refresh" type="button" id="honorsRefresh">↻ Refresh</button>
+    </div>
+    <div id="honorsGrid" class="honors-grid" aria-live="polite"></div>
+    <div id="honorsStatus" class="honors-state">Loading champions…</div>
   </section>
 </div>
 <div class="page" id="pageAdmin"><div class="admin-wrap">
@@ -1980,6 +1993,7 @@ function showPage(name){
   if(navTabsEl) navTabsEl.classList.toggle("honors-active", name === "honors");
   if(navTabsEl) navTabsEl.classList.toggle("admin-active", name === "admin");
   if(name === "table") loadLeaderboard();
+  if(name === "honors") loadHonors();
   if(name === "admin") loadAdminPanel();
 }
 $("navHome").onclick = function(){ showPage("home"); };
@@ -7162,6 +7176,52 @@ setInterval(function(){
 },30000);
 
 /* ===== HONORS PAGE ===== */
+var honorsLoadSequence = 0;
+async function loadHonors(){
+  var grid = $("honorsGrid"), status = $("honorsStatus");
+  if(!grid || !status) return;
+  var sequence = ++honorsLoadSequence;
+  status.hidden = false;
+  status.textContent = "Loading champions…";
+  if(!sb){ status.textContent = "Unable to connect to the champions archive."; return; }
+  try{
+    var response = await sb.rpc("kf_get_recent_tournament_champions");
+    if(sequence !== honorsLoadSequence) return;
+    if(response.error) throw response.error;
+    var champions = Array.isArray(response.data) ? response.data.slice(0,50) : [];
+    grid.replaceChildren();
+    if(!champions.length){ status.textContent = "No tournament champions yet."; return; }
+    champions.forEach(function(champion){
+      var card=document.createElement("article");
+      card.className="honors-champion";
+      var photo=document.createElement("img");
+      photo.className="honors-avatar";
+      photo.alt="Champion avatar";
+      photo.loading="lazy";
+      photo.src=champion.winner_avatar || defaultAvatar();
+      photo.onerror=function(){ this.onerror=null;this.src=defaultAvatar(); };
+      var name=document.createElement("div");
+      name.className="honors-name";
+      name.textContent=champion.winner_username || "Champion";
+      var date=document.createElement("time");
+      date.className="honors-date";
+      var finished=new Date(champion.completed_at);
+      if(Number.isFinite(finished.getTime())){
+        date.dateTime=champion.completed_at;
+        date.textContent=finished.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+        date.title=finished.toLocaleString();
+      }else{date.textContent="Date unavailable";}
+      card.appendChild(photo);card.appendChild(name);card.appendChild(date);
+      grid.appendChild(card);
+    });
+    status.hidden=true;
+  }catch(error){
+    if(sequence !== honorsLoadSequence) return;
+    console.warn("Kingsfall Honors load failed:",error);
+    status.textContent="Could not load tournament champions. Tap Refresh to retry.";
+  }
+}
+$("honorsRefresh").onclick = loadHonors;
 $("navHonors").onclick = function(){ showPage("honors"); };
 
 initApp();
