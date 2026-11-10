@@ -2230,6 +2230,12 @@ function fmtClock(sec){
   sec = Math.max(0, Math.floor(sec));
   return String(Math.floor(sec/60)).padStart(2,"0") + ":" + String(sec%60).padStart(2,"0");
 }
+/* TEMP ALPHA TEST: show clock tenths without altering authoritative timing. */
+function fmtClockTenths(sec){
+  var tenths = Math.max(0,Math.floor((Number(sec)||0)*10+1e-7));
+  return String(Math.floor(tenths/600)).padStart(2,"0")+":"+
+    String(Math.floor((tenths%600)/10)).padStart(2,"0")+"."+(tenths%10);
+}
 function fmtCountdown(ms){
   if(ms < 0) ms = 0;
   var s = Math.floor(ms/1000);
@@ -2307,7 +2313,7 @@ function paintClocks(){
     for(var j=0;j<ids.length;j++){
       var el = $(ids[j]);
       if(!el) continue;
-      el.textContent = fmtClock(val);
+      el.textContent = fmtClockTenths(val);
       var active = false;
       if(canRun && !computerMode){
         var turnIsWhite = displayTurn === "w";
@@ -2324,12 +2330,12 @@ function paintClocks(){
     var botVal = botColor === "white" ? clockWhite : clockBlack;
     var topEl = $("gfsTopClock"), botEl = $("gfsBotClock");
     if(topEl){
-      topEl.textContent = fmtClock(topVal);
+      topEl.textContent = fmtClockTenths(topVal);
       var topActive = canRun && ((displayTurn==="w")===(topColor==="white"));
       topEl.classList.toggle("active", topActive);
     }
     if(botEl){
-      botEl.textContent = fmtClock(botVal);
+      botEl.textContent = fmtClockTenths(botVal);
       var botActive = canRun && ((displayTurn==="w")===(fsPlayerColor==="w"));
       botEl.classList.toggle("active", botActive);
     }
@@ -3744,7 +3750,8 @@ function tickClock(){
   paintClocks();
 }
 
-setInterval(tickClock, 250);
+// TEMP ALPHA TEST: tenths refresh
+setInterval(tickClock, 100);
 
 /* ===== FIRST MOVE DEADLINE (UI only; database owns the deadline/result) ===== */
 function updateFirstMoveDeadlineUI(){
