@@ -80,6 +80,9 @@ header.topnav{
 /* Hidden admin control must stay hidden, including during swipe transitions. */
 #navAdmin[hidden]{display:none!important;visibility:hidden!important;pointer-events:none!important}
 .topnav-right{display:flex;gap:8px;align-items:center;flex:none}
+.get-vip-btn{border:1px solid var(--gold);border-radius:10px;padding:9px 11px;background:linear-gradient(135deg,rgba(237,197,107,.19),rgba(215,163,62,.08));color:var(--gold2);font:800 11px inherit;letter-spacing:.6px;white-space:nowrap;cursor:pointer;box-shadow:0 0 10px rgba(237,197,107,.13);transition:filter .2s,box-shadow .2s}
+.get-vip-btn:hover,.get-vip-btn:focus-visible{filter:brightness(1.15);box-shadow:0 0 13px rgba(237,197,107,.32)}
+@media(max-width:600px){.get-vip-btn{padding:8px 7px;font-size:10px;letter-spacing:0}}
 @media(max-width:700px){
   .topnav-left{gap:10px}
   .brand-crown{width:32px;height:32px;font-size:17px}
@@ -1341,6 +1344,7 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
       </nav>
     </div>
     <div class="topnav-right">
+      <button class="get-vip-btn" id="getVipBtn" type="button" title="Get VIP">Get VIP</button>
       <img id="avatarThumb" alt="Profile photo" title="Open profile">
       <span id="userBadge"></span>
       <button class="btn" id="signIn">Sign In</button>
@@ -1982,6 +1986,8 @@ function say(msg, opts){
     toast(msg, opts.error ? "error" : (opts.info ? "info" : ""));
   }
 }
+
+$("getVipBtn").onclick = function(){ toast("VIP is coming soon!", "info"); };
 
 /* ===== THEME ===== */
 (function initTheme(){
