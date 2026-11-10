@@ -1316,6 +1316,7 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 /* VIP style studio */
 .vip-studio{max-width:840px;margin:18px auto 40px;padding:20px;border:1px solid var(--line2);border-radius:18px;background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2));color:var(--text)}
 .vip-studio-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.vip-back-row{display:flex;justify-content:flex-end;margin-bottom:4px}
 .vip-studio-head h2{font-size:clamp(21px,4vw,32px);margin:5px 0;color:var(--gold2);letter-spacing:1px}
 .vip-studio-head p{font-size:13px;color:var(--muted);line-height:1.5;margin:7px 0 10px}
 .vip-eyebrow{font-weight:800;letter-spacing:2px;color:var(--gold);font-size:12px}
@@ -1383,6 +1384,7 @@ body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark
   </header>
   <div class="page" id="pageVip">
     <section class="vip-studio">
+      <div class="vip-back-row"><button class="btn" id="vipBack" type="button">← Back</button></div>
       <h3>Exclusive chessboard themes</h3>
       <div id="vipBoardChoices" class="vip-choices" role="group" aria-label="Chessboard themes"></div>
       <h3>Piece shapes</h3>
@@ -2136,6 +2138,7 @@ function vipInit(){
   vipRenderStudio();
 }
 
+$("vipBack").onclick=function(){showPage("home");};
 $("vipApply").onclick=function(){
   vipApplyAppearance(vipSelectedBoard,vipSelectedPiece,vipSelectedColor);
   try{
