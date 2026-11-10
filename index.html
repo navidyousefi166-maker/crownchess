@@ -2075,7 +2075,6 @@ var queuePoll = null;
 var queueTimeout = null;
 var gameChannel = null;
 var onlineGamePolling = null;
-  var gameStartDelay = 0;
 var submittingMove = false;
 // Invalidates game-state fetches that began before a local move submission.
 var gameSyncGeneration = 0;
@@ -3056,8 +3055,6 @@ async function joinTournamentGame(gameId, skipIntro){
   }
   var data = res.data;
   if($("tournDialog").open) $("tournDialog").close();
-    if(!skipIntro) gameStartDelay = Date.now() + 2000; // فقط برای شروع اولیه
-    else gameStartDelay = 0;
     startGamePolling();
   if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   onlineGameId = gameId;
@@ -3294,9 +3291,7 @@ async function loadOnlineGame(id, skipIntro){
     var oppName = myIsWhite ? data.black_username : data.white_username;
     var oppAvatar = myIsWhite ? data.black_avatar : data.white_avatar;
     await showVsAnimation(myName, myAvatar, oppName, oppAvatar);
-    gameStartDelay = Date.now() + 2000;
   } else {
-    gameStartDelay = 0;
     var oldOverlay = $("vsOverlay");
     if(oldOverlay) oldOverlay.classList.remove("show");
   }
@@ -6604,11 +6599,16 @@ async function clickSquare(s){
   // its server-defined animation timeline has fully completed.
   if(rouletteOpeningAnimating) return;
   if(onlineGame&&onlineGame.is_bloodblade&&!humilApplied&&!humilSelecting){humilSelecting=true;draw();}
-  // Block normal moves during the initial countdown, but allow Humiliation
-  // selection and sacrifice before the clock starts.
-  if(!humilSelecting && gameStartDelay > 0 && Date.now() < gameStartDelay){
-    say("Get ready... Game starts in a moment!", {silentToast: false});
-    return;
+  // In online games the server's official clock-start timestamp is the ONLY
+  // movement gate. The VS introduction must never add a second delay after
+  // White's clock has started. Keep pre-clock Bloodblade sacrifice available.
+  if(onlineGameId && !humilSelecting){
+    var officialStart = onlineGame && Date.parse(onlineGame.clock_started_at);
+    var serverNow = Date.now() + (kfServerOffsetKnown ? kfServerOffsetMs : 0);
+    if(!Number.isFinite(officialStart) || serverNow < officialStart){
+      say("Get ready... Game starts in a moment!", {silentToast: false});
+      return;
+    }
   }
 
   /* Humiliation: sacrifice selection */
