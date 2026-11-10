@@ -1542,6 +1542,7 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 <div id="adminOverviewView">
 <div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div><div class="admin-stat suspicious-players-card" role="button" tabindex="0"><span>Suspicious Players</span><strong>—</strong></div></div>
 <section class="admin-section" id="adminRejectedMovesSection"><div class="admin-section-head"><div><h2>🛡️ Rejected Move Reports</h2><p>Illegal move requests rejected by the server · reports are not automatic proof of cheating</p></div></div><div id="adminRejectedMoves" class="admin-users"><div class="admin-loading">Loading reports…</div></div></section>
+<section class="admin-section" id="adminClockDiagnosticsSection"><div class="admin-section-head"><div><h2>⏱ Clock Diagnostics (TEMP)</h2><p>30 latest admin moves · remove after testing</p></div><button type="button" class="btn" id="adminClockDiagRefresh">Refresh</button></div><div id="adminClockDiagList" class="admin-users">No measurements yet.</div></section>
 <section class="admin-section"><div class="admin-section-head"><div><h2>⚙️ Feature Management</h2><p>Temporarily enable or disable game features</p></div></div><div id="adminFeatures" class="admin-features"><div class="admin-loading">Loading features…</div></div></section>
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
 </div>
@@ -6164,6 +6165,20 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
     };
     window.kfClockDiagnostics = window.kfClockDiagnostics || [];
     window.kfClockDiagnostics.push(traceResult);
+    // TEMP diagnostics: asynchronous owner-only recording; never changes clocks.
+    if(!res.error && res.data && currentUser && currentUser.id==="cc80cc38-f476-4edd-8efc-45e2722f3c4f"){
+      (function(d,gid,color,san,before,after){
+        setTimeout(function(){
+          if(!sb)return;
+          sb.rpc("kf_admin_clock_diag_add",{p_game_id:gid,p_color:color,p_san:san,
+            p_at_release_ms:Math.round(before*1000),p_confirmed_ms:Math.round(after*1000),
+            p_adjustment_ms:d.adjustmentMs,p_preparation_ms:d.prepareMs,
+            p_round_trip_ms:d.roundTripMs,p_server_processing_ms:d.serverMs==null?null:Math.round(d.serverMs)})
+          .then(function(x){if(x.error)console.warn("Clock diagnostics write:",x.error.message);})
+          .catch(function(e){console.warn("Clock diagnostics write:",e);});
+        },250);
+      })(traceResult,submittedGameId,m.color,m.san,kfClockAtTap,Number(kfMoverColor==="white"?res.data.white_time_left:res.data.black_time_left));
+    }
     if(window.kfClockDiagnostics.length > 30) window.kfClockDiagnostics.shift();
     console.debug("[Kingsfall clock]", traceResult);
     if(onlineGameId !== submittedGameId) return;
@@ -7182,8 +7197,20 @@ $("adminPlayerReportsList").addEventListener("click",async function(event){
  }catch(err){if(details)details.textContent="Could not load game: "+(err.message||err);}
  finally{button.disabled=false;}
 });
+async function loadAdminClockDiagnostics(){
+ if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
+ var el=$("adminClockDiagList");if(!el)return;
+ try{
+  var r=await sb.rpc("kf_admin_clock_diag_list");if(r.error)throw r.error;
+  var rows=Array.isArray(r.data)?r.data:[];
+  var ms=function(n){return n==null?"—":Math.round(Number(n)).toLocaleString("en-US")+" ms";};
+  el.innerHTML=rows.length?rows.map(function(x){return '<article class="admin-report-row"><strong>'+adminEscape(x.color==="w"?"White ":"Black ")+adminEscape(x.san||"move")+'</strong><small>'+adminEscape(new Date(x.created_at).toLocaleString())+'</small><div class="admin-user-stats"><span class="admin-chip">Adjustment: '+ms(x.adjustment_ms)+'</span><span class="admin-chip">Server: '+ms(x.server_processing_ms)+'</span><span class="admin-chip">Round trip: '+ms(x.round_trip_ms)+'</span><span class="admin-chip">Prepare: '+ms(x.preparation_ms)+'</span><span class="admin-chip">Network estimate: '+ms(x.network_approx_ms)+'</span></div><small>At release: '+ms(x.at_release_ms)+' · Confirmed: '+ms(x.confirmed_ms)+'</small></article>';}).join(""):'<div class="admin-empty">No measurements yet. Make moves from the admin account.</div>';
+ }catch(e){el.textContent="Clock diagnostics error: "+(e.message||e);}
+}
+$("adminClockDiagRefresh").onclick=loadAdminClockDiagnostics;
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
+ loadAdminClockDiagnostics();
  loadAdminRejectedMoveReports();
  loadAdminPlayerReportsCount();
  loadAdminSuspiciousPlayers();
