@@ -2050,7 +2050,8 @@ var vipBoardThemes = [
 var vipPieceStyles = [
   {id:"classic",name:"Classic"},
   {id:"outline",name:"Outline"},
-  {id:"dualclassic",name:"Dual Classic SVG"}
+  {id:"dualclassic",name:"Dual Classic SVG"},
+  {id:"rosevector",name:"Rose Vector SVG"}
 ];
 var vipPieceColors = [
   {id:"standard",name:"Classic",white:"#fffdf7",black:"#20100d"},
@@ -2487,6 +2488,13 @@ function vipDualClassicSvg(p,colorOverride){
   return '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" style="color:'+pair[0]+'" xmlns="http://www.w3.org/2000/svg">'
     +'<use href="'+sprite+'" xlink:href="'+sprite+'" x="0" y="0" width="100" height="100" xmlns:xlink="http://www.w3.org/1999/xlink"></use></svg>';
 }
+function vipRoseVectorSvg(p,colorOverride){
+  var white=p.color==="w",pair=vipColors(colorOverride,white);
+  var label=(white?"White ":"Black ")+names[p.type];
+  var sprite="assets/vip-rose-pieces.svg#vip-rose-"+p.type;
+  return '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" style="color:'+pair[0]+';filter:drop-shadow(0 1px 1px '+pair[1]+')" xmlns="http://www.w3.org/2000/svg">'
+    +'<use href="'+sprite+'" xlink:href="'+sprite+'" x="0" y="0" width="100" height="100" xmlns:xlink="http://www.w3.org/1999/xlink"></use></svg>';
+}
 function svg(p,styleOverride,colorOverride){
   var style=styleOverride||window.kfVipPieceStyle||"classic";
   var color=colorOverride||window.kfVipPieceColor||"standard";
@@ -2495,6 +2503,7 @@ function svg(p,styleOverride,colorOverride){
   if(style==="heritage"){var original=vipHeritageSvg(p,color);_svgCache[key]=original;return original;}
   if(style==="silhouette"){var traced=vipSilhouetteSvg(p,color);_svgCache[key]=traced;return traced;}
   if(style==="dualclassic"){var exact=vipDualClassicSvg(p,color);_svgCache[key]=exact;return exact;}
+  if(style==="rosevector"){var newArt=vipRoseVectorSvg(p,color);_svgCache[key]=newArt;return newArt;}
   var w=p.color==="w";
   var solid={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
   var hollow={k:"♔",q:"♕",r:"♖",b:"♗",n:"♘",p:"♙"};
