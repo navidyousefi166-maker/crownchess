@@ -7263,7 +7263,7 @@ async function loadAdminSuspiciousPlayers(){
 $("adminSuspiciousForm").addEventListener("submit",async function(e){
  e.preventDefault();if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
  var field=$("adminSuspiciousId"),id=field.value.trim(),button=$("adminSuspiciousSubmit");
- if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)){say("Enter a valid player UUID.",{error:true});return;}
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)){say("Enter a valid player UUID.",{error:true});return;}
  button.disabled=true;
  try{var r=await sb.rpc("kf_admin_mark_suspicious",{p_user_id:id});if(r.error)throw r.error;field.value="";await loadAdminSuspiciousPlayers();say("Suspicion count updated to "+fmtStat(r.data)+".",{silentToast:true});}
  catch(err){say("Could not save suspicious player: "+(err.message||err),{error:true});}
@@ -7273,7 +7273,7 @@ function showRegisteredUsers(){$("adminSuspiciousPlayersSection").hidden=true;if
 function showAdminOverview(){$("adminSuspiciousPlayersSection").hidden=true;$("adminPlayerReportsSection").hidden=true;$("adminUserManagementSection").hidden=true;$("adminOverviewView").hidden=false;$("adminPageTitle").textContent="🛡️ Admin Panel";$("adminPageSubtitle").textContent="Private administration · Owner access only";$("adminBackToOverview").hidden=true;window.scrollTo({top:0,behavior:"smooth"});}
 $("adminBackToOverview").addEventListener("click",showAdminOverview);
 $("adminOverview").addEventListener("click",function(e){if(e.target.closest(".registered-users-card"))showRegisteredUsers();else if(e.target.closest(".player-reports-card"))showPlayerReports();else if(e.target.closest(".suspicious-players-card"))showSuspiciousPlayers();});
-$("adminOverview").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;if(e.target.closest(".registered-users-card")){e.preventDefault();showRegisteredUsers();}else if(e.target.closest(".player-reports-card")){e.preventDefault();showPlayerReports();}});
+$("adminOverview").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;if(e.target.closest(".registered-users-card")){e.preventDefault();showRegisteredUsers();}else if(e.target.closest(".player-reports-card")){e.preventDefault();showPlayerReports();}else if(e.target.closest(".suspicious-players-card")){e.preventDefault();showSuspiciousPlayers();}});
 var adminWinsTargetId=null,adminWinsTargetMetric="wins",adminWinsValue=0,adminWinsDragY=null,adminWinsDragRemainder=0;
 function updateAdminWinsDisplay(){var n=$("adminWinsNumber");n.textContent=adminWinsValue.toLocaleString("en-US");$("adminWinsWheel").setAttribute("aria-valuenow",String(adminWinsValue));}
 function openAdminWinsEditor(userId,metric){var u=adminUsersCache.find(function(x){return x.id===userId;});if(!u)return;var labels={wins:"Wins",tournament_wins:"Trophies",humiliation_losses:"Humiliation"};if(!Object.prototype.hasOwnProperty.call(labels,metric))return;adminWinsTargetId=userId;adminWinsTargetMetric=metric;adminWinsValue=Math.max(metric==="humiliation_losses"?-100000000:0,Math.min(100000000,Number(u[metric])||0));$("adminWinsTitle").textContent=labels[metric];$("adminWinsSave").textContent="Save "+labels[metric].toLowerCase();$("adminWinsPlayer").textContent=u.username||"Player";updateAdminWinsDisplay();$("adminWinsEditor").hidden=false;}
