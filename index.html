@@ -1023,6 +1023,12 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
   background:var(--btn-bg);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;
 }
 .lb-refresh:hover{background:var(--btn-hover);border-color:var(--gold)}
+.lb-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.lb-sort-wrap{position:relative}
+.lb-sort-menu{position:absolute;right:0;top:calc(100% + 5px);z-index:30;min-width:185px;padding:5px;background:var(--panel-bg1);border:1px solid var(--line2);border-radius:10px;box-shadow:0 8px 25px rgba(0,0,0,.4)}
+.lb-sort-menu[hidden]{display:none!important}
+.lb-sort-menu button{display:block;width:100%;padding:10px 12px;text-align:left;border:0;border-radius:6px;color:var(--text);background:transparent;cursor:pointer;font-size:12px}
+.lb-sort-menu button:hover,.lb-sort-menu button[aria-pressed="true"]{background:var(--btn-hover);color:var(--gold)}
 .lb-table-head{
   display:grid;
   grid-template-columns:54px minmax(110px,1fr) 76px 70px 90px 84px;
@@ -1543,7 +1549,19 @@ input[type="color"] {
             <h2>🏆 Kingsfall Leaderboard</h2>
             <div class="lb-sub">Ranked by wins · trophies · Humiliation score</div>
           </div>
-          <button class="lb-refresh" id="lbRefresh" type="button">🔄 Refresh</button>
+          <div class="lb-actions">
+            <div class="lb-sort-wrap">
+              <button class="lb-refresh" id="lbSortBtn" type="button" aria-expanded="false" aria-controls="lbSortMenu">⇅ Sort: Overall ▾</button>
+              <div class="lb-sort-menu" id="lbSortMenu" hidden>
+                <button type="button" data-lb-sort="overall">Overall</button>
+                <button type="button" data-lb-sort="wins">Crowns</button>
+                <button type="button" data-lb-sort="tournament_wins">Tournament wins</button>
+                <button type="button" data-lb-sort="humiliation_losses">Humiliation</button>
+                <button type="button" data-lb-sort="bt_wins">Blood Tributes</button>
+              </div>
+            </div>
+            <button class="lb-refresh" id="lbRefresh" type="button">🔄 Refresh</button>
+          </div>
         </div>
         <div class="lb-table-head">
           <span>#</span>
@@ -2434,25 +2452,22 @@ function setRouletteState(text, opts){
   $("rouletteBtn").disabled = !!(opts.lock || onlineGameId);
   }
   /* ============ LEADERBOARD ============ */
-async function loadLeaderboard(){
+var leaderboardData = [];
+var leaderboardSort = "overall";
+var leaderboardSortLabels = {overall:"Overall",wins:"Crowns",tournament_wins:"Tournament wins",humiliation_losses:"Humiliation",bt_wins:"Blood Tributes"};
+function renderLeaderboardRows(){
   var list = $("lbList");
-  if(!sb){ list.innerHTML = '<div class="lb-empty">Supabase is unavailable.</div>'; return; }
-  list.innerHTML = '<div class="lb-loading">Loading leaderboard…</div>';
-  var res = await sb.rpc("kf_get_leaderboard_bt", {p_limit: 100});
-  if(res.error){
-    console.error("Leaderboard error:", res);
-    list.innerHTML = '<div class="lb-empty">Could not load leaderboard.<br><small style="color:#ef8b83;word-break:break-word;display:block;margin-top:8px">'+
-      (res.error.message || JSON.stringify(res.error)) + '</small></div>';
-    return;
-  }
-  var data = res.data || [];
-  if(!data.length){
-    list.innerHTML = '<div class="lb-empty">No players yet. Play a match to appear here!</div>';
-    return;
+  if(!leaderboardData.length) return;
+  var data = leaderboardData.map(function(row,index){ return {row:row,index:index}; });
+  if(leaderboardSort !== "overall"){
+    data.sort(function(a,b){
+      var diff = (Number(b.row[leaderboardSort]) || 0) - (Number(a.row[leaderboardSort]) || 0);
+      return diff || a.index - b.index;
+    });
   }
   list.innerHTML = "";
   for(var i=0;i<data.length;i++){
-    var row = data[i];
+    var row = data[i].row;
     var isMe = currentUser && row.user_id === currentUser.id;
     var div = document.createElement("div");
     div.className = "lb-row" + (isMe ? " me" : "");
@@ -2472,9 +2487,54 @@ async function loadLeaderboard(){
       '<div class="lb-stat wins">' + (row.wins || 0) + '</div>' +
       '<div class="lb-stat trophies">' + (row.tournament_wins || 0) + '</div>' +
       '<div class="lb-stat humil">' + Number(row.humiliation_losses || 0) + '</div>' +
-       '<div class="lb-stat bt" title="Blood Tributes wins">' + Number(row.bt_wins || 0) + '</div>';
+      '<div class="lb-stat bt" title="Blood Tributes wins">' + Number(row.bt_wins || 0) + '</div>';
     list.appendChild(div);
   }
+}
+function closeLeaderboardSort(){
+  $("lbSortMenu").hidden = true;
+  $("lbSortBtn").setAttribute("aria-expanded","false");
+}
+$("lbSortBtn").onclick = function(e){
+  e.stopPropagation();
+  var menu = $("lbSortMenu");
+  menu.hidden = !menu.hidden;
+  $("lbSortBtn").setAttribute("aria-expanded",String(!menu.hidden));
+};
+$("lbSortMenu").addEventListener("click",function(e){
+  var btn = e.target.closest("button[data-lb-sort]");
+  if(!btn) return;
+  var chosen = btn.getAttribute("data-lb-sort");
+  if(!Object.prototype.hasOwnProperty.call(leaderboardSortLabels,chosen)) return;
+  leaderboardSort = chosen;
+  $("lbSortBtn").textContent = "⇅ Sort: " + leaderboardSortLabels[chosen] + " ▾";
+  Array.prototype.forEach.call($("lbSortMenu").querySelectorAll("button"),function(b){
+    b.setAttribute("aria-pressed", String(b === btn));
+  });
+  closeLeaderboardSort();
+  renderLeaderboardRows();
+});
+document.addEventListener("click",function(e){
+  if(!e.target.closest(".lb-sort-wrap")) closeLeaderboardSort();
+});
+async function loadLeaderboard(){
+  var list = $("lbList");
+  if(!sb){ list.innerHTML = '<div class="lb-empty">Supabase is unavailable.</div>'; return; }
+  list.innerHTML = '<div class="lb-loading">Loading leaderboard…</div>';
+  var res = await sb.rpc("kf_get_leaderboard_bt", {p_limit: 100});
+  if(res.error){
+    console.error("Leaderboard error:", res);
+    list.innerHTML = '<div class="lb-empty">Could not load leaderboard.<br><small style="color:#ef8b83;word-break:break-word;display:block;margin-top:8px">'+
+      (res.error.message || JSON.stringify(res.error)) + '</small></div>';
+    return;
+  }
+  var data = res.data || [];
+  leaderboardData = data;
+  if(!data.length){
+    list.innerHTML = '<div class="lb-empty">No players yet. Play a match to appear here!</div>';
+    return;
+  }
+  renderLeaderboardRows();
 }
 $("lbRefresh").onclick = loadLeaderboard;
 
