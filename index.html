@@ -2493,9 +2493,10 @@ function vipDualClassicSvg(p,colorOverride){
 function vipRoseVectorSvg(p,colorOverride){
   var white=p.color==="w",pair=vipColors(colorOverride,white);
   var label=(white?"White ":"Black ")+names[p.type];
-  var sprite="assets/vip-rose-pieces.svg#vip-rose-"+p.type;
+  var roseArtType=p.type==="b"?"p":p.type==="p"?"b":p.type;
+  var sprite="assets/vip-rose-pieces.svg#vip-rose-"+roseArtType;
   // Keep each Rose piece centered while enlarging its drawing only.
-  var tune={k:[-4,1,1.11],q:[7,1,1.11],r:[-9,1,1.11],b:[14,1,1.11],n:[-7,1,1.12],p:[0,1,1.11]}[p.type]||[0,1,1.11];
+  var tune={k:[-4,1,1.11],q:[7,1,1.11],r:[-9,1,1.11],b:[0,1,1.11],n:[-7,1,1.12],p:[14,1,1.11]}[p.type]||[0,1,1.11];
   return '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" style="color:'+pair[0]+';filter:drop-shadow(0 1px 1px '+pair[1]+')" xmlns="http://www.w3.org/2000/svg">'
     +'<g transform="translate('+(50+tune[0])+' '+(50+tune[1])+') scale('+tune[2]+') translate(-50 -50)">'
     +'<use href="'+sprite+'" xlink:href="'+sprite+'" x="0" y="0" width="100" height="100" xmlns:xlink="http://www.w3.org/1999/xlink"></use></g></svg>';
