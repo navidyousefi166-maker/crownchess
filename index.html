@@ -1262,6 +1262,7 @@ input[type="color"] {
 .kf-evidence-arrow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}.kf-evidence-caption{font-size:12px;color:var(--muted);margin-top:6px}
 .kf-evidence-info{flex:1 1 180px;font-size:13px;line-height:1.5;min-width:160px}.kf-evidence-info strong{color:var(--gold2)}.kf-evidence-info p{margin:8px 0}.kf-evidence-warning{color:#fda4af}
 .kf-evidence-details{border-top:1px solid var(--line);padding-top:9px}.kf-evidence-details summary{cursor:pointer;color:var(--gold2);font-size:12px;margin-bottom:8px}.kf-evidence-details .admin-user-meta{margin-top:5px;word-break:break-word}
+.kf-accused-id{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:10px 0;font-size:12px}.kf-accused-id span{color:var(--muted);font-weight:700}.kf-accused-id code{overflow-wrap:anywhere;user-select:text;font-size:11px}.kf-accused-id button{border:1px solid var(--line2);border-radius:7px;background:var(--btn-bg);color:var(--gold2);padding:6px 10px;font:inherit;cursor:pointer}
 /* PRIVATE ADMIN PANEL */
 .admin-wrap{max-width:1180px;margin:22px auto 36px}
 .admin-heading-actions{display:flex;align-items:center;gap:8px}
@@ -6977,6 +6978,26 @@ function adminIllegalBoard(a){
  html+='<div class="kf-evidence-info"><strong>Position before the illegal move</strong><p>'+adminEscape(description)+' attempted '+adminEscape(from)+' → '+adminEscape(to)+'</p><p>'+(q?'Target occupied by '+adminEscape((q.color==="w"?"White ":"Black ")+names[q.type]):'Target square empty')+'</p><p class="kf-evidence-warning">The move was rejected; pieces did not move.</p></div></div>';
  return html;
 }
+// Copy only the reported player's ID, never the opponent's account ID.
+$("adminRejectedMoves").addEventListener("click",async function(e){
+ var button=e.target.closest(".kf-copy-accused-id");
+ if(!button || !this.contains(button) || !currentUser || currentUser.id!==adminOwnerId)return;
+ var id=button.getAttribute("data-player-id")||"";
+ if(!/^[a-f0-9-]{36}$/i.test(id))return;
+ try{
+  if(navigator.clipboard && navigator.clipboard.writeText){
+   await navigator.clipboard.writeText(id);
+  }else{
+   var field=document.createElement("textarea");
+   field.value=id;field.style.position="fixed";field.style.opacity="0";
+   document.body.appendChild(field);field.select();
+   var copied=document.execCommand("copy");field.remove();
+   if(!copied)throw new Error("Copy is unavailable");
+  }
+  button.textContent="Copied ✓";
+  say("Accused player ID copied.",{silentToast:true});
+ }catch(err){say("Unable to copy ID. Select and copy the displayed ID.",{error:true});}
+});
 async function loadAdminRejectedMoveReports(){
  if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
  var target=$("adminRejectedMoves");if(!target)return;
@@ -6991,6 +7012,7 @@ async function loadAdminRejectedMoveReports(){
    var opponent=side==="White"?a.black_username:a.white_username;
    var when=a.reported_at?new Date(a.reported_at).toLocaleString():"Unknown time";
    return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">⚠️ '+adminEscape(name||"Unknown player")+' · '+side+'</div><div class="admin-user-meta">Against '+adminEscape(opponent||"Unknown")+' · '+adminEscape(when)+'</div></div></div>'+
+    '<div class="kf-accused-id"><span>Accused player ID</span><code>'+adminEscape(a.player_id||"Unknown")+'</code><button type="button" class="kf-copy-accused-id" data-player-id="'+adminEscape(a.player_id||"")+'">Copy ID</button></div>'+
     adminIllegalBoard(a)+
     '<details class="kf-evidence-details"><summary>Technical details (FEN, PGN, IDs)</summary><div class="admin-user-meta">Game: '+adminEscape(a.game_id||"")+' · Account: '+adminEscape(a.player_id||"")+'</div><div class="admin-user-meta">FEN: '+adminEscape(a.position_fen||"")+'</div><div class="admin-user-meta">PGN: '+adminEscape(String(a.position_pgn||"").slice(-1000)||"—")+'</div></details></article>';
   }).join("");
