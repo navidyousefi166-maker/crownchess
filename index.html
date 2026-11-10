@@ -3682,6 +3682,10 @@ function tickClock(){
   if(computerMode || !game || (game.game_over() && !kfPendingClockMove) || clockExpired){ paintClocks(); return; }
   if(!onlineGameId || !onlineGame || onlineGame.status !== "active"){ paintClocks(); return; }
 
+  // BETA FOLLOW-UP: the new turn does not officially begin until validation
+  // has committed. Do not consume the opponent's clock during that interval.
+  if(kfPendingClockMove){ paintClocks(); return; }
+
   // The server clock starts at clock_started_at, independently of player
   // page-entry timestamps and the visual VS/board transition. Never pause the
   // display here: anchor it to the authoritative server timestamp below.
@@ -6225,14 +6229,9 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
       return;
     }
 
-    // Capture the optimistic running clock BEFORE replacing it with the
-    // authoritative server snapshot; otherwise the blend starts at zero.
-    var turnBeforeConfirmation=clockPerfTurn;
-    var shownNext=null;
-    if(clockPerfAnchor!=null){
-      var optimisticElapsed=Math.max(0,(performance.now()-clockPerfAnchor)/1000);
-      shownNext=Math.max(0,(turnBeforeConfirmation==="w"?clockPerfBaseWhite:clockPerfBaseBlack)-optimisticElapsed);
-    }
+    // The next turn's display was held until the validated server commit.
+    // It will now use last_move_at to account for delivery time.
+    kfRunningClockBlend=null;
     // ✅ سرور زمان دقیق رو برگردوند، ما هم همون رو ذخیره می‌کنیم
     onlineGame.turn = game.turn();
     onlineGame.white_time_left = res.data.white_time_left;
@@ -6256,7 +6255,6 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
     clockPerfBaseWhite=clockWhite;clockPerfBaseBlack=clockBlack;
     clockPerfTurn=onlineGame.turn||"w";
     anchorClockToServerTime(onlineGame.last_move_at||onlineGame.clock_started_at);
-    kfBlendClockAfterRebase(turnBeforeConfirmation,shownNext);
     lastClockAt=Date.now();tickClock();
 
   } catch(err) {
