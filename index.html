@@ -1994,7 +1994,7 @@ $("themeToggle").onclick = function(){
   document.body.classList.toggle("theme-ocean");
   var isOcean = document.body.classList.contains("theme-ocean");
   try { localStorage.setItem("kf_theme", isOcean ? "ocean" : "burgundy"); } catch(e){}
-  _themeRotation += 45;
+  _themeRotation += 360;
   this.style.setProperty("--crown-rotation", _themeRotation + "deg");
 };
 
