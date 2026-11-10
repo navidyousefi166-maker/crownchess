@@ -1026,6 +1026,9 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 .lb-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .lb-sort-wrap{position:relative}
 .lb-sort-menu{position:absolute;right:0;top:calc(100% + 5px);z-index:30;min-width:185px;padding:5px;background:var(--panel-bg1);border:1px solid var(--line2);border-radius:10px;box-shadow:0 8px 25px rgba(0,0,0,.4)}
+@media(max-width:600px){
+  .lb-sort-menu{left:0;right:auto;min-width:185px;max-width:calc(100vw - 32px);box-sizing:border-box}
+}
 .lb-sort-menu[hidden]{display:none!important}
 .lb-sort-menu button{display:block;width:100%;padding:10px 12px;text-align:left;border:0;border-radius:6px;color:var(--text);background:transparent;cursor:pointer;font-size:12px}
 .lb-sort-menu button:hover,.lb-sort-menu button[aria-pressed="true"]{background:var(--btn-hover);color:var(--gold)}
