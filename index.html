@@ -2299,32 +2299,16 @@ function setPlayer(color, player){
 }
 
 /* ===== clocks ===== */
-// TEMP ALPHA TEST: visible game clocks must never tick upwards on the same game.
-// This is visual-only; the server continues to own official clock and timeout rules.
-var kfMonotoneDisplay={gameId:null,white:null,black:null};
-function kfNonIncreasingClockDisplay(color,value){
-  if(!onlineGameId||!onlineGame||computerMode)return value;
-  if(kfMonotoneDisplay.gameId!==onlineGameId){
-    kfMonotoneDisplay={gameId:onlineGameId,white:null,black:null};
-  }
-  var next=Math.max(0,Number(value)||0);
-  var previous=kfMonotoneDisplay[color];
-  if(previous!=null)next=Math.min(next,previous);
-  kfMonotoneDisplay[color]=next;
-  return next;
-}
 // Show server-authoritative clock values directly. Do not keep decrementing
 // the stopped player's clock with a post-move visual animation.
 function paintClocks(){
   // A clock repaint used to replay the move history up to six times.
   var canRun = game && !clockExpired && !game.game_over();
   var displayTurn = (onlineGameId && onlineGame && onlineGame.turn) ? onlineGame.turn : (game ? game.turn() : "w");
-  var shownWhite=kfNonIncreasingClockDisplay("white",clockWhite);
-  var shownBlack=kfNonIncreasingClockDisplay("black",clockBlack);
   var colors = ["white", "black"];
   for(var i=0;i<colors.length;i++){
     var color = colors[i];
-    var val = color === "white" ? shownWhite : shownBlack;
+    var val = color === "white" ? clockWhite : clockBlack;
     var ids = [color + "Clock", color + "ClockMobile"];
     for(var j=0;j<ids.length;j++){
       var el = $(ids[j]);
@@ -2341,9 +2325,9 @@ function paintClocks(){
   }
   if(document.body.classList.contains("game-focus")){
     var topColor = fsPlayerColor === "w" ? "black" : "white";
-    var topVal = topColor === "white" ? shownWhite : shownBlack;
+    var topVal = topColor === "white" ? clockWhite : clockBlack;
     var botColor = fsPlayerColor === "w" ? "white" : "black";
-    var botVal = botColor === "white" ? shownWhite : shownBlack;
+    var botVal = botColor === "white" ? clockWhite : clockBlack;
     var topEl = $("gfsTopClock"), botEl = $("gfsBotClock");
     if(topEl){
       topEl.textContent = fmtClockTenths(topVal);
