@@ -1318,8 +1318,6 @@ input[type="color"] {
 .kf-audit-replay-controls .btn{min-width:42px}.kf-audit-replay-status{font-size:13px;line-height:1.6;overflow-wrap:anywhere;margin-top:7px}
 .kf-audit-offender{margin:10px 0;padding:10px 12px;border:1px solid rgba(255,151,94,.55);border-radius:10px;background:rgba(141,52,26,.16);font-size:13px;line-height:1.6;overflow-wrap:anywhere}.kf-audit-offender b{color:#ffcb8d}.kf-audit-offender small{display:block;color:#b8c4d6;font-size:11px}.kf-audit-replay-head>div{min-width:0}.kf-audit-replay-head .btn{flex-shrink:0}@media(max-width:420px){.kf-audit-replay{padding:8px}.kf-audit-replay-panel{padding:12px;max-height:calc(100dvh - 16px)}.kf-audit-replay-board{width:min(100%,330px)}.kf-audit-replay-controls{gap:5px}.kf-audit-replay-controls .btn{min-width:36px;padding:8px}}
 .kf-audit-replay-note{border-left:3px solid #dba559;padding-left:10px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
-.square.kf-premove-from,.square.kf-premove-to{box-shadow:inset 0 0 0 4px rgba(70,175,255,.88)!important}
-.square.kf-premove-select{box-shadow:inset 0 0 0 4px rgba(70,175,255,.55)!important}
 </style>
 </head>
 <body>
@@ -2067,49 +2065,6 @@ var historyEl = $("history");
 var game = null;
 var selected = null;
 var targets = [];
-// Exactly one client-side premove; never sent to the server before our turn.
-var kfPremove = null;
-var kfPremoveSelected = null;
-var kfPremoveTargets = [];
-function kfClearPremove(){ kfPremove=null; kfPremoveSelected=null; kfPremoveTargets=[]; }
-function kfMyOnlineColor(){
-  if(!onlineGame || !currentUser) return null;
-  if(onlineGame.white_id === currentUser.id) return "w";
-  if(onlineGame.black_id === currentUser.id) return "b";
-  return null;
-}
-function kfPremoveCandidateMoves(square, color){
-  if(!game || !color) return [];
-  try{
-    var fen = game.fen().split(" ");
-    fen[1]=color;
-    // Chess.js 0.10.3 accepts a temporary turn-swapped position; the actual
-    // move will still be rechecked against the authoritative next position.
-    var preview = new Chess(fen.join(" "));
-    return preview.moves({square:square,verbose:true});
-  }catch(e){return [];}
-}
-function kfTryRunPremove(){
-  if(!kfPremove || !onlineGameId || !onlineGame || !game || submittingMove || kfPendingClockMove || rouletteOpeningAnimating || humilSelecting) return;
-  var premove=kfPremove, color=kfMyOnlineColor();
-  if(premove.gameId!==onlineGameId || !color || onlineGame.status==="completed" || onlineGame.status==="cancelled" || game.game_over()){
-    kfClearPremove(); draw(); return;
-  }
-  if(game.turn()!==color || onlineGame.turn!==color || (onlineGame.fen && onlineGame.fen!==game.fen()))return;
-  kfClearPremove();
-  // Never manipulate the clock here: use exactly the regular click/submit path.
-  var legal=game.moves({square:premove.from,verbose:true}).some(function(m){return m.to===premove.to;});
-  if(!legal){selected=null;targets=[];draw();return;}
-  selected=null;targets=[];
-  // The scheduled callback avoids recursion from realtime applyOnlineGame.
-  setTimeout(async function(){
-    if(onlineGameId!==premove.gameId || !onlineGame || onlineGame.turn!==color || game.turn()!==color || submittingMove || kfPendingClockMove)return;
-    await clickSquare(premove.from);
-    if(onlineGameId!==premove.gameId || !selected || selected!==premove.from || submittingMove)return;
-    await clickSquare(premove.to);
-  },0);
-}
-
 var flipped = false;
 var last = null;
 var mode = "signin";
@@ -3230,7 +3185,6 @@ async function stopQueuePoll(){
 }
 
 async function leaveOnlineState(){
-  kfClearPremove();
   computerMode = false;
   computerBusy = false;
   if(computerTimer){ clearTimeout(computerTimer); computerTimer = null; }
@@ -3323,7 +3277,6 @@ function stopGamePolling() {
   
 async function loadOnlineGame(id, skipIntro){
   if(!sb) return;
-  if(onlineGameId !== id) kfClearPremove();
   var res = await sb.from("kf_games").select("*").eq("id", id).maybeSingle();
   if(res.error || !res.data){
     say(res.error ? res.error.message : "Could not load the matched game.", {error: true});
@@ -3666,8 +3619,6 @@ if(row.is_tournament){
     }
   }
   }
-  if(kfPremove) setTimeout(kfTryRunPremove,0);
-}
 function tickClock(){
   if(computerMode || !game || (game.game_over() && !kfPendingClockMove) || clockExpired){ paintClocks(); return; }
   if(!onlineGameId || !onlineGame || onlineGame.status !== "active"){ paintClocks(); return; }
@@ -6588,9 +6539,6 @@ function draw(){
       if(!b) continue;
       b.innerHTML = "";
       b.classList.toggle("selected", selected === s);
-      b.classList.toggle("kf-premove-from", !!kfPremove && kfPremove.from===s);
-      b.classList.toggle("kf-premove-to", !!kfPremove && kfPremove.to===s);
-      b.classList.toggle("kf-premove-select", kfPremoveSelected===s);
       b.classList.remove("humil-dim", "humil-target");
       b.style.backgroundImage = "";
       if(humilSelecting){
@@ -6606,7 +6554,7 @@ function draw(){
       var aria = s + (p ? ", " + (p.color === "w" ? "white" : "black") + " " + names[p.type] : "");
       b.setAttribute("aria-label", aria);
       if(p) b.innerHTML = svg(p);
-      if((targetsSet[s] || kfPremoveTargets.indexOf(s)!==-1) && !humilSelecting){
+      if(targetsSet[s] && !humilSelecting){
         var mark = document.createElement("span");
         mark.className = p ? "ring" : "dot";
         b.appendChild(mark);
@@ -6697,27 +6645,6 @@ async function clickSquare(s){
   }
 
   if(game.game_over() || clockExpired) return;
-
-  // Opponent turn: allow one replaceable premove, without changing FEN or clock.
-  if(onlineGameId && onlineGame && onlineGame.status==="active" && !submittingMove && !kfPendingClockMove){
-    var preColor=kfMyOnlineColor();
-    if(preColor && game.turn()!==preColor){
-      var prePiece=game.get(s);
-      if(kfPremoveSelected && kfPremoveTargets.indexOf(s)!==-1){
-        kfPremove={gameId:onlineGameId,from:kfPremoveSelected,to:s};
-        kfPremoveSelected=null;kfPremoveTargets=[];
-        selected=null;targets=[];
-        draw(); say("Pre-move ready · tap your piece to replace it.",{silentToast:true});
-      }else if(prePiece && prePiece.color===preColor){
-        if(kfPremoveSelected===s){kfPremoveSelected=null;kfPremoveTargets=[];}
-        else {kfPremoveSelected=s;kfPremoveTargets=kfPremoveCandidateMoves(s,preColor).map(function(m){return m.to;});}
-        kfPremove=null; selected=null;targets=[];draw();
-      }else{
-        kfPremoveSelected=null;kfPremoveTargets=[];kfPremove=null;draw();
-      }
-      return;
-    }
-  }
 
   if(computerMode){
     var compColor = (computerUserColor === "w") ? "b" : "w";
