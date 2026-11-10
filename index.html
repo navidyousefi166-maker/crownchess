@@ -1240,6 +1240,7 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 .player-report-choice{display:flex;align-items:center;gap:12px;padding:12px;margin:10px 0;border:1px solid var(--line2);border-radius:9px;background:var(--panel-bg2);cursor:pointer}
 .player-report-choice input{width:17px;height:17px;accent-color:var(--gold)}
 .player-report-actions{display:flex;gap:8px;margin-top:18px}.player-report-actions button{flex:1}
+.admin-stat.suspicious-players-card{cursor:pointer}.admin-stat.suspicious-players-card:hover,.admin-stat.suspicious-players-card:focus-visible{border-color:var(--gold2);outline:none}
 .admin-stat.player-reports-card{cursor:pointer;transition:border-color .18s,transform .18s}
 .admin-stat.player-reports-card:hover,.admin-stat.player-reports-card:focus-visible{border-color:var(--gold2);transform:translateY(-2px);outline:none}
 #adminPlayerReportsSection[hidden]{display:none!important}
@@ -1539,12 +1540,13 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 <div class="page" id="pageAdmin"><div class="admin-wrap">
 <div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1 id="adminPageTitle">🛡️ Admin Panel</h1><p id="adminPageSubtitle">Private administration · Owner access only</p></div><div class="admin-heading-actions"><button class="btn" id="adminBackToOverview" type="button" hidden>← Back</button><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div></div>
 <div id="adminOverviewView">
-<div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div></div>
+<div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div><div class="admin-stat suspicious-players-card" role="button" tabindex="0"><span>Suspicious Players</span><strong>—</strong></div></div>
 <section class="admin-section" id="adminRejectedMovesSection"><div class="admin-section-head"><div><h2>🛡️ Rejected Move Reports</h2><p>Illegal move requests rejected by the server · reports are not automatic proof of cheating</p></div></div><div id="adminRejectedMoves" class="admin-users"><div class="admin-loading">Loading reports…</div></div></section>
 <section class="admin-section"><div class="admin-section-head"><div><h2>⚙️ Feature Management</h2><p>Temporarily enable or disable game features</p></div></div><div id="adminFeatures" class="admin-features"><div class="admin-loading">Loading features…</div></div></section>
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
 </div>
 <section class="admin-section" id="adminPlayerReportsSection" hidden><div class="admin-section-head"><div><h2>⚑ Player Reports</h2><p>Player-submitted allegations · not automatic proof of cheating</p></div></div><div id="adminPlayerReportsList" class="admin-users"><div class="admin-loading">Loading reports…</div></div></section>
+<section class="admin-section" id="adminSuspiciousPlayersSection" hidden><div class="admin-section-head"><div><h2>⚠ Suspicious Players</h2><p>Private watchlist · not proof of cheating</p></div></div><form id="adminSuspiciousForm" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><input id="adminSuspiciousId" class="admin-search" style="flex:1;min-width:185px" type="text" autocomplete="off" placeholder="Player UUID" required><button class="btn gold" id="adminSuspiciousSubmit" type="submit">Submit</button></form><div class="admin-users" id="adminSuspiciousList"></div></section>
 <section class="admin-section" id="adminUserManagementSection" hidden><div class="admin-section-head"><div><h2>👥 User Management</h2><p>Search accounts, edit records, and manage access</p></div></div><input class="admin-search" id="adminUserSearch" type="search" placeholder="Search by username or email…"><div id="adminUsers" class="admin-users"><div class="admin-loading">Loading users…</div></div></section>
 <div class="admin-wins-overlay" id="adminWinsEditor" hidden><div class="admin-wins-dialog" role="dialog" aria-modal="true" aria-labelledby="adminWinsTitle"><button class="admin-wins-close" id="adminWinsClose" type="button" aria-label="Close">×</button><div class="kicker">PLAYER RECORD</div><h2 id="adminWinsTitle">Wins</h2><div class="admin-wins-player" id="adminWinsPlayer"></div><div class="admin-wins-hint">Swipe up or down to change the number</div><div class="admin-wins-wheel" id="adminWinsWheel" tabindex="0" role="slider" aria-label="Wins count" aria-valuemin="0" aria-valuemax="100000000"><div class="admin-wins-number" id="adminWinsNumber">0</div><div class="admin-wins-arrows">▲<br>▼</div></div><div class="admin-wins-actions"><button class="btn" id="adminWinsCancel" type="button">Cancel</button><button class="btn gold" id="adminWinsSave" type="button">Save wins</button></div></div></div>
   <footer>
@@ -7184,9 +7186,10 @@ async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  loadAdminRejectedMoveReports();
  loadAdminPlayerReportsCount();
+ loadAdminSuspiciousPlayers();
  $("adminUsers").innerHTML='<div class="admin-loading">Loading registered users…</div>';
  $("adminFeatures").innerHTML='<div class="admin-loading">Loading features…</div>';
- $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>Loading…</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>—</strong></div>';
+ $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>Loading…</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div><div class="admin-stat suspicious-players-card" role="button" tabindex="0"><span>Suspicious Players</span><strong>—</strong></div>';
  // Count directly in the database; independent of the user-list endpoint.
  try{
   var countResult=await sb.rpc("kf_admin_registered_user_count");
@@ -7203,12 +7206,12 @@ async function loadAdminPanel(){
  try{
   var usersResult=await adminInvoke({action:"list_users"});
   adminUsersCache=(usersResult.users||[]).slice().sort(function(a,b){return (Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0);});
-  var cups=adminUsersCache.reduce(function(n,u){return n+Number(u.tournament_wins||0);},0);
   var banned=adminUsersCache.filter(function(u){return u.banned_until&&new Date(u.banned_until)>new Date();}).length;
   var firstValue=$("adminOverview").querySelector(".admin-stat strong");
-  $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>'+(firstValue?adminEscape(firstValue.textContent):'—')+'</strong></div><div class="admin-stat"><span>Banned users</span><strong>'+fmtStat(banned)+'</strong></div><div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>'+fmtStat(cups)+'</strong></div>';
+  $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>'+(firstValue?adminEscape(firstValue.textContent):'—')+'</strong></div><div class="admin-stat"><span>Banned users</span><strong>'+fmtStat(banned)+'</strong></div><div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div><div class="admin-stat suspicious-players-card" role="button" tabindex="0"><span>Suspicious Players</span><strong>—</strong></div>';
   renderAdminUsers();
   loadAdminPlayerReportsCount();
+  loadAdminSuspiciousPlayers();
  }catch(e){
   $("adminUsers").innerHTML='<div class="admin-empty">Could not load user list: '+adminEscape(e.message||e)+'</div>';
   console.error("Admin user list failed:",e);
@@ -7238,16 +7241,38 @@ function renderAdminFeatures(rows){
 $("navAdmin").onclick=function(){if(currentUser&&currentUser.id===adminOwnerId)showPage("admin");};
 $("adminRefresh").onclick=loadAdminPanel;$("adminUserSearch").addEventListener("input",renderAdminUsers);
 
-function showPlayerReports(){
+function showPlayerReports(){$("adminSuspiciousPlayersSection").hidden=true;
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  $("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=true;$("adminPlayerReportsSection").hidden=false;
  $("adminPageTitle").textContent="⚑ Player Reports";$("adminPageSubtitle").textContent="Player submissions for admin review";$("adminBackToOverview").hidden=false;
  loadAdminPlayerReports();window.scrollTo({top:0,behavior:"smooth"});
 }
-function showRegisteredUsers(){if(!currentUser||currentUser.id!==adminOwnerId)return;$("adminPlayerReportsSection").hidden=true;$("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=false;$("adminPageTitle").textContent="👥 User Management";$("adminPageSubtitle").textContent="Manage Kingsfall accounts";$("adminBackToOverview").hidden=false;$("adminUserSearch").value="";renderAdminUsers();window.scrollTo({top:0,behavior:"smooth"});}
-function showAdminOverview(){$("adminPlayerReportsSection").hidden=true;$("adminUserManagementSection").hidden=true;$("adminOverviewView").hidden=false;$("adminPageTitle").textContent="🛡️ Admin Panel";$("adminPageSubtitle").textContent="Private administration · Owner access only";$("adminBackToOverview").hidden=true;window.scrollTo({top:0,behavior:"smooth"});}
+function showSuspiciousPlayers(){
+ if(!currentUser||currentUser.id!==adminOwnerId)return;
+ $("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=true;$("adminPlayerReportsSection").hidden=true;$("adminSuspiciousPlayersSection").hidden=false;
+ $("adminPageTitle").textContent="⚠ Suspicious Players";$("adminPageSubtitle").textContent="Private watchlist · Admin only";$("adminBackToOverview").hidden=false;loadAdminSuspiciousPlayers();window.scrollTo({top:0,behavior:"smooth"});
+}
+async function loadAdminSuspiciousPlayers(){
+ if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
+ var target=$("adminSuspiciousList");
+ try{var r=await sb.rpc("kf_admin_suspicious_players");if(r.error)throw r.error;var rows=Array.isArray(r.data)?r.data:[];
+ var count=$("adminOverview").querySelector(".suspicious-players-card strong");if(count)count.textContent=fmtStat(rows.length);
+ target.innerHTML=rows.length?rows.map(function(p){return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">'+adminEscape(p.username||"Player")+' <span class="admin-chip">× '+fmtStat(p.count)+'</span></div><div class="admin-user-meta">'+adminEscape(p.id)+'</div></div></div></article>';}).join(""):'<div class="admin-empty">No suspicious players registered.</div>';
+ }catch(e){target.innerHTML='<div class="admin-empty">Could not load suspicious players: '+adminEscape(e.message||e)+'</div>';console.error(e);}
+}
+$("adminSuspiciousForm").addEventListener("submit",async function(e){
+ e.preventDefault();if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
+ var field=$("adminSuspiciousId"),id=field.value.trim(),button=$("adminSuspiciousSubmit");
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)){say("Enter a valid player UUID.",{error:true});return;}
+ button.disabled=true;
+ try{var r=await sb.rpc("kf_admin_mark_suspicious",{p_user_id:id});if(r.error)throw r.error;field.value="";await loadAdminSuspiciousPlayers();say("Suspicion count updated to "+fmtStat(r.data)+".",{silentToast:true});}
+ catch(err){say("Could not save suspicious player: "+(err.message||err),{error:true});}
+ finally{button.disabled=false;}
+});
+function showRegisteredUsers(){$("adminSuspiciousPlayersSection").hidden=true;if(!currentUser||currentUser.id!==adminOwnerId)return;$("adminPlayerReportsSection").hidden=true;$("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=false;$("adminPageTitle").textContent="👥 User Management";$("adminPageSubtitle").textContent="Manage Kingsfall accounts";$("adminBackToOverview").hidden=false;$("adminUserSearch").value="";renderAdminUsers();window.scrollTo({top:0,behavior:"smooth"});}
+function showAdminOverview(){$("adminSuspiciousPlayersSection").hidden=true;$("adminPlayerReportsSection").hidden=true;$("adminUserManagementSection").hidden=true;$("adminOverviewView").hidden=false;$("adminPageTitle").textContent="🛡️ Admin Panel";$("adminPageSubtitle").textContent="Private administration · Owner access only";$("adminBackToOverview").hidden=true;window.scrollTo({top:0,behavior:"smooth"});}
 $("adminBackToOverview").addEventListener("click",showAdminOverview);
-$("adminOverview").addEventListener("click",function(e){if(e.target.closest(".registered-users-card"))showRegisteredUsers();else if(e.target.closest(".player-reports-card"))showPlayerReports();});
+$("adminOverview").addEventListener("click",function(e){if(e.target.closest(".registered-users-card"))showRegisteredUsers();else if(e.target.closest(".player-reports-card"))showPlayerReports();else if(e.target.closest(".suspicious-players-card"))showSuspiciousPlayers();});
 $("adminOverview").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;if(e.target.closest(".registered-users-card")){e.preventDefault();showRegisteredUsers();}else if(e.target.closest(".player-reports-card")){e.preventDefault();showPlayerReports();}});
 var adminWinsTargetId=null,adminWinsTargetMetric="wins",adminWinsValue=0,adminWinsDragY=null,adminWinsDragRemainder=0;
 function updateAdminWinsDisplay(){var n=$("adminWinsNumber");n.textContent=adminWinsValue.toLocaleString("en-US");$("adminWinsWheel").setAttribute("aria-valuenow",String(adminWinsValue));}
