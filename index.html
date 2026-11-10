@@ -3714,11 +3714,13 @@ function updateFirstMoveDeadlineUI(){
   var anchorMs = new Date(anchor).getTime();
   if(!Number.isFinite(anchorMs)){ hide(); return; }
 
-  // The clock and banner must change on exactly the same visible second.
-  // fmtClock floors the remaining seconds: 5:00 -> 20, 4:59 -> 19.
-  // Both first-move clocks start at 300 seconds and have a 20-second deadline.
-  var shownClock = isWhite ? clockWhite : clockBlack;
-  var remain = Math.max(0, Math.min(20, Math.floor(shownClock) - 280));
+  // Share the game clock's server-calibrated monotonic anchor. The deadline
+  // is independent of total game duration (3, 5, 10 minutes, etc.).
+  // The same fractional-second boundary as fmtClock's Math.floor is used:
+  // after any fraction of a second, both displayed counters drop by one.
+  if(clockPerfAnchor == null || clockPerfTurn !== myTurn){ hide(); return; }
+  var elapsed = Math.max(0, (performance.now() - clockPerfAnchor) / 1000);
+  var remain = Math.max(0, 20 - Math.ceil(elapsed));
   normal.querySelector("strong").textContent = String(remain);
   fullscreen.querySelector("strong").textContent = String(remain);
   normal.hidden = false;
