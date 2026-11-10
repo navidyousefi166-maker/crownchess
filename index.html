@@ -1318,9 +1318,6 @@ input[type="color"] {
 .kf-audit-replay-controls .btn{min-width:42px}.kf-audit-replay-status{font-size:13px;line-height:1.6;overflow-wrap:anywhere;margin-top:7px}
 .kf-audit-offender{margin:10px 0;padding:10px 12px;border:1px solid rgba(255,151,94,.55);border-radius:10px;background:rgba(141,52,26,.16);font-size:13px;line-height:1.6;overflow-wrap:anywhere}.kf-audit-offender b{color:#ffcb8d}.kf-audit-offender small{display:block;color:#b8c4d6;font-size:11px}.kf-audit-replay-head>div{min-width:0}.kf-audit-replay-head .btn{flex-shrink:0}@media(max-width:420px){.kf-audit-replay{padding:8px}.kf-audit-replay-panel{padding:12px;max-height:calc(100dvh - 16px)}.kf-audit-replay-board{width:min(100%,330px)}.kf-audit-replay-controls{gap:5px}.kf-audit-replay-controls .btn{min-width:36px;padding:8px}}
 .kf-audit-replay-note{border-left:3px solid #dba559;padding-left:10px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
-/* Queued move markers only. The server owns the actual move and clock. */
-.square.kf-premove-source {outline:3px solid #52b5ff;outline-offset:-4px}
-.square.kf-premove-target {box-shadow:inset 0 0 0 4px #52b5ff}
 </style>
 </head>
 <body>
@@ -2068,36 +2065,6 @@ var historyEl = $("history");
 var game = null;
 var selected = null;
 var targets = [];
-// A single queued premove belongs to the server, never to an optimistic clock.
-var kfPremove = null;
-var kfPremoveSource = null;
-var kfPremoveTasks = Promise.resolve();
-function kfPremoveOwnerColor(){
- if(!onlineGame || !currentUser)return null;
- return onlineGame.white_id===currentUser.id?'w':onlineGame.black_id===currentUser.id?'b':null;
-}
-function kfClearPremoveLocal(){kfPremove=null;kfPremoveSource=null;}
-function kfQueuePremoveRequest(gameId,from,to){
- // Serialized requests prevent an old response overwriting a newer selection.
- kfPremoveTasks=kfPremoveTasks.catch(function(){}).then(async function(){
-   if(!sb || !currentUser || onlineGameId!==gameId)return;
-   try{
-     var body={game_id:gameId};
-     if(from && to){body.from=from;body.to=to;body.promotion='q';}
-     else body.clear=true;
-     var res=await sb.functions.invoke('kf-premove',{body:body});
-     if(res.error)throw res.error;
-   }catch(e){
-     if(onlineGameId===gameId && from && to &&
-        kfPremove && kfPremove.from===from && kfPremove.to===to){
-       kfClearPremoveLocal();
-       draw();
-       say('Pre-move could not be saved.',{error:true});
-     }
-   }
- });
-}
-
 var flipped = false;
 var last = null;
 var mode = "signin";
@@ -3218,7 +3185,6 @@ async function stopQueuePoll(){
 }
 
 async function leaveOnlineState(){
-  kfClearPremoveLocal();
   computerMode = false;
   computerBusy = false;
   if(computerTimer){ clearTimeout(computerTimer); computerTimer = null; }
@@ -3311,7 +3277,6 @@ function stopGamePolling() {
   
 async function loadOnlineGame(id, skipIntro){
   if(!sb) return;
-  if(onlineGameId!==id)kfClearPremoveLocal();
   var res = await sb.from("kf_games").select("*").eq("id", id).maybeSingle();
   if(res.error || !res.data){
     say(res.error ? res.error.message : "Could not load the matched game.", {error: true});
@@ -3495,10 +3460,6 @@ function applyOnlineGame(row){
   var prevLastMoveAt = onlineGame ? onlineGame.last_move_at : null;
   var prevClockStartedAt = onlineGame ? onlineGame.clock_started_at : null;
   onlineGame = row;
-  // A queued move has been consumed (or rejected) once our turn returns.
-  if(kfPremove && (row.status!=='active' || row.turn===kfPremoveOwnerColor())){
-    kfClearPremoveLocal();
-  }
 
   /* Humiliation badge for opponent */
   var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap))
@@ -6103,17 +6064,6 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
       if(!res.error){ say(m.san, {silentToast:true}); draw(); updateHumilBadge(); }
     }
     
-    if(!res.error && res.data && res.data.premove_applied){
-      // Both plies were committed atomically on the server. Reconcile the
-      // optimistic single-ply board before applying the final clock turn.
-      try{
-        var pgnLoaded=false;
-        if(res.data.pgn) pgnLoaded=game.load_pgn(res.data.pgn);
-        if(!pgnLoaded || game.fen()!==res.data.fen)game.load(res.data.fen);
-        last=res.data.last_move||last;
-        selected=null;targets=[];
-      }catch(e){console.warn('Pre-move board reconcile:',e);}
-    }
     if(res.error){
       if(kfClockBeforeMove){
         clockPerfBaseWhite=kfClockBeforeMove.white;
@@ -6170,7 +6120,7 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
     onlineGame.turn = game.turn();
     onlineGame.white_time_left = res.data.white_time_left;
     onlineGame.black_time_left = res.data.black_time_left;
-    onlineGame.last_move = res.data.last_move || {from: m.from, to: m.to, san: m.san};
+    onlineGame.last_move = {from: m.from, to: m.to, san: m.san};
     onlineGame.last_move_at = res.data.last_move_at || new Date().toISOString();
     if(res.data.clock_started_at) onlineGame.clock_started_at = res.data.clock_started_at;
     clockExpired = false;
@@ -6589,8 +6539,6 @@ function draw(){
       if(!b) continue;
       b.innerHTML = "";
       b.classList.toggle("selected", selected === s);
-      b.classList.toggle("kf-premove-source", (kfPremoveSource===s) || (!!kfPremove && kfPremove.from===s));
-      b.classList.toggle("kf-premove-target", !!kfPremove && kfPremove.to===s);
       b.classList.remove("humil-dim", "humil-target");
       b.style.backgroundImage = "";
       if(humilSelecting){
@@ -6697,40 +6645,6 @@ async function clickSquare(s){
   }
 
   if(game.game_over() || clockExpired) return;
-  // Server-side premove: store coordinates only. Never change game, turn, or
-  // clock while waiting. A click on empty space cancels the queued move.
-  if(onlineGameId && onlineGame && onlineGame.status==='active' &&
-     !submittingMove && !kfPendingClockMove){
-    var ownColor=kfPremoveOwnerColor();
-    if(ownColor && game.turn()!==ownColor){
-      var ownPiece=game.get(s);
-      if(kfPremoveSource && s!==kfPremoveSource && (!ownPiece || ownPiece.color!==ownColor)){
-        var origin=kfPremoveSource, gameId=onlineGameId;
-        kfPremove={from:origin,to:s};
-        kfPremoveSource=null;
-        selected=null;targets=[];
-        draw();
-        kfQueuePremoveRequest(gameId,origin,s);
-        say('Pre-move queued',{silentToast:true});
-      }else if(ownPiece && ownPiece.color===ownColor){
-        if(kfPremoveSource===s){
-          kfPremoveSource=null;
-          kfPremove=null;
-          kfQueuePremoveRequest(onlineGameId,null,null);
-        }else{
-          kfPremoveSource=s;
-          kfPremove=null;
-          kfQueuePremoveRequest(onlineGameId,null,null);
-        }
-        selected=null;targets=[];draw();
-      }else{
-        kfClearPremoveLocal();
-        kfQueuePremoveRequest(onlineGameId,null,null);
-        selected=null;targets=[];draw();
-      }
-      return;
-    }
-  }
 
   if(computerMode){
     var compColor = (computerUserColor === "w") ? "b" : "w";
