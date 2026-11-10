@@ -1034,7 +1034,7 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 .lb-sort-menu button:hover,.lb-sort-menu button[aria-pressed="true"]{background:var(--btn-hover);color:var(--gold)}
 .lb-table-head{
   display:grid;
-  grid-template-columns:54px minmax(110px,1fr) 76px 70px 90px 84px;
+  grid-template-columns:48px minmax(110px,1fr) 68px 58px 86px 55px 74px;
   gap:8px;padding:10px 14px;
   background:var(--panel-bg2);border:1px solid var(--line);border-radius:10px 10px 0 0;
   font-size:11px;color:var(--muted);font-weight:800;letter-spacing:1px;
@@ -1049,7 +1049,7 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 }
 .lb-row{
   display:grid;
-  grid-template-columns:54px minmax(110px,1fr) 76px 70px 90px 84px;
+  grid-template-columns:48px minmax(110px,1fr) 68px 58px 86px 55px 74px;
   gap:8px;padding:10px 14px;align-items:center;
   border-bottom:1px solid rgba(255,255,255,.04);
   transition:background .15s;
@@ -1072,18 +1072,21 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 .lb-stat.trophies{color:var(--gold)}
 .lb-stat.humil{color:#ff9b8b}
 .lb-stat.bt{color:#ff727d;font-size:13px;white-space:nowrap}
+.lb-stat.overall{color:var(--gold2);font-weight:900}
 @media(max-width:600px){.lb-stat.bt{font-size:10px}.lb-user{gap:5px}.lb-user img{width:25px;height:25px}}
 .lb-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
 .lb-loading{text-align:center;padding:30px;color:var(--muted);font-size:13px}
 @media(max-width:600px){
   .lb-wrap{padding:12px}
   .lb-head h2{font-size:16px}
-  .lb-table-head,.lb-row{grid-template-columns:28px minmax(65px,1fr) 42px 34px 44px 57px;gap:6px;padding:8px 10px;font-size:10px}
+  .lb-table-head,.lb-row{grid-template-columns:22px minmax(62px,1fr) 36px 27px 55px 22px 43px;gap:3px;padding:8px 5px;font-size:9px}
   .lb-table-head span{letter-spacing:.5px}
   .lb-rank{font-size:14px}
   .lb-user img{width:30px;height:30px;border-width:1.5px}
   .lb-user .lb-name{font-size:12px}
-  .lb-stat{font-size:12px}
+  .lb-stat{font-size:11px}
+  .lb-stat.overall{font-size:11px}
+  .lb-table-head span:nth-child(5){font-size:8px;letter-spacing:0}
 }
 /* ===== NEW: TOAST (نمایش پیام در fullscreen و همه‌جا) ===== */
 #kfToastWrap{
@@ -1550,7 +1553,7 @@ input[type="color"] {
         <div class="lb-head">
           <div>
             <h2>🏆 Kingsfall Leaderboard</h2>
-            <div class="lb-sub">Ranked by wins · trophies · Humiliation score</div>
+            <div class="lb-sub">Overall = Crowns + BT + (Tournament wins × 20)</div>
           </div>
           <div class="lb-actions">
             <div class="lb-sort-wrap">
@@ -1573,6 +1576,7 @@ input[type="color"] {
           <span>🏆</span>
           <span>Humiliation</span>
           <span title="Blood Tributes wins">BT</span>
+          <span title="Crowns + Blood Tributes wins + 20 × Tournament wins">Overall</span>
         </div>
         <div class="lb-list" id="lbList">
           <div class="lb-loading">Loading leaderboard…</div>
@@ -2458,16 +2462,18 @@ function setRouletteState(text, opts){
 var leaderboardData = [];
 var leaderboardSort = "overall";
 var leaderboardSortLabels = {overall:"Overall",wins:"Crowns",tournament_wins:"Tournament wins",humiliation_losses:"Humiliation",bt_wins:"Blood Tributes"};
+function getLeaderboardOverall(row){
+  return (Number(row.wins) || 0) + (Number(row.bt_wins) || 0) + 20 * (Number(row.tournament_wins) || 0);
+}
 function renderLeaderboardRows(){
   var list = $("lbList");
   if(!leaderboardData.length) return;
   var data = leaderboardData.map(function(row,index){ return {row:row,index:index}; });
-  if(leaderboardSort !== "overall"){
-    data.sort(function(a,b){
-      var diff = (Number(b.row[leaderboardSort]) || 0) - (Number(a.row[leaderboardSort]) || 0);
-      return diff || a.index - b.index;
-    });
-  }
+  data.sort(function(a,b){
+    var aScore = leaderboardSort === "overall" ? getLeaderboardOverall(a.row) : (Number(a.row[leaderboardSort]) || 0);
+    var bScore = leaderboardSort === "overall" ? getLeaderboardOverall(b.row) : (Number(b.row[leaderboardSort]) || 0);
+    return bScore - aScore || a.index - b.index;
+  });
   list.innerHTML = "";
   for(var i=0;i<data.length;i++){
     var row = data[i].row;
@@ -2490,7 +2496,8 @@ function renderLeaderboardRows(){
       '<div class="lb-stat wins">' + (row.wins || 0) + '</div>' +
       '<div class="lb-stat trophies">' + (row.tournament_wins || 0) + '</div>' +
       '<div class="lb-stat humil">' + Number(row.humiliation_losses || 0) + '</div>' +
-      '<div class="lb-stat bt" title="Blood Tributes wins">' + Number(row.bt_wins || 0) + '</div>';
+      '<div class="lb-stat bt" title="Blood Tributes wins">' + Number(row.bt_wins || 0) + '</div>' +
+      '<div class="lb-stat overall" title="Crowns + BT + 20 × Tournament wins">' + getLeaderboardOverall(row) + '</div>';
     list.appendChild(div);
   }
 }
