@@ -1382,8 +1382,10 @@ body.vip-board-rose{--board-light1:#f4dacb;--board-light2:#e9c1b2;--board-dark1:
       <div class="vip-studio-note">Style preview is available during setup. VIP membership and payment verification are not active yet.</div>
       <h3>Exclusive chessboard themes</h3>
       <div id="vipBoardChoices" class="vip-choices" role="group" aria-label="Chessboard themes"></div>
-      <h3>Piece collections</h3>
-      <div id="vipPieceChoices" class="vip-choices" role="group" aria-label="Chess piece styles"></div>
+      <h3>Piece shapes</h3>
+      <div id="vipPieceChoices" class="vip-choices" role="group" aria-label="Chess piece shapes"></div>
+      <h3>Piece colors</h3>
+      <div id="vipColorChoices" class="vip-choices" role="group" aria-label="Chess piece colors"></div>
       <h3>Live preview</h3>
       <div id="vipPreviewBoard" class="vip-preview-board" aria-label="Preview of selected pieces and board theme"></div>
       <div class="vip-studio-actions"><button class="btn gold" id="vipApply" type="button">Apply my style</button><button class="btn" id="vipReset" type="button">Reset to default</button></div>
@@ -2037,29 +2039,44 @@ var vipBoardThemes = [
 ];
 var vipPieceStyles = [
   {id:"classic",name:"Classic"},
-  {id:"royal",name:"Royal Gold"},
-  {id:"outline",name:"Ivory Outline"},
-  {id:"neon",name:"Neon"},
+  {id:"outline",name:"Outline"},
   {id:"heritage",name:"Heritage 2D"},
   {id:"silhouette",name:"Silhouette SVG"}
 ];
-var vipSelectedBoard = "default", vipSelectedPiece = "classic";
+var vipPieceColors = [
+  {id:"standard",name:"Classic",white:"#fffdf7",black:"#20100d"},
+  {id:"royal",name:"Royal Gold",white:"#fff0b2",black:"#9b6825"},
+  {id:"neon",name:"Neon",white:"#d7ffff",black:"#421349"},
+  {id:"obsidian",name:"Obsidian",white:"#e6eef5",black:"#172333"}
+];
+var vipSelectedBoard = "default", vipSelectedPiece = "classic",vipSelectedColor="standard";
 function vipGetSaved(key,allowed,fallback){
   try {var val=localStorage.getItem(key);return allowed.some(function(a){return a.id===val;})?val:fallback;}catch(e){return fallback;}
 }
-function vipApplyAppearance(board,piece){
-  var allowedBoard=vipBoardThemes.some(function(t){return t.id===board;});
-  var allowedPiece=vipPieceStyles.some(function(t){return t.id===piece;});
-  board=allowedBoard?board:"default";piece=allowedPiece?piece:"classic";
+function vipColors(colorId,white){
+  var id=colorId||window.kfVipPieceColor||"standard";
+  var palette={
+    standard:{white:["#fffdf7","#2a1810"],black:["#20100d","#f0d8a8"]},
+    royal:{white:["#fff0b2","#80531b"],black:["#9b6825","#f6d889"]},
+    neon:{white:["#d7ffff","#20f5e2"],black:["#421349","#ff66da"]},
+    obsidian:{white:["#e6eef5","#526779"],black:["#172333","#aec5d6"]}
+  };
+  return (palette[id]||palette.standard)[white?"white":"black"];
+}
+function vipApplyAppearance(board,piece,color){
+  board=vipBoardThemes.some(function(t){return t.id===board;})?board:"default";
+  piece=vipPieceStyles.some(function(t){return t.id===piece;})?piece:"classic";
+  color=vipPieceColors.some(function(t){return t.id===color;})?color:"standard";
   vipBoardThemes.forEach(function(t){document.body.classList.remove("vip-board-"+t.id);});
   if(board!=="default")document.body.classList.add("vip-board-"+board);
   window.kfVipPieceStyle=piece;
+  window.kfVipPieceColor=color;
   if(typeof _svgCache!=="undefined")_svgCache={};
   if(typeof game!=="undefined"&&game&&typeof draw==="function")draw();
 }
 function vipRenderStudio(){
-  var boards=$("vipBoardChoices"),pieces=$("vipPieceChoices"),preview=$("vipPreviewBoard");
-  if(!boards||!pieces||!preview)return;
+  var boards=$("vipBoardChoices"),pieces=$("vipPieceChoices"),colors=$("vipColorChoices"),preview=$("vipPreviewBoard");
+  if(!boards||!pieces||!colors||!preview)return;
   boards.innerHTML="";
   vipBoardThemes.forEach(function(t){
     var b=document.createElement("button");b.type="button";b.className="vip-choice"+(t.id===vipSelectedBoard?" selected":"");
@@ -2071,8 +2088,15 @@ function vipRenderStudio(){
   vipPieceStyles.forEach(function(t){
     var b=document.createElement("button");b.type="button";b.className="vip-choice"+(t.id===vipSelectedPiece?" selected":"");
     b.setAttribute("aria-pressed",String(t.id===vipSelectedPiece));
-    b.innerHTML='<span class="vip-piece-sample">'+svg({color:"w",type:"n"},t.id)+svg({color:"b",type:"k"},t.id)+'</span><strong>'+t.name+'</strong>';
+    b.innerHTML='<span class="vip-piece-sample">'+svg({color:"w",type:"n"},t.id,vipSelectedColor)+svg({color:"b",type:"k"},t.id,vipSelectedColor)+'</span><strong>'+t.name+'</strong>';
     b.onclick=function(){vipSelectedPiece=t.id;vipRenderStudio();};pieces.appendChild(b);
+  });
+  colors.innerHTML="";
+  vipPieceColors.forEach(function(t){
+    var b=document.createElement("button");b.type="button";b.className="vip-choice"+(t.id===vipSelectedColor?" selected":"");
+    b.setAttribute("aria-pressed",String(t.id===vipSelectedColor));
+    b.innerHTML='<span class="vip-piece-sample">'+svg({color:"w",type:"q"},vipSelectedPiece,t.id)+svg({color:"b",type:"q"},vipSelectedPiece,t.id)+'</span><strong>'+t.name+'</strong>';
+    b.onclick=function(){vipSelectedColor=t.id;vipRenderStudio();};colors.appendChild(b);
   });
   var chosen=vipBoardThemes.find(function(t){return t.id===vipSelectedBoard;})||vipBoardThemes[0];
   preview.innerHTML="";
@@ -2080,26 +2104,38 @@ function vipRenderStudio(){
   for(var i=0;i<16;i++){
     var cell=document.createElement("div");cell.className="vip-preview-square";
     cell.style.background=(((Math.floor(i/4)+i%4)%2)===0?chosen.light:chosen.dark);
-    if(samples[i])cell.innerHTML=svg({color:samples[i][0],type:samples[i][1]},vipSelectedPiece);
+    if(samples[i])cell.innerHTML=svg({color:samples[i][0],type:samples[i][1]},vipSelectedPiece,vipSelectedColor);
     preview.appendChild(cell);
   }
 }
 function vipInit(){
   vipSelectedBoard=vipGetSaved("kf_vip_board",vipBoardThemes,"default");
-  vipSelectedPiece=vipGetSaved("kf_vip_piece",vipPieceStyles,"classic");
-  vipApplyAppearance(vipSelectedBoard,vipSelectedPiece);
+  var oldPiece="";
+  try{oldPiece=localStorage.getItem("kf_vip_piece")||"";}catch(e){}
+  vipSelectedPiece=vipPieceStyles.some(function(t){return t.id===oldPiece;})?oldPiece:"classic";
+  var priorColor=(oldPiece==="royal"||oldPiece==="neon")?oldPiece:"standard";
+  vipSelectedColor=vipGetSaved("kf_vip_piece_color",vipPieceColors,priorColor);
+  vipApplyAppearance(vipSelectedBoard,vipSelectedPiece,vipSelectedColor);
   vipRenderStudio();
 }
 $("vipBack").onclick=function(){showPage("home");};
 $("vipApply").onclick=function(){
-  vipApplyAppearance(vipSelectedBoard,vipSelectedPiece);
-  try{localStorage.setItem("kf_vip_board",vipSelectedBoard);localStorage.setItem("kf_vip_piece",vipSelectedPiece);}catch(e){}
-  toast("Your board and pieces have been updated.","info");
+  vipApplyAppearance(vipSelectedBoard,vipSelectedPiece,vipSelectedColor);
+  try{
+    localStorage.setItem("kf_vip_board",vipSelectedBoard);
+    localStorage.setItem("kf_vip_piece",vipSelectedPiece);
+    localStorage.setItem("kf_vip_piece_color",vipSelectedColor);
+  }catch(e){}
+  toast("Your board, piece shape and colors have been updated.","info");
 };
 $("vipReset").onclick=function(){
-  vipSelectedBoard="default";vipSelectedPiece="classic";
-  vipApplyAppearance(vipSelectedBoard,vipSelectedPiece);
-  try{localStorage.removeItem("kf_vip_board");localStorage.removeItem("kf_vip_piece");}catch(e){}
+  vipSelectedBoard="default";vipSelectedPiece="classic";vipSelectedColor="standard";
+  vipApplyAppearance(vipSelectedBoard,vipSelectedPiece,vipSelectedColor);
+  try{
+    localStorage.removeItem("kf_vip_board");
+    localStorage.removeItem("kf_vip_piece");
+    localStorage.removeItem("kf_vip_piece_color");
+  }catch(e){}
   vipRenderStudio();toast("Default style restored.","info");
 };
 
@@ -2370,11 +2406,10 @@ function sq(r,c){ return files[c] + (8-r); }
   /* ===== SVG pieces (with cache) ===== */
 var _svgCache = {};
 /* Original, lightweight outlined chess silhouettes for the VIP Heritage collection. */
-function vipHeritageSvg(p){
+function vipHeritageSvg(p,colorOverride){
   var white=p.color==="w";
-  var fill=white?"#fffefd":"#080808";
-  var outline=white?"#090909":"#fff7ea";
-  var detail=white?"#161616":"#fffdf8";
+  var pair=vipColors(colorOverride,white);
+  var fill=pair[0],outline=pair[1],detail=pair[1];
   var outer='fill="'+fill+'" stroke="'+outline+'" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"';
   var line='fill="none" stroke="'+outline+'" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"';
   var accent='fill="none" stroke="'+detail+'" stroke-width="3.2" stroke-linecap="round"';
@@ -2417,29 +2452,32 @@ var vipSilhouettePaths={
 "p":"M815 2830 c-203 -43 -349 -190 -392 -393 -32 -154 12 -308 125 -429 l44 -47 -40 -10 c-95 -26 -162 -107 -187 -227 -18 -84 -19 -196 -3 -212 8 -8 47 -12 110 -12 l98 0 -5 -27 c-2 -16 -7 -58 -10 -94 -14 -164 -103 -343 -246 -493 -62 -66 -76 -76 -106 -76 -73 0 -150 -52 -184 -125 -36 -78 -19 -165 45 -230 24 -24 57 -46 75 -50 36 -8 42 -25 8 -25 -43 0 -47 -14 -47 -186 0 -134 3 -165 16 -178 14 -14 96 -16 759 -16 663 0 745 2 759 16 13 13 16 44 16 178 0 168 -4 186 -43 186 -10 0 -17 3 -15 8 30 58 42 99 46 162 6 106 -8 150 -66 202 -139 126 -221 224 -276 335 -55 110 -68 165 -70 296 l-2 117 117 0 c92 0 119 3 129 15 19 23 6 197 -19 266 -36 96 -104 157 -193 174 l-36 7 43 45 c211 220 165 586 -94 753 -97 61 -254 93 -356 70z m65 -43 c0 -1 -48 -50 -107 -107 l-108 -105 105 108 c97 99 110 112 110 104z"
 };
 var vipSilhouetteBounds={"p":[0,165],"n":[190,380],"r":[400,569],"b":[607,809],"q":[846,1054],"k":[1074,1280]};
-function vipSilhouetteSvg(piece){
+function vipSilhouetteSvg(piece,colorOverride){
   var white=piece.color==="w",range=vipSilhouetteBounds[piece.type];
-  var color=white?"#f9fbfc":"#263945";
-  var border=white?"#263945":"#d7e1e6";
+  var pair=vipColors(colorOverride,white);
+  var color=pair[0],border=pair[1];
   var label=(white?"White ":"Black ")+names[piece.type];
   return '<svg class="piece" viewBox="'+range[0]+' 0 '+(range[1]-range[0])+' 650" preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg">'
     +'<g transform="translate(0 650) scale(0.1 -0.1)" fill="'+color+'" stroke="'+border+'" stroke-width="32" stroke-linejoin="round" paint-order="stroke fill">'
     +'<path d="'+vipSilhouettePaths[piece.type]+'"/></g></svg>';
 }
-function svg(p,styleOverride){
+function svg(p,styleOverride,colorOverride){
   var style=styleOverride||window.kfVipPieceStyle||"classic";
-  var key=style+":"+p.color+p.type;
+  var color=colorOverride||window.kfVipPieceColor||"standard";
+  var key=style+":"+color+":"+p.color+p.type;
   if(_svgCache[key])return _svgCache[key];
-  if(style==="heritage"){var original=vipHeritageSvg(p);_svgCache[key]=original;return original;}
-  if(style==="silhouette"){var traced=vipSilhouetteSvg(p);_svgCache[key]=traced;return traced;}
+  if(style==="heritage"){var original=vipHeritageSvg(p,color);_svgCache[key]=original;return original;}
+  if(style==="silhouette"){var traced=vipSilhouetteSvg(p,color);_svgCache[key]=traced;return traced;}
   var w=p.color==="w";
   var solid={k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
   var hollow={k:"♔",q:"♕",r:"♖",b:"♗",n:"♘",p:"♙"};
   var glyph=style==="outline"?hollow[p.type]:solid[p.type];
-  var fill=w?"#fffdf7":"#20100d",stroke=w?"#2a1810":"#f0d8a8",strokeW=w?"2.6":"1.4",shadow="drop-shadow(0 2px 2px #0008)";
-  if(style==="royal"){fill=w?"#fff0b2":"#9b6825";stroke=w?"#80531b":"#f6d889";strokeW="2.4";shadow="drop-shadow(0 2px 3px #5e371b99)";}
-  if(style==="outline"){fill=w?"#fffdf3":"#283247";stroke=w?"#65513a":"#e7d8c9";strokeW="1.8";shadow="drop-shadow(0 1px 1px #0005)";}
-  if(style==="neon"){fill=w?"#d7ffff":"#421349";stroke=w?"#20f5e2":"#ff66da";strokeW="3";shadow=w?"drop-shadow(0 0 5px #3dfbea)":"drop-shadow(0 0 5px #ff53df)";}
+  var pair=vipColors(color,w);
+  var fill=pair[0],stroke=pair[1];
+  var strokeW=w?"2.6":"1.4",shadow="drop-shadow(0 2px 2px #0008)";
+  if(color==="neon"){strokeW="3";shadow=w?"drop-shadow(0 0 5px #3dfbea)":"drop-shadow(0 0 5px #ff53df)";}
+  if(color==="royal"){strokeW="2.4";shadow="drop-shadow(0 2px 3px #5e371b99)";}
+  if(style==="outline")strokeW="1.8";
   var fontSizes={k:112,q:100,r:100,b:106,n:108,p:106};
   var label=(w?"White ":"Black ")+names[p.type];
   var result='<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" xmlns="http://www.w3.org/2000/svg">'
