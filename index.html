@@ -1882,7 +1882,6 @@ input[type="color"] {
       <div class="gfs-actions">
         <button class="gfs-draw" id="gfsDrawBtn" type="button" title="Draw">🤝</button>
         <button class="gfs-resign" id="gfsResignBtn" type="button" title="Resign">🏳️</button>
-        <button class="gfs-draw" id="kfIllegalMoveTest" type="button" title="Admin test: send illegal move" hidden style="font-size:12px;min-width:46px">TEST</button>
       </div>
     </div>
     <div class="gfs-right">
@@ -3889,7 +3888,6 @@ function stopFullscreenNameMarquee(){
 
   function enterFullscreenGame(row){
   document.body.classList.add("game-focus");
-  $("kfIllegalMoveTest").hidden = !(currentUser && currentUser.id === adminOwnerId && !row.is_tournament);
   fsPlayerColor = (row.white_id === currentUser.id) ? "w" : "b";
   flipped = (fsPlayerColor === "b");
   _boardBuilt = false;
@@ -6603,47 +6601,6 @@ function updateHistory(){
   }
   historyEl.scrollTop = historyEl.scrollHeight;
 }
-
-/* ===== ADMIN TEST: submit an illegal move without mutating client state ===== */
-$("kfIllegalMoveTest").onclick=async function(){
-  var button=this;
-  if(!sb || !onlineGame || !onlineGameId || !game || !currentUser ||
-     currentUser.id!==adminOwnerId || onlineGame.is_tournament ||
-     onlineGame.status!=="active"){
-    say("Admin test only in an active Quick Play game.",{error:true});return;
-  }
-  var ownColor=onlineGame.white_id===currentUser.id?"w":"b";
-  if(onlineGame.turn!==ownColor || game.turn()!==ownColor){
-    say("Test only when it is your turn.",{info:true});return;
-  }
-  // A king-to-opposing-king move is never legal in chess.
-  var from=null,to=null;
-  for(var ri=0;ri<8;ri++)for(var ci=0;ci<8;ci++){
-    var square=sq(ri,ci),piece=game.get(square);
-    if(piece&&piece.type==="k"){
-      if(piece.color===ownColor)from=square;
-      else to=square;
-    }
-  }
-  if(!from||!to){say("Test kings not found.",{error:true});return;}
-  button.disabled=true;
-  try{
-    var response=await sb.functions.invoke("kf-submit-validated-v2",{
-      body:{game_id:onlineGameId,from:from,to:to,request_id:crypto.randomUUID()}
-    });
-    var data=response.data||{};
-    var httpStatus=response.error && response.error.context && response.error.context.status;
-    if(response.error && response.error.context && typeof response.error.context.json==="function"){
-      try{data=await response.error.context.json();}catch(e){}
-    }
-    if(data.code==="ILLEGAL_MOVE" && httpStatus===422){
-      say("PASS: illegal move rejected (422). Admin audit is queued.",{info:true});
-    }else{
-      say("TEST RESULT: HTTP "+(httpStatus||"200")+" / "+JSON.stringify(data).slice(0,140),{error:true});
-    }
-  }catch(error){say("Test failed: "+(error.message||error),{error:true});}
-  finally{button.disabled=false;}
-};
 
 /* ===== CLICK SQUARE ===== */
 async function clickSquare(s){
