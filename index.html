@@ -2324,6 +2324,8 @@ function paintClocks(){
       botEl.classList.toggle("active", botActive);
     }
   }
+  // Paint the first-move banner with the exact same clock snapshot.
+  updateFirstMoveDeadlineUI();
 }
 
 // Keep the visible clock aligned with the server's actual timestamp.
@@ -3712,20 +3714,16 @@ function updateFirstMoveDeadlineUI(){
   var anchorMs = new Date(anchor).getTime();
   if(!Number.isFinite(anchorMs)){ hide(); return; }
 
-  // Keep a separate monotonic anchor so optimistic clock updates cannot reset this countdown.
-  if(anchor !== firstMoveDeadlineAnchor || firstMoveDeadlinePerfAnchor == null){
-    firstMoveDeadlineAnchor = anchor;
-    firstMoveDeadlinePerfAnchor = performance.now() - (Date.now() + (kfServerOffsetKnown ? kfServerOffsetMs : 0) - anchorMs);
-  }
-
-  var elapsedSeconds = Math.max(0, (performance.now() - firstMoveDeadlinePerfAnchor) / 1000);
-  var remain = Math.max(0, 20 - Math.floor(elapsedSeconds));
+  // The clock and banner must change on exactly the same visible second.
+  // fmtClock floors the remaining seconds: 5:00 -> 20, 4:59 -> 19.
+  // Both first-move clocks start at 300 seconds and have a 20-second deadline.
+  var shownClock = isWhite ? clockWhite : clockBlack;
+  var remain = Math.max(0, Math.min(20, Math.floor(shownClock) - 280));
   normal.querySelector("strong").textContent = String(remain);
   fullscreen.querySelector("strong").textContent = String(remain);
   normal.hidden = false;
   fullscreen.hidden = false;
 }
-setInterval(updateFirstMoveDeadlineUI, 250);
 
 /* ===== START QUICK PLAY ===== */
 async function startQuickPlay(){
