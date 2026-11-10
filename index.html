@@ -2283,6 +2283,16 @@ function defaultAvatar(){
 
 /* ===== helpers ===== */
 function isValidHcp(v){ return v === "n" || v === "b" || v === "r" || v === "q"; }
+// Display-only player stat formatter: calculations and stored values remain exact.
+function fmtStat(value){
+  var n=Number(value);
+  if(!Number.isFinite(n)) return "—";
+  var abs=Math.abs(n), sign=n<0?"-":"";
+  if(abs<1000) return String(n);
+  var scale=abs>=1000000?1000000:1000, suffix=scale===1000000?"M":"K";
+  var tenths=Math.floor(abs/scale*10+1e-9);
+  return sign+Math.floor(tenths/10)+suffix+(tenths%10?"."+(tenths%10):"");
+}
 function fmtClock(sec){
   sec = Math.max(0, Math.floor(sec));
   return String(Math.floor(sec/60)).padStart(2,"0") + ":" + String(sec%60).padStart(2,"0");
@@ -2334,7 +2344,7 @@ function setPlayer(color, player){
   var card = $(prefix + "Card");
   var name = player && player.username ? player.username : "Waiting for opponent";
   var winsRaw = player && player.wins !== undefined ? Number(player.wins) : NaN;
-  var wins = (isFinite(winsRaw) ? winsRaw : "—") + " crowns";
+  var wins = (isFinite(winsRaw) ? fmtStat(winsRaw) : "—") + " crowns";
   var avatar = (player && player.avatar_url) ? player.avatar_url : defaultAvatar();
   $(prefix + "Name").textContent = name;
   $(prefix + "Wins").textContent = wins;
@@ -2493,11 +2503,11 @@ function renderLeaderboardRows(){
         '<img src="' + (row.avatar_url || defaultAvatar()) + '" alt="">' +
         '<div class="lb-name">' + (row.username || "Player") + (isMe ? ' <span style="color:var(--gold);font-size:10px">(YOU)</span>' : '') + '</div>' +
       '</div>' +
-      '<div class="lb-stat wins">' + (row.wins || 0) + '</div>' +
-      '<div class="lb-stat trophies">' + (row.tournament_wins || 0) + '</div>' +
-      '<div class="lb-stat humil">' + Number(row.humiliation_losses || 0) + '</div>' +
-      '<div class="lb-stat bt" title="Blood Tributes wins">' + Number(row.bt_wins || 0) + '</div>' +
-      '<div class="lb-stat overall" title="Crowns + BT + 20 × Tournament wins">' + getLeaderboardOverall(row) + '</div>';
+      '<div class="lb-stat wins">' + fmtStat(row.wins || 0) + '</div>' +
+      '<div class="lb-stat trophies">' + fmtStat(row.tournament_wins || 0) + '</div>' +
+      '<div class="lb-stat humil">' + fmtStat(row.humiliation_losses || 0) + '</div>' +
+      '<div class="lb-stat bt" title="Blood Tributes wins">' + fmtStat(row.bt_wins || 0) + '</div>' +
+      '<div class="lb-stat overall" title="Crowns + BT + 20 × Tournament wins">' + fmtStat(getLeaderboardOverall(row)) + '</div>';
     list.appendChild(div);
   }
 }
@@ -4048,7 +4058,7 @@ async function renderFullscreenStats(){
       myTrophyWins = Number(myStatsRes.data.tournament_wins || 0);
     }
   } catch(e){ console.warn("Could not load own profile stats:", e); }
-  $("gfsBotStats").innerHTML = '<span class="gfs-stat">🏆 ' + myTrophyWins + '</span><span class="gfs-stat">' + myWins + ' crowns</span>';
+  $("gfsBotStats").innerHTML = '<span class="gfs-stat">🏆 ' + fmtStat(myTrophyWins) + '</span><span class="gfs-stat">' + fmtStat(myWins) + ' crowns</span>';
 
   if(oppId){
     try{
@@ -4061,7 +4071,7 @@ async function renderFullscreenStats(){
   }
   // Avoid an older async request painting stats over a newly opened game.
   if(!onlineGame || onlineGame.id !== gameSnapshot.id || !currentUser || currentUser.id !== gameSnapshot[myIsWhite ? "white_id" : "black_id"]) return;
-  $("gfsTopStats").innerHTML = '<span class="gfs-stat">🏆 ' + oppTrophyWins + '</span><span class="gfs-stat">' + oppWins + ' crowns</span>';
+  $("gfsTopStats").innerHTML = '<span class="gfs-stat">🏆 ' + fmtStat(oppTrophyWins) + '</span><span class="gfs-stat">' + fmtStat(oppWins) + ' crowns</span>';
 }
 
 function exitFullscreenGame(){
@@ -4544,9 +4554,9 @@ if(opts.hasHumiliation && opts.outcome === "win"){
   if(opts.outcome === "win") launchConfetti();
   var oldW = opts.oldWins || 0;
   var newW = opts.newWins || oldW;
-  setTimeout(function(){ $("celebWinsOld").textContent = oldW; }, 900);
-  setTimeout(function(){ $("celebPlus").textContent = (newW - oldW > 0) ? "+" + (newW - oldW) : ""; }, 1400);
-  setTimeout(function(){ $("celebWinsNew").textContent = "→ " + newW; }, 1500);
+  setTimeout(function(){ $("celebWinsOld").textContent = fmtStat(oldW); }, 900);
+  setTimeout(function(){ $("celebPlus").textContent = (newW - oldW > 0) ? "+" + fmtStat(newW - oldW) : ""; }, 1400);
+  setTimeout(function(){ $("celebWinsNew").textContent = "→ " + fmtStat(newW); }, 1500);
   var dur = opts.isTournament ? 10000 : 10000;
   $("celebAuto").textContent = "Closing in " + Math.ceil(dur/1000) + "s…";
   if(celebTimer) clearTimeout(celebTimer);
@@ -7122,7 +7132,7 @@ async function loadAdminPanel(){
   var registeredCount=Number(countResult.data||0);
   var overview=$("adminOverview");
   var first=overview.querySelector(".admin-stat strong");
-  if(first)first.textContent=registeredCount.toLocaleString("en-US",{numberingSystem:"latn"});
+  if(first)first.textContent=fmtStat(registeredCount);
  }catch(countError){
   var first=$("adminOverview").querySelector(".admin-stat strong");
   if(first)first.textContent="Error";
@@ -7134,7 +7144,7 @@ async function loadAdminPanel(){
   var wins=adminUsersCache.reduce(function(n,u){return n+Number(u.wins||0);},0),cups=adminUsersCache.reduce(function(n,u){return n+Number(u.tournament_wins||0);},0);
   var banned=adminUsersCache.filter(function(u){return u.banned_until&&new Date(u.banned_until)>new Date();}).length;
   var firstValue=$("adminOverview").querySelector(".admin-stat strong");
-  $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>'+(firstValue?adminEscape(firstValue.textContent):'—')+'</strong></div><div class="admin-stat"><span>Banned users</span><strong>'+banned+'</strong></div><div class="admin-stat"><span>Total wins</span><strong>'+wins+'</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>'+cups+'</strong></div>';
+  $("adminOverview").innerHTML='<div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>'+(firstValue?adminEscape(firstValue.textContent):'—')+'</strong></div><div class="admin-stat"><span>Banned users</span><strong>'+fmtStat(banned)+'</strong></div><div class="admin-stat"><span>Total wins</span><strong>'+fmtStat(wins)+'</strong></div><div class="admin-stat"><span>Tournament trophies</span><strong>'+fmtStat(cups)+'</strong></div>';
   renderAdminUsers();
  }catch(e){
   $("adminUsers").innerHTML='<div class="admin-empty">Could not load user list: '+adminEscape(e.message||e)+'</div>';
@@ -7155,7 +7165,7 @@ function renderAdminUsers(){
  $("adminUsers").innerHTML=list.map(function(u){
   var banned=!!u.banned_until&&new Date(u.banned_until)>new Date(),id=adminEscape(u.id);
   return '<article class="admin-user" data-user-id="'+id+'"><div class="admin-user-top"><img src="'+adminEscape(u.avatar_url||defaultAvatar())+'" alt=""><div class="admin-user-ident"><div class="admin-user-name">'+adminEscape(u.username)+'</div><div class="admin-user-meta">'+adminEscape(u.email)+' · '+id+'</div></div><span class="admin-user-state '+(banned?'banned':'')+'">'+(banned?'BANNED':'ACTIVE')+'</span></div>'+
-  '<div class="admin-user-stats"><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="wins" aria-label="Edit wins count">♟ Wins: '+Number(u.wins||0)+'</span><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="tournament_wins" aria-label="Edit trophies count">🏆 Trophies: '+Number(u.tournament_wins||0)+'</span><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="humiliation_losses" aria-label="Edit humiliation losses count">🎭 Humiliation: '+Number(u.humiliation_losses||0)+'</span><span class="admin-chip">Joined: '+adminEscape(new Date(u.created_at).toLocaleDateString())+'</span></div>'+
+  '<div class="admin-user-stats"><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="wins" aria-label="Edit wins count">♟ Wins: '+fmtStat(u.wins||0)+'</span><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="tournament_wins" aria-label="Edit trophies count">🏆 Trophies: '+fmtStat(u.tournament_wins||0)+'</span><span class="admin-chip admin-edit-count" role="button" tabindex="0" data-metric="humiliation_losses" aria-label="Edit humiliation losses count">🎭 Humiliation: '+fmtStat(u.humiliation_losses||0)+'</span><span class="admin-chip">Joined: '+adminEscape(new Date(u.created_at).toLocaleDateString())+'</span></div>'+
   '<div class="admin-actions"><button class="btn admin-ban" type="button" data-banned="'+banned+'">'+(banned?'Unban':'Ban')+'</button></div></article>';
  }).join("");
 }
