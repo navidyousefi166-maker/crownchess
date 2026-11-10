@@ -2051,7 +2051,7 @@ var vipPieceStyles = [
   {id:"classic",name:"Classic"},
   {id:"outline",name:"Outline"},
   {id:"dualclassic",name:"Royal Heritage"},
-  {id:"rosevector",name:"Rose Vector SVG"},
+  {id:"rosevector",name:"Velvet Rose"},
   {id:"storybook",name:"Storybook 2D"}
 ];
 var vipPieceColors = [
@@ -2494,8 +2494,11 @@ function vipRoseVectorSvg(p,colorOverride){
   var white=p.color==="w",pair=vipColors(colorOverride,white);
   var label=(white?"White ":"Black ")+names[p.type];
   var sprite="assets/vip-rose-pieces.svg#vip-rose-"+p.type;
+  // Keep each Rose piece centered while enlarging its drawing only.
+  var tune={k:[0,1,1.11],q:[0,1,1.11],r:[0,1,1.11],b:[0,1,1.11],n:[-1,1,1.12],p:[0,1,1.11]}[p.type]||[0,1,1.11];
   return '<svg class="piece" viewBox="0 0 100 100" role="img" aria-label="'+label+'" style="color:'+pair[0]+';filter:drop-shadow(0 1px 1px '+pair[1]+')" xmlns="http://www.w3.org/2000/svg">'
-    +'<use href="'+sprite+'" xlink:href="'+sprite+'" x="0" y="0" width="100" height="100" xmlns:xlink="http://www.w3.org/1999/xlink"></use></svg>';
+    +'<g transform="translate('+(50+tune[0])+' '+(50+tune[1])+') scale('+tune[2]+') translate(-50 -50)">'
+    +'<use href="'+sprite+'" xlink:href="'+sprite+'" x="0" y="0" width="100" height="100" xmlns:xlink="http://www.w3.org/1999/xlink"></use></g></svg>';
 }
 /* Original vector recreation based on the user's illustrated chess set. */
 var vipStorybookShapes={"r":"<path d=\"M22 31 L19 17 Q19 12 25 12 L34 12 L36 23 L43 23 L44 11 L57 11 L59 23 L66 23 L68 13 L77 13 Q82 13 81 20 L79 33 Q78 40 71 41 L29 41 Q23 41 22 31 Z\"/><path d=\"M30 41 L70 41 L74 79 L26 79 Z\"/><path d=\"M20 78 Q17 78 16 86 L16 93 L84 93 L84 86 Q83 78 78 78 Z\"/>","n":"<path d=\"M72 78 Q78 64 77 44 Q75 24 60 18 Q49 12 43 8 L38 18 Q34 25 25 34 L14 47 Q10 55 16 60 Q24 66 37 57 L52 47 Q52 57 40 66 L33 78 Z\"/><path d=\"M24 78 L77 78 Q83 78 84 86 L84 93 L17 93 L17 86 Q18 78 24 78 Z\"/><path d=\"M38 31 Q42 27 47 31 L47 35 L37 35 Z\" class=\"eye\"/>","b":"<path d=\"M50 7 Q41 9 41 19 Q43 25 46 26 Q25 43 26 63 Q27 73 35 78 L67 78 Q75 70 75 58 Q75 42 62 24 L56 48 L47 48 L48 25 Q59 16 57 12 Q55 7 50 7 Z\"/><path d=\"M31 78 L69 78 Q77 78 79 85 L79 93 L21 93 L21 85 Q23 78 31 78 Z\"/>","q":"<path d=\"M18 19 A8 8 0 1 1 29 26 L38 43 L38 19 A8 8 0 1 1 49 17 L50 37 L60 17 A8 8 0 1 1 70 22 L68 43 L80 27 A8 8 0 1 1 89 34 L75 79 L25 79 L10 33 Q5 28 9 23 Q12 20 18 19 Z\"/><path d=\"M25 78 L75 78 Q82 78 83 86 L83 93 L17 93 L17 86 Q18 78 25 78 Z\"/>","k":"<path fill-rule=\"evenodd\" d=\"M44 7 L56 7 L56 16 L65 16 L65 27 L56 27 L56 33 Q76 27 85 38 Q94 50 83 63 L70 79 L30 79 L17 63 Q6 49 16 38 Q25 27 44 33 L44 27 L35 27 L35 16 L44 16 Z M29 46 Q24 52 34 63 L42 65 L42 47 Q35 43 29 46 Z M71 46 Q65 43 58 47 L58 65 L66 63 Q76 52 71 46 Z\"/><path d=\"M27 78 L73 78 Q81 78 82 86 L82 93 L18 93 L18 86 Q19 78 27 78 Z\"/>","p":"<circle cx=\"50\" cy=\"20\" r=\"13\"/><path d=\"M38 32 Q33 37 34 42 L41 44 Q40 52 32 60 Q19 67 20 80 L80 80 Q81 67 68 60 Q60 52 59 44 L66 42 Q67 37 62 32 Z\"/><path d=\"M26 79 L74 79 Q82 79 83 87 L83 93 L17 93 L17 87 Q18 79 26 79 Z\"/>"};
