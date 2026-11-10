@@ -1530,7 +1530,7 @@ input[type="color"] {
         <section class="history-section" id="historySection">
       <div class="history-head">
         <h2>📜 RECENT GAMES</h2>
-        <span class="hi-sub">Your last 5 finished games</span>
+        <span class="hi-sub">Your last 10 finished games</span>
       </div>
       <div class="history-list" id="historyList"></div>
     </section>
@@ -4852,7 +4852,7 @@ function resetQueueUI(){
 async function loadHistory(){
   var section = $("historySection");
   if(!sb || !currentUser){ section.classList.remove("show"); return; }
-  var res = await sb.rpc("kf_get_my_history", {p_limit: 5});
+  var res = await sb.rpc("kf_get_my_history", {p_limit: 10});
   if(res.error){ console.warn("History error:", res.error); section.classList.remove("show"); return; }
   historyData = res.data || [];
   renderHistory();
