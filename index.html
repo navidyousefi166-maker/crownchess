@@ -1538,9 +1538,8 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
   </section>
 </div>
 <div class="page" id="pageAdmin"><div class="admin-wrap">
-<div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1 id="adminPageTitle">🛡️ Admin Panel</h1><p id="adminPageSubtitle">Private administration · Owner access only</p></div><div class="admin-heading-actions"><button class="btn" id="adminBackToOverview" type="button" hidden>← Back</button><button class="btn gold" id="adminAlphaClockOpen" type="button">⏱ Clock Probe</button><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div></div>
+<div class="admin-heading"><div><div class="kicker">KINGSFALL CONTROL CENTER</div><h1 id="adminPageTitle">🛡️ Admin Panel</h1><p id="adminPageSubtitle">Private administration · Owner access only</p></div><div class="admin-heading-actions"><button class="btn" id="adminBackToOverview" type="button" hidden>← Back</button><button class="btn" id="adminRefresh" type="button">↻ Refresh</button></div></div>
 <div id="adminOverviewView">
-<section class="admin-section" id="adminAlphaClockProbe"><div class="admin-section-head"><div><h2>⏱ Clock Probe — Alpha Test</h2><p>Temporary · latest 30 moves from admin account · does not affect game clocks</p></div><button id="adminAlphaClockRefresh" class="btn" type="button">↻ Refresh</button></div><div class="admin-users" id="adminAlphaClockList">No measurements yet.</div></section>
 <div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div><div class="admin-stat suspicious-players-card" role="button" tabindex="0"><span>Suspicious Players</span><strong>—</strong></div></div>
 <section class="admin-section" id="adminRejectedMovesSection"><div class="admin-section-head"><div><h2>🛡️ Rejected Move Reports</h2><p>Illegal move requests rejected by the server · reports are not automatic proof of cheating</p></div></div><div id="adminRejectedMoves" class="admin-users"><div class="admin-loading">Loading reports…</div></div></section>
 
@@ -1922,10 +1921,10 @@ var kfMoveTrace = null;
 // Keep only numeric timings, never credentials, request bodies or player IDs.
 function kfTimedFetch(input, init){
   var url = typeof input === "string" ? input : input.url;
-  var trace = /\/functions\/v1\/kf-submit-validated-v2(?:\?|$)/.test(url) ? kfMoveTrace : null;
+  var trace = /\/rpc\/kf_submit_move(?:\?|$)/.test(url) ? kfMoveTrace : null;
   if(trace){ trace.fetchStart = performance.now(); trace.fetchWall = Date.now(); }
   return fetch(input, init).then(function(response){
-    if(trace){trace.headersAt = performance.now();trace.headersWall=Date.now();}
+    if(trace) trace.headersAt = performance.now();
     return response;
   });
 }
@@ -6151,7 +6150,6 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
       }catch(e){}
     }
     var responseAt = performance.now();
-    var responseWall = Date.now();
     var receivedAt = res.data && Date.parse(res.data.server_received_at);
     var completedAt = res.data && Date.parse(res.data.server_completed_at);
     var serverMs = Number.isFinite(receivedAt) && Number.isFinite(completedAt) ? Math.max(0, completedAt-receivedAt) : null;
@@ -6163,36 +6161,10 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
       lockMs: res.data && res.data.lock_wait_ms != null ? Number(res.data.lock_wait_ms) : null,
       writeMs: res.data && res.data.write_ms != null ? Number(res.data.write_ms) : null,
       adjustmentMs: res.data ? Math.round((kfClockAtTap-Number(kfMoverColor === "white" ? res.data.white_time_left : res.data.black_time_left))*1000) : null,
-      dispatchToServerMs: Number.isFinite(receivedAt)&&trace.fetchWall!=null&&kfServerOffsetKnown?Math.round(receivedAt-(trace.fetchWall+kfServerOffsetMs)):null,
-      serverToResponseMs: Number.isFinite(completedAt)&&kfServerOffsetKnown?Math.round(responseWall-(completedAt-kfServerOffsetMs)):null,
-      clockOffsetKnown: kfServerOffsetKnown,
       ok: !res.error
     };
     window.kfClockDiagnostics = window.kfClockDiagnostics || [];
     window.kfClockDiagnostics.push(traceResult);
-    // TEMP Alpha probe: owner-only, asynchronous and excluded from the live move path.
-    if(!res.error && res.data && trace.fetchStart != null &&
-       currentUser && currentUser.id === "cc80cc38-f476-4edd-8efc-45e2722f3c4f"){
-      (function(d,gid,color,san,before,after){
-        setTimeout(function(){
-          if(!sb)return;
-          sb.rpc("kf_alpha_clock_probe_add",{
-            p_game_id:gid,p_color:color,p_move_san:san,
-            p_client_clock_at_release_ms:Math.round(before*1000),
-            p_official_clock_ms:Math.round(after*1000),
-            p_adjustment_ms:d.adjustmentMs,
-            p_release_to_dispatch_ms:d.prepareMs,
-            p_request_round_trip_ms:d.roundTripMs,
-            p_server_processing_ms:d.serverMs == null ? null : Math.round(d.serverMs),
-            p_dispatch_to_server_estimate_ms:d.dispatchToServerMs,
-            p_server_to_response_estimate_ms:d.serverToResponseMs,
-            p_offset_known:d.clockOffsetKnown
-          }).then(function(x){if(x.error)console.warn("[Alpha clock probe] save failed",x.error.message);})
-          .catch(function(e){console.warn("[Alpha clock probe] save error",e);});
-        },100);
-      })(traceResult,submittedGameId,m.color,m.san,kfClockAtTap,
-        Number(kfMoverColor === "white" ? res.data.white_time_left : res.data.black_time_left));
-    }
     if(window.kfClockDiagnostics.length > 30) window.kfClockDiagnostics.shift();
     console.debug("[Kingsfall clock]", traceResult);
     if(onlineGameId !== submittedGameId) return;
@@ -7211,37 +7183,8 @@ $("adminPlayerReportsList").addEventListener("click",async function(event){
  }catch(err){if(details)details.textContent="Could not load game: "+(err.message||err);}
  finally{button.disabled=false;}
 });
-async function loadAdminAlphaClockProbe(){
-  if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
-  var el=$("adminAlphaClockList");if(!el)return;
-  el.textContent="Loading measurements…";
-  try{
-    var r=await sb.rpc("kf_alpha_clock_probe_list");if(r.error)throw r.error;
-    var rows=Array.isArray(r.data)?r.data:[];
-    var fmtMs=function(x){return x==null?"—":Math.round(Number(x)).toLocaleString("en-US")+" ms";};
-    el.innerHTML=rows.length?rows.map(function(x){
-      return '<article class="admin-report-row"><strong>'+adminEscape(x.color==="w"?"White ":"Black ")+adminEscape(x.move_san||"Move")+'</strong>'+
-      '<small>'+adminEscape(new Date(x.created_at).toLocaleString())+'</small>'+
-      '<div class="admin-user-stats"><span class="admin-chip">Clock adjustment: '+fmtMs(x.adjustment_ms)+'</span>'+
-      '<span class="admin-chip">Release → dispatch: '+fmtMs(x.release_to_dispatch_ms)+'</span>'+
-      '<span class="admin-chip">Request round trip: '+fmtMs(x.request_round_trip_ms)+'</span>'+
-      '<span class="admin-chip">Server processing: '+fmtMs(x.server_processing_ms)+'</span>'+
-      '<span class="admin-chip">Dispatch → server (est): '+fmtMs(x.dispatch_to_server_estimate_ms)+'</span>'+
-      '<span class="admin-chip">Server → response (est): '+fmtMs(x.server_to_response_estimate_ms)+'</span></div>'+
-      '<small>Local clock at move: '+fmtMs(x.client_clock_at_release_ms)+' · Server official clock: '+fmtMs(x.official_clock_ms)+
-      (x.offset_known?' · offset calibrated':' · offset unavailable')+'</small></article>';
-    }).join(""):'<div class="admin-empty">No measurements yet. Make a few moves with the admin account, then tap Refresh.</div>';
-  }catch(e){el.textContent="Clock probe error: "+(e.message||e);}
-}
-$("adminAlphaClockRefresh").onclick=loadAdminAlphaClockProbe;
-$("adminAlphaClockOpen").onclick=function(){
-  showAdminOverview();
-  loadAdminAlphaClockProbe();
-  $("adminAlphaClockProbe").scrollIntoView({behavior:"smooth",block:"start"});
-};
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
- loadAdminAlphaClockProbe();
  loadAdminRejectedMoveReports();
  loadAdminPlayerReportsCount();
  loadAdminSuspiciousPlayers();
