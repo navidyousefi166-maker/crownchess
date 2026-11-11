@@ -6459,7 +6459,7 @@ function updateEvalBar(idx){
   $("anEvalLabel").textContent = label;
   }
   /* ===== UNIFIED submitMove (FIX: try/finally + tournament ordering) ===== */
-async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove){
+async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove, premoveTiming){
   if(!sb || !onlineGameId || !onlineGame) return;
   if(submittingMove) return;
   submittingMove = true;
@@ -6535,6 +6535,24 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
       adjustmentMs: res.data ? Math.round((kfClockAtTap-Number(kfMoverColor === "white" ? res.data.white_time_left : res.data.black_time_left))*1000) : null,
       ok: !res.error
     };
+    if(isPremove===true && premoveTiming){
+      var realtimeApproxMs=premoveTiming.serverMoveAt?Math.round(premoveTiming.realtimeReceivedWall-premoveTiming.serverMoveAt):null;
+      var networkOtherMs=traceResult.roundTripMs!=null&&serverMs!=null?Math.round(traceResult.roundTripMs-serverMs):null;
+      var premoveSample={
+        move:premoveTiming.move,
+        serverToRealtimeApproxMs:realtimeApproxMs,
+        localDispatchMs:premoveTiming.localDispatchMs,
+        clientPrepareMs:traceResult.prepareMs,
+        httpRoundTripMs:traceResult.roundTripMs,
+        serverProcessingMs:serverMs,
+        httpOtherMs:networkOtherMs,
+        success:!res.error
+      };
+      window.kfPremoveTimeline=window.kfPremoveTimeline||[];
+      window.kfPremoveTimeline.push(premoveSample);
+      if(window.kfPremoveTimeline.length>30)window.kfPremoveTimeline.shift();
+      console.debug("[Kingsfall premove timing]",premoveSample);
+    }
     window.kfClockDiagnostics = window.kfClockDiagnostics || [];
     window.kfClockDiagnostics.push(traceResult);
     if(window.kfClockDiagnostics.length > 30) window.kfClockDiagnostics.shift();
@@ -7212,7 +7230,13 @@ function kfMaybeExecuteLocalPremove(row,realtimeApplyAt){
     if(window.kfPremoveDispatchDiagnostics.length>30)window.kfPremoveDispatchDiagnostics.shift();
   }
   // To the server this is a regular move with an optional clock minimum.
-  submitMove(move,Math.floor(clockWhite),Math.floor(clockBlack),moveStartedAt,true);
+  var premoveTiming={
+    move:move.san,
+    serverMoveAt:row.last_move_at?Date.parse(row.last_move_at):null,
+    realtimeReceivedWall:Date.now()-Math.max(0,performance.now()-realtimeApplyAt),
+    localDispatchMs:Number.isFinite(realtimeApplyAt)?Math.round((performance.now()-realtimeApplyAt)*10)/10:null
+  };
+  submitMove(move,Math.floor(clockWhite),Math.floor(clockBlack),moveStartedAt,true,premoveTiming);
   return true;
 }
 /* ===== CLICK SQUARE ===== */
