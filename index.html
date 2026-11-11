@@ -7064,8 +7064,8 @@ function updateHistory(){
   historyEl.scrollTop = historyEl.scrollHeight;
 }
 
-/* ===== Premove: one queued move, with the server as sole authority ===== */
-var kfPremoveSelected=null,kfPremoveQueued=null,kfPremoveBusy=false,kfPremoveGameId=null;
+/* ===== Browser-only premove: legality checked on the newly received turn ===== */
+var kfPremoveSelected=null,kfPremoveQueued=null,kfPremoveGameId=null;
 // Fast, speculative premove geometry. Opponent pieces may move before
 // execution, so this deliberately does not claim future legality.
 function kfPremoveGeometry(from,to,color){
