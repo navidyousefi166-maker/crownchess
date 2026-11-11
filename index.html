@@ -7059,6 +7059,46 @@ async function kfPremoveRequest(payload,id){
   }
   return reply.data;
 }
+// Fast, speculative premove geometry. Opponent pieces may move before
+// execution, so this deliberately does not claim future legality.
+function kfPremoveGeometry(from,to,color){
+  if(!/^[a-h][1-8]$/.test(from)||!/^[a-h][1-8]$/.test(to)||from===to)return false;
+  var piece=game.get(from),occupant=game.get(to);
+  if(!piece||piece.color!==color||occupant&&occupant.color===color)return false;
+  var x=to.charCodeAt(0)-from.charCodeAt(0), y=Number(to[1])-Number(from[1]);
+  var ax=Math.abs(x),ay=Math.abs(y),type=piece.type;
+  if(type==="n")return ax===1&&ay===2||ax===2&&ay===1;
+  if(type==="k"){
+    if(Math.max(ax,ay)===1)return true;
+    if(ay!==0||ax!==2)return false;
+    var rookSquare=(x>0?"h":"a")+from[1],rook=game.get(rookSquare);
+    return !!rook&&rook.color===color&&rook.type==="r"&&
+      !game.get((x>0?"f":"d")+from[1])&&
+      (x>0||!game.get("b"+from[1]));
+  }
+  if(type==="p"){
+    var step=color==="w"?1:-1;
+    if(y===step&&ax===1)return true; // speculative capture, even onto an empty square
+    if(x!==0)return false;
+    if(y===step)return true; // opposing blocker may leave on their turn
+    if(y===2*step&&Number(from[1])===(color==="w"?2:7)){
+      return !game.get(from[0]+(Number(from[1])+step));
+    }
+    return false;
+  }
+  var slide=(type==="b"&&ax===ay&&ax>0)||
+    (type==="r"&&(x===0)!==(y===0))||
+    (type==="q"&&(ax===ay&&ax>0||(x===0)!==(y===0)));
+  if(!slide)return false;
+  var sx=Math.sign(x),sy=Math.sign(y),n=Math.max(ax,ay);
+  for(var i=1;i<n;i++){
+    var square=String.fromCharCode(from.charCodeAt(0)+sx*i)+(Number(from[1])+sy*i);
+    var blocker=game.get(square);
+    if(blocker&&blocker.color===color)return false;
+    // Enemy pieces can move on the upcoming turn: don't reject prematurely.
+  }
+  return true;
+}
 async function kfHandlePremoveSquare(square,color){
   if(!onlineGameId||!onlineGame||onlineGame.status!=="active"||kfPremoveBusy)return;
   var id=onlineGameId;
@@ -7084,6 +7124,11 @@ async function kfHandlePremoveSquare(square,color){
   if(!kfPremoveSelected)return;
   var from=kfPremoveSelected;
   kfPremoveSelected=null;
+  if(!kfPremoveGeometry(from,square,color)){
+    say("That premove does not match this piece's movement.",{silentToast:true});
+    draw();
+    return;
+  }
   kfPremoveBusy=true;
   // Optimistic UI: show the chosen premove on this very tap, not after
   // the network round-trip. This does not move a piece or change the clock.
