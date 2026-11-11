@@ -3825,10 +3825,7 @@ function applyOnlineGame(row){
   var prevClockStartedAt = onlineGame ? onlineGame.clock_started_at : null;
   onlineGame = row;
   if(kfPremoveGameId&&kfPremoveGameId!==row.id){kfPremoveSelected=null;kfPremoveQueued=null;}
-  if((row.last_move_at&&row.last_move_at!==prevLastMoveAt)||row.status!=="active"||
-     (currentUser&&row.turn===(row.white_id===currentUser.id?"w":"b"))){
-    kfPremoveSelected=null;kfPremoveQueued=null;
-  }
+  if(row.status!=="active"){kfPremoveSelected=null;kfPremoveQueued=null;}
   kfPremoveGameId=row.id;
   // Server acknowledgment: a valid premove is already the last move in the
   // authoritative snapshot, so its existing gold last-move highlight replaces
@@ -3912,6 +3909,18 @@ if(game && row.fen && game.fen() !== row.fen){
     say("Received an invalid game position.", {error: true});
   }
 }
+
+  // Run the browser-only queued move against the newly received position.
+  // This runs after the authoritative FEN/PGN has been loaded, never from a
+  // stale board and never before the opponent's move reaches the client.
+  if(kfPremoveQueued && row.status==="active" &&
+      currentUser && row.turn===(row.white_id===currentUser.id?"w":"b")){
+    setTimeout(function(){
+      if(onlineGameId===row.id && onlineGame &&
+         onlineGame.fen===row.fen && !submittingMove)
+        kfMaybeExecuteLocalPremove(row);
+    },0);
+  }
 
   /* Draw offers are unavailable in tournament games. */
 if(row.is_tournament){
@@ -6424,7 +6433,7 @@ function updateEvalBar(idx){
   $("anEvalLabel").textContent = label;
   }
   /* ===== UNIFIED submitMove (FIX: try/finally + tournament ordering) ===== */
-async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
+async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove){
   if(!sb || !onlineGameId || !onlineGame) return;
   if(submittingMove) return;
   submittingMove = true;
@@ -6462,12 +6471,21 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt){
     // Send the move and let the server persist the authoritative result.
     // Position, history, result and clock are now derived by the server.
     // The client sends only move coordinates and an idempotency token.
-    var res = await sb.functions.invoke("kf-submit-validated-v2", {
+    var res = await sb.functions.invoke("kf-submit-fast-v1", {
       body: {
         game_id: onlineGameId,
+        expected_fen: onlineGame.fen,
         from: m.from,
         to: m.to,
         ...(m.promotion ? {promotion:m.promotion} : {}),
+        san: m.san,
+        fen: game.fen(),
+        pgn: game.pgn(),
+        turn: game.turn(),
+        status: status,
+        result: result,
+        winner_id: winnerId,
+        is_premove: isPremove===true,
         request_id: crypto.randomUUID()
       }
     });
@@ -7048,17 +7066,6 @@ function updateHistory(){
 
 /* ===== Premove: one queued move, with the server as sole authority ===== */
 var kfPremoveSelected=null,kfPremoveQueued=null,kfPremoveBusy=false,kfPremoveGameId=null;
-async function kfPremoveRequest(payload,id){
-  var reply=await sb.functions.invoke("kf-premove",{body:Object.assign({game_id:id},payload)});
-  if(reply.error){
-    var message=reply.error.message||"Premove request failed";
-    if(reply.error.context&&typeof reply.error.context.json==="function"){
-      try{var detail=await reply.error.context.json();if(detail&&detail.error)message=detail.error;}catch(ignore){}
-    }
-    throw new Error(message);
-  }
-  return reply.data;
-}
 // Fast, speculative premove geometry. Opponent pieces may move before
 // execution, so this deliberately does not claim future legality.
 function kfPremoveGeometry(from,to,color){
@@ -7099,59 +7106,81 @@ function kfPremoveGeometry(from,to,color){
   }
   return true;
 }
-async function kfHandlePremoveSquare(square,color){
-  if(!onlineGameId||!onlineGame||onlineGame.status!=="active"||kfPremoveBusy)return;
-  var id=onlineGameId;
-  if(kfPremoveGameId!==id){kfPremoveGameId=id;kfPremoveSelected=null;kfPremoveQueued=null;}
+function kfHandlePremoveSquare(square,color){
+  if(!onlineGameId||!onlineGame||onlineGame.status!=="active")return;
+  if(kfPremoveGameId!==onlineGameId){
+    kfPremoveGameId=onlineGameId;kfPremoveSelected=null;kfPremoveQueued=null;
+  }
   var piece=game.get(square);
   if(square===kfPremoveSelected){kfPremoveSelected=null;draw();return;}
-  if(!kfPremoveSelected&&kfPremoveQueued&&(square===kfPremoveQueued.from||square===kfPremoveQueued.to)){
-    kfPremoveBusy=true;
-    var previousQueued=kfPremoveQueued;
-    kfPremoveQueued=null;
-    draw(); // Remove blue highlights immediately; server confirmation follows.
-    try{await kfPremoveRequest({clear:true},id);}
-    catch(e){
-      if(onlineGameId===id&&onlineGame&&onlineGame.status==="active"&&onlineGame.turn!==color){
-        kfPremoveQueued=previousQueued;
-      }
-      say("Premove cancellation failed: "+e.message,{error:true});
-    }
-    finally{kfPremoveBusy=false;if(onlineGameId===id)draw();}
+  if(!kfPremoveSelected&&kfPremoveQueued&&
+    (square===kfPremoveQueued.from||square===kfPremoveQueued.to)){
+    kfPremoveQueued=null;draw();return;
+  }
+  if(piece&&piece.color===color){
+    kfPremoveSelected=square;
+    draw();
     return;
   }
-  if(piece&&piece.color===color){kfPremoveSelected=square;draw();return;}
   if(!kfPremoveSelected)return;
   var from=kfPremoveSelected;
   kfPremoveSelected=null;
   if(!kfPremoveGeometry(from,square,color)){
     say("That premove does not match this piece's movement.",{silentToast:true});
-    draw();
-    return;
+    draw();return;
   }
-  kfPremoveBusy=true;
-  // Optimistic UI: show the chosen premove on this very tap, not after
-  // the network round-trip. This does not move a piece or change the clock.
-  kfPremoveQueued={from:from,to:square};
+  // Entirely browser-local: nothing is sent to Supabase at queue time.
+  kfPremoveQueued={from:from,to:square,promotion:"q"};
   draw();
-  try{
-    await kfPremoveRequest({from:from,to:square,promotion:"q"},id);
-    if(onlineGameId===id&&onlineGame&&onlineGame.status==="active"&&onlineGame.turn!==color){
-      say("Premove queued. Tap a marked square to cancel.",{silentToast:true});
-    }else if(onlineGameId===id){
-      kfPremoveQueued=null;
-      syncGameState(id);
+}
+function kfStartOptimisticClock(m){
+  if(!onlineGameId)return;
+  kfClockBeforeMove={
+    turn:onlineGame?onlineGame.turn:m.color,
+    white:clockPerfBaseWhite,black:clockPerfBaseBlack,
+    anchor:clockPerfAnchor,perfTurn:clockPerfTurn
+  };
+  kfPendingClockMove=true;
+  kfRunningClockBlend=null;
+  if(clockPerfAnchor!=null){
+    var perfNow=performance.now();
+    var elapsedFromAnchor=Math.max(0,(perfNow-clockPerfAnchor)/1000);
+    if(clockPerfTurn==="w"){
+      clockWhite=Math.max(0,clockPerfBaseWhite-elapsedFromAnchor);
+      clockBlack=Math.max(0,clockPerfBaseBlack);
+    }else{
+      clockBlack=Math.max(0,clockPerfBaseBlack-elapsedFromAnchor);
+      clockWhite=Math.max(0,clockPerfBaseWhite);
     }
-  }catch(e){
-    if(onlineGameId===id){
-      kfPremoveQueued=null;
-      say("Premove rejected: "+e.message,{error:true});
-      syncGameState(id);
-    }
-  }finally{
-    kfPremoveBusy=false;
-    if(onlineGameId===id)draw();
   }
+  clockPerfBaseWhite=clockWhite;
+  clockPerfBaseBlack=clockBlack;
+  clockPerfTurn=game.turn();
+  clockPerfAnchor=performance.now();
+  lastClockAt=Date.now();
+  if(onlineGame)onlineGame.turn=game.turn();
+}
+function kfMaybeExecuteLocalPremove(row){
+  if(!row||!kfPremoveQueued||!game||!currentUser||submittingMove||kfPendingClockMove||
+      row.id!==onlineGameId||row.status!=="active"||kfPremoveGameId!==row.id)return;
+  var color=row.white_id===currentUser.id?"w":row.black_id===currentUser.id?"b":null;
+  if(!color||row.turn!==color||game.turn()!==color||game.fen()!==row.fen)return;
+  var pm=kfPremoveQueued;
+  kfPremoveQueued=null;
+  kfPremoveSelected=null;
+  var move=null;
+  try{move=game.move({from:pm.from,to:pm.to,promotion:pm.promotion||"q"});}catch(e){}
+  if(!move){
+    // The opponent changed the position; an illegal premove is never sent.
+    draw();return;
+  }
+  last={from:move.from,to:move.to};
+  selected=null;targets=[];
+  var moveStartedAt=performance.now();
+  kfStartOptimisticClock(move);
+  draw();
+  // To the server this is a regular move with an optional clock minimum.
+  submitMove(move,Math.floor(clockWhite),Math.floor(clockBlack),moveStartedAt,true);
 }
 /* ===== CLICK SQUARE ===== */
 async function clickSquare(s){
@@ -7243,36 +7272,7 @@ if(m){
   selected = null;
   targets = [];
 
- // 🟢 فریز کردن ساعت در لحظه حرکت — بدون محاسبه دوباره‌ی زمان
-// (tickClock هر ۲۵۰ms از anchor محاسبه می‌کند؛ اینجا فقط
-//  مقدار فعلی را فریز می‌کنیم و نوبت را عوض می‌کنیم تا پرش رخ نده)
-if(onlineGameId) {
-  kfClockBeforeMove={
-    turn:onlineGame?onlineGame.turn:m.color,
-    white:clockPerfBaseWhite,black:clockPerfBaseBlack,
-    anchor:clockPerfAnchor,perfTurn:clockPerfTurn
-  };
-  kfPendingClockMove=true;
-  kfRunningClockBlend=null;
-  if(clockPerfAnchor != null){
-    var perfNow = performance.now();
-    var elapsedFromAnchor = Math.max(0, (perfNow - clockPerfAnchor) / 1000);
-    if(clockPerfTurn === "w"){
-      clockWhite = Math.max(0, clockPerfBaseWhite - elapsedFromAnchor);
-      clockBlack = Math.max(0, clockPerfBaseBlack);
-    } else {
-      clockBlack = Math.max(0, clockPerfBaseBlack - elapsedFromAnchor);
-      clockWhite = Math.max(0, clockPerfBaseWhite);
-    }
-  }
-  // مهره‌ی خودمون روی همین مقدار فعلی فریز می‌شود
-  clockPerfBaseWhite = clockWhite;
-  clockPerfBaseBlack = clockBlack;
-  clockPerfTurn = game.turn();
-  clockPerfAnchor = performance.now();
-  lastClockAt = Date.now();
-  if(onlineGame) onlineGame.turn = game.turn();
-  }
+ kfStartOptimisticClock(m);
 
   if(onlineGameId){
     await submitMove(m, Math.floor(clockWhite), Math.floor(clockBlack), moveStartedAt);
