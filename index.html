@@ -3693,10 +3693,15 @@ async function loadOnlineGame(id, skipIntro){
   updateHumilBadge();
   updateFirstMoveDeadlineUI();
   gameChannel = sb.channel("kf-game-" + id)
-    .on("postgres_changes", {event:"UPDATE", schema:"public", table:"kf_games"}, function(payload){
+    .on("postgres_changes", {event:"UPDATE", schema:"public", table:"kf_games", filter:"id=eq." + id}, function(payload){
       if(payload.new && payload.new.id === onlineGameId) applyOnlineGame(payload.new);
     })
-    .subscribe();
+    .subscribe(function(status){
+      if(status==="CHANNEL_ERROR" || status==="TIMED_OUT" || status==="CLOSED"){
+        console.warn("Game channel issue:",status);
+        kfScheduleGameStateRecovery(id);
+      }
+    });
 if(currentGameIsRoulette){
   // Roulette is server-authoritative: both players receive the same stored line.
   // Keep realtime snapshots and the normal clock-start fallback paused while
