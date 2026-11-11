@@ -3823,7 +3823,9 @@ function applyOnlineGame(row){
   var prevLastMove = onlineGame ? onlineGame.last_move : null;
   var prevLastMoveAt = onlineGame ? onlineGame.last_move_at : null;
   var prevClockStartedAt = onlineGame ? onlineGame.clock_started_at : null;
-  onlineGame = row;
+  var prevConfirmedFen = onlineGame ? onlineGame.fen : null;
+  // Keep the received server snapshot independent of local optimistic turns.
+  onlineGame = Object.assign({},row);
   if(kfPremoveGameId&&kfPremoveGameId!==row.id){kfPremoveSelected=null;kfPremoveQueued=null;}
   if(row.status!=="active"){kfPremoveSelected=null;kfPremoveQueued=null;}
   kfPremoveGameId=row.id;
@@ -3890,37 +3892,46 @@ if(prevHumilW !== row.white_handicap || prevHumilB !== row.black_handicap){
   }
 }
 
-  /* Load FEN (this already has the sacrificed piece removed) */
-/* Load PGN first to keep history, fallback to FEN if PGN fails */
-if(game && row.fen && game.fen() !== row.fen){
+  /* Apply the incoming opponent move to the existing chess.js board
+   when possible. This preserves history without reparsing the entire PGN. */
+var kfBoardNeedsDraw=false;
+if(game && row.fen && game.fen()!==row.fen){
   try{
-    var loaded = false;
-    if(row.pgn && row.pgn.length > 0) {
-      loaded = game.load_pgn(row.pgn);
+    var kfLoaded=false;
+    if(prevConfirmedFen && game.fen()===prevConfirmedFen &&
+       row.last_move && row.last_move.from && row.last_move.to){
+      var kfDelta=null;
+      try{
+        kfDelta=game.move({
+          from:row.last_move.from,
+          to:row.last_move.to,
+          promotion:row.last_move.promotion||"q"
+        });
+      }catch(ignore){}
+      if(kfDelta){
+        if(game.fen()===row.fen) kfLoaded=true;
+        else game.undo();
+      }
     }
-    if(!loaded || game.fen() !== row.fen) {
-      game.load(row.fen);
+    if(!kfLoaded && row.pgn && row.pgn.length){
+      kfLoaded=!!game.load_pgn(row.pgn)&&game.fen()===row.fen;
     }
-    last = row.last_move || null;
-    selected = null;
-    targets = [];
-    draw();
-  } catch(e){
-    say("Received an invalid game position.", {error: true});
+    if(!kfLoaded || game.fen()!==row.fen)game.load(row.fen);
+    last=row.last_move||null;
+    selected=null;
+    targets=[];
+    kfBoardNeedsDraw=true;
+  }catch(e){
+    say("Received an invalid game position.",{error:true});
   }
 }
 
-  // Run the browser-only queued move against the newly received position.
-  // This runs after the authoritative FEN/PGN has been loaded, never from a
-  // stale board and never before the opponent's move reaches the client.
-  if(kfPremoveQueued && row.status==="active" &&
-      currentUser && row.turn===(row.white_id===currentUser.id?"w":"b")){
-    setTimeout(function(){
-      if(onlineGameId===row.id && onlineGame &&
-         onlineGame.fen===row.fen && !submittingMove)
-        kfMaybeExecuteLocalPremove(row);
-    },0);
-  }
+// Validate and execute the queued local premove in the same event loop turn,
+// before the slower side panels and other interface updates.
+var kfHadPremove=!!(kfPremoveQueued && row.status==="active" &&
+  currentUser && row.turn===(row.white_id===currentUser.id?"w":"b"));
+if(kfHadPremove) kfMaybeExecuteLocalPremove(row);
+if(kfBoardNeedsDraw && !kfHadPremove)draw();
 
   /* Draw offers are unavailable in tournament games. */
 if(row.is_tournament){
