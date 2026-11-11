@@ -1992,7 +1992,7 @@ var kfMoveTrace = null;
 // Keep only numeric timings, never credentials, request bodies or player IDs.
 function kfTimedFetch(input, init){
   var url = typeof input === "string" ? input : input.url;
-  var trace = /\/rpc\/kf_submit_move(?:\?|$)/.test(url) ? kfMoveTrace : null;
+  var trace = /\/functions\/v1\/kf-submit-fast-v1(?:\?|$)/.test(url) ? kfMoveTrace : null;
   if(trace){ trace.fetchStart = performance.now(); trace.fetchWall = Date.now(); }
   return fetch(input, init).then(function(response){
     if(trace) trace.headersAt = performance.now();
@@ -3806,6 +3806,7 @@ if(currentGameIsRoulette){
 
 function applyOnlineGame(row){
   if(!row || row.id !== onlineGameId) return;
+  var kfRealtimeApplyAt = performance.now();
   // The database already contains the complete opening; keep its snapshot
   // from replacing the board while the six moves are being animated locally.
   if(rouletteOpeningAnimating) return;
@@ -3833,18 +3834,6 @@ function applyOnlineGame(row){
   kfPremoveGameId=row.id;
   // Paint only after applying the latest board and clock snapshot.
 
-  /* Humiliation badge for opponent */
-  var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap))
-               || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
-  var btCaption = row.is_bloodblade ? "BLOOD TRIBUTES" : "HUMILIATION";
-  var topHumilText = $("gfsTopHumil").querySelector("span:last-child");
-  var botHumilText = $("gfsBotHumil").querySelector("span:last-child");
-  if(topHumilText) topHumilText.textContent = btCaption;
-  if(botHumilText) botHumilText.textContent = btCaption;
-  ["gfsTopHumil","gfsBotHumil"].forEach(function(id){ $(id).classList.toggle("blood-tributes", !!row.is_bloodblade); });
-  $("gfsTopHumil").classList.toggle("roulette-hidden", !!row.is_roulette);
-  $("gfsTopHumil").hidden = !!row.is_roulette || !oppHadHcp;
-
   /* Clock update: only when new move arrives */
 var hasNewMove = false;
 if(row.last_move && (!prevLastMove ||
@@ -3869,27 +3858,6 @@ if(hasNewMove || row.clock_started_at !== prevClockStartedAt || (row.turn && row
   lastClockAt = Date.now();
   clockExpired = false;
 }
-paintClocks();
-renderPlayers(row);
-  updateHumilBadge();
-
-  updateFirstMoveDeadlineUI();
-  if(row.is_tournament && row.white_joined_at && row.black_joined_at && row.clock_started_at && !window._kfClockSyncedAt){
-    window._kfClockSyncedAt = true;
-    lastClockAt = Date.now();
-  }
-
-  /* CORRECTION 2 — فقط handicap خودم باعث فعال شدن badge میشه. (FEN از سمت حریف خودش مهره رو حذف کرده) */
-if(prevHumilW !== row.white_handicap || prevHumilB !== row.black_handicap){
-  var myHcp = (fsPlayerColor === "w" && isValidHcp(row.white_handicap))
-           || (fsPlayerColor === "b" && isValidHcp(row.black_handicap));
-  if(myHcp && !humilApplied){
-    humilApplied = true;
-    humilSelecting = false;
-    updateHumilBadge();
-  }
-}
-
   /* Apply the incoming opponent move to the existing chess.js board
    when possible. This preserves history without reparsing the entire PGN. */
 var kfBoardNeedsDraw=false;
@@ -3927,10 +3895,44 @@ if(game && row.fen && game.fen()!==row.fen){
 // A rejected premove still needs a repaint of the authoritative position.
 var kfHadPremove=!!(kfPremoveQueued && row.status==="active" &&
   currentUser && row.turn===(row.white_id===currentUser.id?"w":"b"));
-var kfPremoveExecuted=kfHadPremove && kfMaybeExecuteLocalPremove(row);
+var kfPremoveExecuted=kfHadPremove && kfMaybeExecuteLocalPremove(row,kfRealtimeApplyAt);
 if(!kfPremoveExecuted &&
    (kfBoardNeedsDraw || (row.last_move_at!==prevLastMoveAt && game && row.fen===game.fen())))
   draw();
+
+// Keep the realtime-to-premove critical path free of nonessential UI writes.
+  /* Humiliation badge for opponent */
+  var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap))
+               || (fsPlayerColor === "b" && isValidHcp(row.white_handicap));
+  var btCaption = row.is_bloodblade ? "BLOOD TRIBUTES" : "HUMILIATION";
+  var topHumilText = $("gfsTopHumil").querySelector("span:last-child");
+  var botHumilText = $("gfsBotHumil").querySelector("span:last-child");
+  if(topHumilText) topHumilText.textContent = btCaption;
+  if(botHumilText) botHumilText.textContent = btCaption;
+  ["gfsTopHumil","gfsBotHumil"].forEach(function(id){ $(id).classList.toggle("blood-tributes", !!row.is_bloodblade); });
+  $("gfsTopHumil").classList.toggle("roulette-hidden", !!row.is_roulette);
+  $("gfsTopHumil").hidden = !!row.is_roulette || !oppHadHcp;
+
+paintClocks();
+renderPlayers(row);
+  updateHumilBadge();
+
+  updateFirstMoveDeadlineUI();
+  if(row.is_tournament && row.white_joined_at && row.black_joined_at && row.clock_started_at && !window._kfClockSyncedAt){
+    window._kfClockSyncedAt = true;
+    lastClockAt = Date.now();
+  }
+
+  /* CORRECTION 2 — فقط handicap خودم باعث فعال شدن badge میشه. (FEN از سمت حریف خودش مهره رو حذف کرده) */
+if(prevHumilW !== row.white_handicap || prevHumilB !== row.black_handicap){
+  var myHcp = (fsPlayerColor === "w" && isValidHcp(row.white_handicap))
+           || (fsPlayerColor === "b" && isValidHcp(row.black_handicap));
+  if(myHcp && !humilApplied){
+    humilApplied = true;
+    humilSelecting = false;
+    updateHumilBadge();
+  }
+}
 
   /* Draw offers are unavailable in tournament games. */
 if(row.is_tournament){
@@ -7170,7 +7172,7 @@ function kfStartOptimisticClock(m){
   lastClockAt=Date.now();
   if(onlineGame)onlineGame.turn=game.turn();
 }
-function kfMaybeExecuteLocalPremove(row){
+function kfMaybeExecuteLocalPremove(row,realtimeApplyAt){
   if(!row||!kfPremoveQueued||!game||!currentUser||submittingMove||kfPendingClockMove||
       row.id!==onlineGameId||row.status!=="active"||kfPremoveGameId!==row.id)return;
   var color=row.white_id===currentUser.id?"w":row.black_id===currentUser.id?"b":null;
@@ -7188,7 +7190,13 @@ function kfMaybeExecuteLocalPremove(row){
   selected=null;targets=[];
   var moveStartedAt=performance.now();
   kfStartOptimisticClock(move);
-  draw();
+  // submitMove schedules the board repaint; avoid a redundant synchronous draw
+  // before dispatching the premove request.
+  if(Number.isFinite(realtimeApplyAt)){
+    window.kfPremoveDispatchDiagnostics=window.kfPremoveDispatchDiagnostics||[];
+    window.kfPremoveDispatchDiagnostics.push(Math.round((performance.now()-realtimeApplyAt)*10)/10);
+    if(window.kfPremoveDispatchDiagnostics.length>30)window.kfPremoveDispatchDiagnostics.shift();
+  }
   // To the server this is a regular move with an optional clock minimum.
   submitMove(move,Math.floor(clockWhite),Math.floor(clockBlack),moveStartedAt,true);
   return true;
