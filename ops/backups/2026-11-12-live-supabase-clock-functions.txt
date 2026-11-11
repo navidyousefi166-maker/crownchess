@@ -1,0 +1,498 @@
+-- Snapshot of live Kingsfall clock/move database functions before visual-only change.
+-- Restore individually, not a full database dump. No tables/data included.
+-- FUNCTION kf_clock_sync
+CREATE OR REPLACE FUNCTION public.kf_clock_sync(p_game_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'auth', 'pg_temp'
+AS $function$
+DECLARE
+  g public.kf_games%ROWTYPE;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Please sign in first';
+  END IF;
+  SELECT * INTO g FROM public.kf_games WHERE id=p_game_id;
+  IF NOT FOUND OR auth.uid() NOT IN (g.white_id,g.black_id) THEN
+    RAISE EXCEPTION 'Game not found or not accessible';
+  END IF;
+  RETURN jsonb_build_object(
+    'server_now', clock_timestamp(),
+    'status', g.status,
+    'turn', g.turn,
+    'clock_started_at', g.clock_started_at,
+    'last_move_at', g.last_move_at,
+    'white_time_left', g.white_time_left,
+    'black_time_left', g.black_time_left
+  );
+END;
+$function$
+;
+
+-- FUNCTION kf_commit_fast_move_v1
+CREATE OR REPLACE FUNCTION public.kf_commit_fast_move_v1(p_game_id uuid, p_player_id uuid, p_expected_fen text, p_expected_turn text, p_new_fen text, p_new_pgn text, p_last_move jsonb, p_new_turn text, p_status text, p_result text, p_winner_id uuid, p_move_received_at timestamp with time zone, p_request_id uuid, p_is_premove boolean DEFAULT false)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public', 'kf_audit', 'pg_temp'
+AS $function$
+DECLARE
+ g public.kf_games%ROWTYPE;
+ v_now timestamptz := clock_timestamp();
+ v_anchor timestamptz;
+ v_elapsed numeric(12,3);
+ v_white numeric(12,3);
+ v_black numeric(12,3);
+ v_status text;
+ v_result text;
+ v_winner uuid;
+ v_apply boolean;
+ v_before_pgn text;
+BEGIN
+ IF p_game_id IS NULL OR p_player_id IS NULL OR p_request_id IS NULL
+   OR p_expected_fen IS NULL OR p_new_fen IS NULL OR p_new_pgn IS NULL
+   OR p_last_move IS NULL OR p_move_received_at IS NULL THEN
+   RAISE EXCEPTION 'Missing move data';
+ END IF;
+ IF p_expected_turn NOT IN ('w','b') OR p_new_turn NOT IN ('w','b')
+   OR p_expected_turn = p_new_turn THEN
+   RAISE EXCEPTION 'Invalid turn transition';
+ END IF;
+ IF length(p_new_fen)>250 OR length(p_new_fen)<20 OR length(p_new_pgn)>80000
+   OR jsonb_typeof(p_last_move)<>'object'
+   OR COALESCE(p_last_move->>'from','') !~ '^[a-h][1-8]$'
+   OR COALESCE(p_last_move->>'to','') !~ '^[a-h][1-8]$' THEN
+   RAISE EXCEPTION 'Malformed move data';
+ END IF;
+ IF p_move_received_at > v_now + interval '1 second'
+   OR p_move_received_at < v_now - interval '15 seconds' THEN
+   RAISE EXCEPTION 'Invalid server receipt timestamp';
+ END IF;
+ SELECT * INTO g FROM public.kf_games WHERE id=p_game_id FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Game not found'; END IF;
+ IF g.kf_last_validated_request=p_request_id THEN
+  RETURN jsonb_build_object('status',g.status,'result',g.result,
+   'winner_id',g.winner_id,'white_time_left',g.white_time_left,
+   'black_time_left',g.black_time_left,'last_move_at',g.last_move_at,
+   'clock_started_at',g.clock_started_at,'duplicate',true,
+   'server_received_at',g.last_move_at);
+ END IF;
+ IF g.status<>'active' OR g.fen IS DISTINCT FROM p_expected_fen
+   OR g.turn IS DISTINCT FROM p_expected_turn THEN
+   RAISE EXCEPTION 'Stale game position';
+ END IF;
+ IF p_player_id IS DISTINCT FROM (CASE WHEN g.turn='w' THEN g.white_id ELSE g.black_id END) THEN
+   RAISE EXCEPTION 'Not your turn';
+ END IF;
+ IF NOT EXISTS (
+   SELECT 1 FROM auth.users u WHERE u.id=p_player_id AND u.deleted_at IS NULL
+     AND (u.banned_until IS NULL OR u.banned_until <= clock_timestamp())
+ ) THEN RAISE EXCEPTION 'Not authenticated'; END IF;
+ IF (p_last_move ? 'kf_session_id') THEN
+   IF (p_last_move->>'kf_session_id') IS NULL
+   THEN RAISE EXCEPTION 'Not authenticated'; END IF;
+   IF NOT EXISTS (SELECT 1 FROM auth.sessions s
+       WHERE s.id=(p_last_move->>'kf_session_id')::uuid AND s.user_id=p_player_id
+       AND (s.not_after IS NULL OR s.not_after>clock_timestamp()))
+   THEN RAISE EXCEPTION 'Not authenticated'; END IF;
+ END IF;
+ IF g.is_bloodblade AND ((g.turn='w' AND g.white_handicap IS NULL)
+   OR (g.turn='b' AND g.black_handicap IS NULL)) THEN
+   RAISE EXCEPTION 'Bloodblade sacrifice required';
+ END IF;
+ IF g.clock_started_at IS NULL OR p_move_received_at<g.clock_started_at THEN
+   RAISE EXCEPTION 'Game clock has not started';
+ END IF;
+ IF g.turn='w' AND g.white_first_move_at IS NULL
+   AND p_move_received_at>=g.clock_started_at+interval '20 seconds' THEN
+   RAISE EXCEPTION 'White first-move deadline expired';
+ END IF;
+ IF g.turn='b' AND g.black_first_move_at IS NULL
+   AND (g.last_move_at IS NULL OR p_move_received_at>=g.last_move_at+interval '20 seconds') THEN
+   RAISE EXCEPTION 'Black first-move deadline expired';
+ END IF;
+ v_anchor:=GREATEST(COALESCE(g.last_move_at,g.clock_started_at),g.clock_started_at);
+ IF p_move_received_at < v_anchor THEN RAISE EXCEPTION 'Invalid move timestamp order'; END IF;
+ v_elapsed:=GREATEST(0,extract(epoch FROM (p_move_received_at-v_anchor)))::numeric;
+ -- Every move, including a locally queued premove, receives the same
+ -- 300ms forgiveness. No artificial 200ms premove minimum.
+ v_elapsed:=GREATEST(0,v_elapsed-LEAST(v_elapsed,0.300));
+ v_before_pgn:=g.pgn;
+ v_white:=COALESCE(g.white_time_left,300);
+ v_black:=COALESCE(g.black_time_left,300);
+ v_status:=p_status;v_result:=p_result;v_winner:=p_winner_id;
+ IF g.turn='w' THEN
+   v_white:=GREATEST(0,v_white-v_elapsed);
+   IF v_white=0 THEN v_status:='completed';v_result:='0-1';v_winner:=g.black_id;END IF;
+ ELSE
+   v_black:=GREATEST(0,v_black-v_elapsed);
+   IF v_black=0 THEN v_status:='completed';v_result:='1-0';v_winner:=g.white_id;END IF;
+ END IF;
+ IF v_status NOT IN ('active','completed')
+   OR (v_status='active' AND (v_result IS NOT NULL OR v_winner IS NOT NULL))
+   OR (v_status='completed' AND NOT (
+      (v_result='1-0' AND v_winner=g.white_id) OR
+      (v_result='0-1' AND v_winner=g.black_id) OR
+      (v_result='1/2-1/2' AND v_winner IS NULL))) THEN
+   RAISE EXCEPTION 'Invalid result and winner';
+ END IF;
+ v_apply:=(g.turn='w' AND v_white>0) OR (g.turn='b' AND v_black>0);
+ PERFORM set_config('app.kf_validated_move_v2','on',true);
+ UPDATE public.kf_games SET
+  fen=CASE WHEN v_apply THEN p_new_fen ELSE g.fen END,
+  pgn=CASE WHEN v_apply THEN p_new_pgn ELSE g.pgn END,
+  turn=CASE WHEN v_apply THEN p_new_turn ELSE g.turn END,
+  last_move=CASE WHEN v_apply THEN (p_last_move - 'kf_session_id') ELSE g.last_move END,
+  status=v_status,result=v_result,winner_id=v_winner,
+  white_time_left=v_white,black_time_left=v_black,
+  last_move_at=p_move_received_at,
+  white_first_move_at=CASE WHEN v_apply AND g.turn='w'
+     AND g.white_first_move_at IS NULL THEN p_move_received_at ELSE g.white_first_move_at END,
+  black_first_move_at=CASE WHEN v_apply AND g.turn='b'
+     AND g.black_first_move_at IS NULL THEN p_move_received_at ELSE g.black_first_move_at END,
+  completed_at=CASE WHEN v_status='completed' THEN clock_timestamp() ELSE NULL END,
+  updated_at=v_now,
+  draw_offer_by=NULL,draw_offer_status=NULL,draw_offer_at=NULL,
+  kf_last_validated_request=p_request_id
+ WHERE id=p_game_id
+ RETURNING * INTO g;
+ IF v_apply THEN
+  INSERT INTO kf_audit.move_jobs(
+    game_id,player_id,before_fen,after_fen,before_pgn,after_pgn,move_data,status)
+  VALUES(p_game_id,p_player_id,p_expected_fen,p_new_fen,
+    v_before_pgn,p_new_pgn,(p_last_move - 'kf_session_id'),'pending');
+ END IF;
+ RETURN jsonb_build_object('status',g.status,'result',g.result,
+   'winner_id',g.winner_id,'white_time_left',g.white_time_left,
+   'black_time_left',g.black_time_left,'last_move_at',g.last_move_at,
+   'clock_started_at',g.clock_started_at,
+   'server_received_at',p_move_received_at,'server_completed_at',clock_timestamp());
+END;$function$
+;
+
+-- FUNCTION kf_submit_move
+CREATE OR REPLACE FUNCTION public.kf_submit_move(p_game_id uuid, p_fen text, p_pgn text, p_turn text, p_last_move jsonb, p_status text, p_result text, p_winner_id uuid, p_client_white_time integer, p_client_black_time integer)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'auth', 'pg_temp'
+AS $function$
+DECLARE
+g public.kf_games%ROWTYPE;
+v_expected_turn text;
+v_now timestamptz := clock_timestamp();
+v_anchor timestamptz;
+v_lock_ms numeric;
+v_write_started timestamptz;
+v_write_ms numeric;
+v_elapsed numeric(12,3);
+v_moving_time numeric(12,3);
+v_white numeric(12,3);
+v_black numeric(12,3);
+v_result text;
+v_winner uuid;
+v_status text;
+v_absence jsonb;
+BEGIN
+IF auth.uid() IS NULL THEN
+RAISE EXCEPTION 'Please sign in first';
+END IF;
+
+IF p_turn NOT IN ('w','b') THEN
+RAISE EXCEPTION 'Invalid turn';
+END IF;
+
+IF p_status NOT IN ('active','completed') THEN
+RAISE EXCEPTION 'Invalid game status';
+END IF;
+
+IF p_fen IS NULL OR p_pgn IS NULL OR p_last_move IS NULL THEN
+RAISE EXCEPTION 'Missing move data';
+END IF;
+
+v_expected_turn := CASE WHEN p_turn = 'b' THEN 'w' ELSE 'b' END;
+
+SELECT *
+INTO g
+FROM public.kf_games
+WHERE id = p_game_id
+FOR UPDATE;
+
+v_lock_ms := extract(epoch FROM (clock_timestamp() - v_now)) * 1000;
+IF NOT FOUND THEN
+RAISE EXCEPTION 'Game not found';
+END IF;
+
+IF auth.uid() NOT IN (g.white_id, g.black_id) THEN
+RAISE EXCEPTION 'You are not a player in this game';
+END IF;
+
+IF g.is_bloodblade IS TRUE AND ((v_expected_turn = 'w' AND g.white_handicap IS NULL) OR (v_expected_turn = 'b' AND g.black_handicap IS NULL)) THEN RAISE EXCEPTION 'Bloodblade requires sacrificing a piece before your first move'; END IF;
+IF g.status <> 'active' THEN
+RAISE EXCEPTION 'This game has finished';
+END IF;
+
+-- Check the 20-second absence rule before accepting a move.
+IF g.last_move_at IS NULL
+AND g.created_at IS NOT NULL
+AND clock_timestamp() >= g.created_at + interval '20 seconds'
+THEN
+v_absence := public.kf_resolve_absent_game(p_game_id);
+
+IF COALESCE((v_absence->>'resolved')::boolean, false) THEN
+SELECT *
+INTO g
+FROM public.kf_games
+WHERE id = p_game_id;
+
+RETURN jsonb_build_object(
+'status', g.status,
+'result', g.result,
+'winner_id', g.winner_id,
+'white_time_left', g.white_time_left,
+'black_time_left', g.black_time_left,
+'last_move_at', g.last_move_at,
+'clock_started_at', g.clock_started_at,
+'server_received_at', v_now,
+'server_completed_at', clock_timestamp(),
+'lock_wait_ms', round(v_lock_ms,3),
+'write_ms', round(v_write_ms,3)
+);
+END IF;
+END IF;
+
+IF g.turn <> v_expected_turn THEN
+RAISE EXCEPTION 'The game position has changed';
+END IF;
+
+IF (v_expected_turn = 'w' AND auth.uid() <> g.white_id)
+OR (v_expected_turn = 'b' AND auth.uid() <> g.black_id)
+THEN
+RAISE EXCEPTION 'It is not your turn';
+END IF;
+
+IF g.is_roulette IS TRUE AND g.clock_started_at IS NOT NULL AND clock_timestamp() < g.clock_started_at THEN RAISE EXCEPTION 'Roulette opening animation is still running'; END IF; IF g.clock_started_at IS NULL THEN
+RAISE EXCEPTION 'Waiting for both players to be ready';
+END IF;
+
+v_anchor := COALESCE(g.last_move_at, g.clock_started_at);
+
+v_elapsed := GREATEST(
+0,
+extract(epoch FROM (v_now - v_anchor))::numeric
+);
+
+v_white := COALESCE(g.white_time_left, 300);
+v_black := COALESCE(g.black_time_left, 300);
+
+IF g.turn = 'w' THEN
+v_moving_time := v_white - v_elapsed;
+
+IF v_moving_time <= 0 THEN
+v_white := 0;
+v_result := '0-1';
+v_winner := g.black_id;
+v_status := 'completed';
+ELSE
+v_white := v_moving_time;
+v_status := p_status;
+v_result := p_result;
+v_winner := p_winner_id;
+END IF;
+ELSE
+v_moving_time := v_black - v_elapsed;
+
+IF v_moving_time <= 0 THEN
+v_black := 0;
+v_result := '1-0';
+v_winner := g.white_id;
+v_status := 'completed';
+ELSE
+v_black := v_moving_time;
+v_status := p_status;
+v_result := p_result;
+v_winner := p_winner_id;
+END IF;
+END IF;
+
+IF v_status = 'completed' THEN
+IF v_result IS NULL OR v_result NOT IN ('1-0','0-1','1/2-1/2') THEN
+RAISE EXCEPTION 'Invalid result';
+END IF;
+
+IF v_result = '1-0' AND v_winner IS DISTINCT FROM g.white_id THEN
+RAISE EXCEPTION 'Invalid winner';
+END IF;
+
+IF v_result = '0-1' AND v_winner IS DISTINCT FROM g.black_id THEN
+RAISE EXCEPTION 'Invalid winner';
+END IF;
+
+IF v_result = '1/2-1/2' AND v_winner IS NOT NULL THEN
+RAISE EXCEPTION 'A draw cannot have a winner';
+END IF;
+ELSE
+IF v_result IS NOT NULL OR v_winner IS NOT NULL THEN
+RAISE EXCEPTION 'Active games cannot have a final result';
+END IF;
+END IF;
+
+v_write_started := clock_timestamp();
+UPDATE public.kf_games
+SET
+fen = p_fen,
+pgn = p_pgn,
+turn = p_turn,
+last_move = p_last_move,
+status = v_status,
+result = v_result,
+winner_id = v_winner,
+white_time_left = GREATEST(0, v_white),
+black_time_left = GREATEST(0, v_black),
+last_move_at = v_now,
+completed_at = CASE WHEN v_status = 'completed' THEN v_now ELSE NULL END,
+updated_at = v_now,
+draw_offer_by = NULL,
+draw_offer_status = NULL,
+draw_offer_at = NULL
+WHERE id = p_game_id;
+v_write_ms := extract(epoch FROM (clock_timestamp() - v_write_started)) * 1000;
+
+IF v_status = 'completed' THEN
+DELETE FROM public.kf_match_queue
+WHERE user_id IN (g.white_id, g.black_id);
+END IF;
+
+RETURN jsonb_build_object(
+'status', v_status,
+'result', v_result,
+'winner_id', v_winner,
+'white_time_left', GREATEST(0, v_white),
+'black_time_left', GREATEST(0, v_black),
+'last_move_at', v_now,
+'clock_started_at', g.clock_started_at,
+'server_received_at', v_now,
+'server_completed_at', clock_timestamp(),
+'lock_wait_ms', round(v_lock_ms,3),
+'write_ms', round(v_write_ms,3)
+);
+END;
+$function$
+;
+
+/* EDGE FUNCTION SNAPSHOTS (REFERENCE ONLY: NOT SQL) 
+// kf-submit-fast-v1/index.ts
+import {createClient} from "npm:@supabase/supabase-js@2.95.0";
+const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization,apikey,content-type,x-client-info","Access-Control-Allow-Methods":"POST, OPTIONS","Access-Control-Max-Age":"600"};
+const respond=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,"Content-Type":"application/json"}});
+const isUuid=(v:unknown)=>typeof v==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+const isSq=(v:unknown)=>typeof v==="string"&&/^[a-h][1-8]$/.test(v);
+Deno.serve(async(req:Request)=>{
+ const receivedAt=new Date().toISOString();
+ if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
+ if(req.method!=="POST")return respond({error:"POST required"},405);
+ try{
+  const auth=req.headers.get("Authorization")||"";
+  if(!auth.startsWith("Bearer "))return respond({error:"Not signed in"},401);
+  const input=await req.json();
+  if(!input||!isUuid(input.game_id)||!isUuid(input.request_id)||
+    !isSq(input.from)||!isSq(input.to)||input.from===input.to||
+    typeof input.expected_fen!=="string"||input.expected_fen.length>250||
+    typeof input.fen!=="string"||input.fen.length>250||
+    typeof input.pgn!=="string"||input.pgn.length>80000||
+    !["w","b"].includes(input.turn)||!["active","completed"].includes(input.status)||
+    (input.promotion!==undefined&&!["q","r","b","n"].includes(input.promotion))||
+    typeof input.san!=="string"||input.san.length>40||
+    (input.winner_id!==null&&input.winner_id!==undefined&&!isUuid(input.winner_id)))
+   return respond({error:"Malformed move"},400);
+  const url=Deno.env.get("SUPABASE_URL")||"";
+  const anon=Deno.env.get("SUPABASE_ANON_KEY")||"";
+  const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
+  if(!url||!anon||!secret)return respond({error:"Server configuration unavailable"},503);
+  const authClient=createClient(url,anon,{global:{headers:{Authorization:auth}},auth:{persistSession:false}});
+  // Verify signed JWT claims using the project's JWKS cache when possible.
+  // Account bans and the live session are checked atomically in the database.
+  const {data:identity,error:authError}=await authClient.auth.getClaims(auth.slice(7));
+  const claims=identity?.claims;
+  if(authError||!claims||!isUuid(claims.sub)||!isUuid(claims.session_id)||claims.role!=="authenticated")
+    return respond({error:"Not authenticated"},401);
+  const service=createClient(url,secret,{auth:{persistSession:false}});
+  const turn=input.turn==="w"?"b":"w";
+  const {data,error}=await service.rpc("kf_commit_fast_move_v1",{
+   p_game_id:input.game_id,
+   p_player_id:claims.sub,
+   p_expected_fen:input.expected_fen,
+   p_expected_turn:turn,
+   p_new_fen:input.fen,
+   p_new_pgn:input.pgn,
+   p_last_move:{from:input.from,to:input.to,san:input.san,promotion:input.promotion||null,kf_session_id:claims.session_id},
+   p_new_turn:input.turn,
+   p_status:input.status,p_result:input.result||null,p_winner_id:input.winner_id||null,
+   p_move_received_at:receivedAt,p_request_id:input.request_id,
+   p_is_premove:input.is_premove===true
+  });
+  if(error){
+   const msg=String(error.message||"Commit rejected");
+   return respond({error:/stale|turn|deadline|timestamp|clock|already|finished|not active|Premove/i.test(msg)?msg:"Move could not be committed",code:"MOVE_REJECTED"},409);
+  }
+  return respond(data);
+ }catch(e){
+  console.error("[Kingsfall fast move]",e);
+  return respond({error:"Move service unavailable"},500);
+ }
+});
+// kf-move-audit/index.ts
+import { createClient } from "npm:@supabase/supabase-js@2.49.4";
+import { Chess } from "npm:chess.js@0.10.3";
+
+const url = Deno.env.get("SUPABASE_URL");
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+if (!url || !serviceKey) throw new Error("Supabase worker environment unavailable");
+const db = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+
+function checkMove(job) {
+  const m = job.move_data || {};
+  const before = String(job.before_fen || "");
+  const after = String(job.after_fen || "");
+  if (!/^[a-h][1-8]$/.test(m.from || "") || !/^[a-h][1-8]$/.test(m.to || "")) {
+    return { verdict: "flagged", detail: "Missing or malformed move coordinates" };
+  }
+  if (!before || !after) return { verdict: "review", detail: "Missing board snapshot" };
+  try {
+    const board = new Chess();
+    if (!board.load(before)) return { verdict: "review", detail: "Unrecognized previous FEN; human review" };
+    let promotion = /=[QRBN]/i.exec(String(m.san || ""));
+    let played = board.move({ from: m.from, to: m.to, promotion: promotion ? promotion[0].slice(1).toLowerCase() : "q" });
+    if (!played) return { verdict: "flagged", detail: "Move illegal from authoritative previous FEN" };
+    if (m.san && String(m.san).replace(/[+#?!]/g, "") !== String(played.san).replace(/[+#?!]/g, "")) {
+      return { verdict: "flagged", detail: "Submitted SAN disagrees with legal move" };
+    }
+    if (board.fen() !== after) return { verdict: "flagged", detail: "Resulting FEN differs from server-replayed legal move" };
+    return { verdict: "passed", detail: "Legal move and resulting position verified" };
+  } catch (_e) {
+    return { verdict: "review", detail: "Unexpected validation failure; requires review" };
+  }
+}
+
+Deno.serve(async (req) => {
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  const secret = req.headers.get("x-kf-audit-secret") || "";
+  if (!secret) return new Response("Unauthorized", { status: 401 });
+  const verified = await db.rpc("kf_audit_worker_authorized", { p_secret: secret });
+  if (verified.error || verified.data !== true) return new Response("Unauthorized", { status: 401 });
+  let processed = 0, alerts = 0;
+  for (let i = 0; i < 50; i++) {
+    const claim = await db.rpc("kf_audit_claim_next");
+    if (claim.error) return Response.json({ error: "Audit claim failed", processed }, { status: 500 });
+    const job = claim.data;
+    if (!job || !job.id) break;
+    const result = checkMove(job);
+    const done = await db.rpc("kf_audit_complete", { p_id: job.id, p_verdict: result.verdict, p_detail: result.detail });
+    if (done.error) return Response.json({ error: "Audit result could not be saved", processed }, { status: 500 });
+    processed++;
+    if (result.verdict === "flagged") alerts++;
+  }
+  return Response.json({ processed, alerts });
+});
+*/
