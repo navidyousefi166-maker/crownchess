@@ -3830,6 +3830,11 @@ function applyOnlineGame(row){
     kfPremoveSelected=null;kfPremoveQueued=null;
   }
   kfPremoveGameId=row.id;
+  // Server acknowledgment: a valid premove is already the last move in the
+  // authoritative snapshot, so its existing gold last-move highlight replaces
+  // the blue preview. A rejected premove drops the preview and snaps back.
+  if(!kfPremoveQueued && game && row.fen === game.fen() &&
+     row.last_move_at !== prevLastMoveAt)draw();
 
   /* Humiliation badge for opponent */
   var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap))
@@ -6961,6 +6966,19 @@ function draw(){
       var c = flipped ? 7-vc : vc;
       var s = sq(r, c);
       var p = game.get(s);
+      // Visual-only premove: render the selected piece at its destination
+      // without ever mutating the authoritative chess.js position.
+      var pmColor = onlineGame&&currentUser?
+        (onlineGame.white_id===currentUser.id?"w":onlineGame.black_id===currentUser.id?"b":null):null;
+      var pmPreview = !!(onlineGameId&&onlineGame&&onlineGame.status==="active"&&
+        pmColor&&game.turn()!==pmColor&&kfPremoveQueued&&kfPremoveGameId===onlineGameId);
+      if(pmPreview){
+        var pmPiece = game.get(kfPremoveQueued.from);
+        if(pmPiece&&pmPiece.color===pmColor){
+          if(s===kfPremoveQueued.from)p=null;
+          else if(s===kfPremoveQueued.to)p=pmPiece;
+        }
+      }
       var b = _sqEls[s];
       if(!b) continue;
       b.innerHTML = "";
