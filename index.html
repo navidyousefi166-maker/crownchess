@@ -3824,16 +3824,14 @@ function applyOnlineGame(row){
   var prevLastMoveAt = onlineGame ? onlineGame.last_move_at : null;
   var prevClockStartedAt = onlineGame ? onlineGame.clock_started_at : null;
   var prevConfirmedFen = onlineGame ? onlineGame.fen : null;
+  // Preserve the previous turn before applying the newer server snapshot.
+  var prevClockTurn = onlineGame ? onlineGame.turn : clockPerfTurn;
   // Keep the received server snapshot independent of local optimistic turns.
   onlineGame = Object.assign({},row);
   if(kfPremoveGameId&&kfPremoveGameId!==row.id){kfPremoveSelected=null;kfPremoveQueued=null;}
   if(row.status!=="active"){kfPremoveSelected=null;kfPremoveQueued=null;}
   kfPremoveGameId=row.id;
-  // Server acknowledgment: a valid premove is already the last move in the
-  // authoritative snapshot, so its existing gold last-move highlight replaces
-  // the blue preview. A rejected premove drops the preview and snaps back.
-  if(!kfPremoveQueued && game && row.fen === game.fen() &&
-     row.last_move_at !== prevLastMoveAt)draw();
+  // Paint only after applying the latest board and clock snapshot.
 
   /* Humiliation badge for opponent */
   var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap))
@@ -3859,7 +3857,7 @@ if(row.last_move && (!prevLastMove ||
 if(hasNewMove || row.clock_started_at !== prevClockStartedAt || (row.turn && row.turn !== clockPerfTurn)){
   // Rebase from the authoritative snapshot using monotonic time so the display
   // does not jump when the device wall clock or a delayed realtime event changes.
-  var beforeTurn=onlineGame.turn||clockPerfTurn;
+  var beforeTurn=prevClockTurn||clockPerfTurn;
   var beforeShown=beforeTurn==="w"?clockWhite:clockBlack;
   if(row.white_time_left != null) clockWhite = Number(row.white_time_left);
   if(row.black_time_left != null) clockBlack = Number(row.black_time_left);
@@ -3926,12 +3924,13 @@ if(game && row.fen && game.fen()!==row.fen){
   }
 }
 
-// Validate and execute the queued local premove in the same event loop turn,
-// before the slower side panels and other interface updates.
+// A rejected premove still needs a repaint of the authoritative position.
 var kfHadPremove=!!(kfPremoveQueued && row.status==="active" &&
   currentUser && row.turn===(row.white_id===currentUser.id?"w":"b"));
-if(kfHadPremove) kfMaybeExecuteLocalPremove(row);
-if(kfBoardNeedsDraw && !kfHadPremove)draw();
+var kfPremoveExecuted=kfHadPremove && kfMaybeExecuteLocalPremove(row);
+if(!kfPremoveExecuted &&
+   (kfBoardNeedsDraw || (row.last_move_at!==prevLastMoveAt && game && row.fen===game.fen())))
+  draw();
 
   /* Draw offers are unavailable in tournament games. */
 if(row.is_tournament){
@@ -7182,8 +7181,8 @@ function kfMaybeExecuteLocalPremove(row){
   var move=null;
   try{move=game.move({from:pm.from,to:pm.to,promotion:pm.promotion||"q"});}catch(e){}
   if(!move){
-    // The opponent changed the position; an illegal premove is never sent.
-    draw();return;
+    // No server submission: caller repaints the real board after cancellation.
+    return false;
   }
   last={from:move.from,to:move.to};
   selected=null;targets=[];
@@ -7192,6 +7191,7 @@ function kfMaybeExecuteLocalPremove(row){
   draw();
   // To the server this is a regular move with an optional clock minimum.
   submitMove(move,Math.floor(clockWhite),Math.floor(clockBlack),moveStartedAt,true);
+  return true;
 }
 /* ===== CLICK SQUARE ===== */
 async function clickSquare(s){
