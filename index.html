@@ -7143,7 +7143,7 @@ function kfHandlePremoveSquare(square,color){
   kfPremoveQueued={from:from,to:square,promotion:"q"};
   draw();
 }
-function kfStartOptimisticClock(m,isPremove){
+function kfStartOptimisticClock(m){
   if(!onlineGameId)return;
   kfClockBeforeMove={
     turn:onlineGame?onlineGame.turn:m.color,
@@ -7152,11 +7152,7 @@ function kfStartOptimisticClock(m,isPremove){
   };
   kfPendingClockMove=true;
   kfRunningClockBlend=null;
-  // The premover's clock was stopped before the opponent's move.
-  // Keep the server snapshot until the premove is confirmed; subtracting
-  // delivery latency here creates a false dip and subsequent rebound.
-  // The server still applies its usual 300ms lag forgiveness.
-  if(clockPerfAnchor!=null && !isPremove){
+  if(clockPerfAnchor!=null){
     var perfNow=performance.now();
     var elapsedFromAnchor=Math.max(0,(perfNow-clockPerfAnchor)/1000);
     if(clockPerfTurn==="w"){
@@ -7191,7 +7187,7 @@ function kfMaybeExecuteLocalPremove(row){
   last={from:move.from,to:move.to};
   selected=null;targets=[];
   var moveStartedAt=performance.now();
-  kfStartOptimisticClock(move,true);
+  kfStartOptimisticClock(move);
   draw();
   // To the server this is a regular move with an optional clock minimum.
   submitMove(move,Math.floor(clockWhite),Math.floor(clockBlack),moveStartedAt,true);
