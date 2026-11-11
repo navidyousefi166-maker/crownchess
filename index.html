@@ -1359,6 +1359,9 @@ body.vip-board-lava{--board-light1:#f2d0c2;--board-light2:#e4b5a2;--board-dark1:
 body.vip-board-ivory{--board-light1:#f6f1e3;--board-light2:#ebe2cf;--board-dark1:#8a7a63;--board-dark2:#6e5f4b;--board-border:#6e5f4b}
 body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark1:#c96a4a;--board-dark2:#9d4d34;--board-border:#9d4d34}
 @media(max-width:600px){.vip-studio{padding:14px}.vip-choices{grid-template-columns:repeat(3,minmax(0,1fr))}.vip-studio-head .btn{padding:8px}}
+.square.kf-premove-from { outline:3px solid #64cfff; outline-offset:-3px; }
+.square.kf-premove-to { box-shadow:inset 0 0 0 4px #64cfff; }
+.square.kf-premove-queued { background-image:linear-gradient(#25abff55,#25abff55) !important; }
 </style>
 </head>
 <body>
@@ -3821,6 +3824,12 @@ function applyOnlineGame(row){
   var prevLastMoveAt = onlineGame ? onlineGame.last_move_at : null;
   var prevClockStartedAt = onlineGame ? onlineGame.clock_started_at : null;
   onlineGame = row;
+  if(kfPremoveGameId&&kfPremoveGameId!==row.id){kfPremoveSelected=null;kfPremoveQueued=null;}
+  if((row.last_move_at&&row.last_move_at!==prevLastMoveAt)||row.status!=="active"||
+     (currentUser&&row.turn===(row.white_id===currentUser.id?"w":"b"))){
+    kfPremoveSelected=null;kfPremoveQueued=null;
+  }
+  kfPremoveGameId=row.id;
 
   /* Humiliation badge for opponent */
   var oppHadHcp = (fsPlayerColor === "w" && isValidHcp(row.black_handicap))
@@ -6956,6 +6965,11 @@ function draw(){
       if(!b) continue;
       b.innerHTML = "";
       b.classList.toggle("selected", selected === s);
+      var pmVisible=!!(onlineGameId&&onlineGame&&currentUser&&onlineGame.status==="active"&&
+        (onlineGame.white_id===currentUser.id?"w":onlineGame.black_id===currentUser.id?"b":null)!==game.turn());
+      b.classList.toggle("kf-premove-from",pmVisible&&kfPremoveSelected===s);
+      b.classList.toggle("kf-premove-to",pmVisible&&!!kfPremoveQueued&&kfPremoveQueued.to===s);
+      b.classList.toggle("kf-premove-queued",pmVisible&&!!kfPremoveQueued&&kfPremoveQueued.from===s);
       b.classList.remove("humil-dim", "humil-target");
       b.style.backgroundImage = "";
       if(humilSelecting){
@@ -7014,6 +7028,45 @@ function updateHistory(){
   historyEl.scrollTop = historyEl.scrollHeight;
 }
 
+/* ===== Premove: one queued move, with the server as sole authority ===== */
+var kfPremoveSelected=null,kfPremoveQueued=null,kfPremoveBusy=false,kfPremoveGameId=null;
+async function kfPremoveRequest(payload,id){
+  var reply=await sb.functions.invoke("kf-premove",{body:Object.assign({game_id:id},payload)});
+  if(reply.error){
+    var message=reply.error.message||"Premove request failed";
+    if(reply.error.context&&typeof reply.error.context.json==="function"){
+      try{var detail=await reply.error.context.json();if(detail&&detail.error)message=detail.error;}catch(ignore){}
+    }
+    throw new Error(message);
+  }
+  return reply.data;
+}
+async function kfHandlePremoveSquare(square,color){
+  if(!onlineGameId||!onlineGame||onlineGame.status!=="active"||kfPremoveBusy)return;
+  var id=onlineGameId;
+  if(kfPremoveGameId!==id){kfPremoveGameId=id;kfPremoveSelected=null;kfPremoveQueued=null;}
+  var piece=game.get(square);
+  if(square===kfPremoveSelected){kfPremoveSelected=null;draw();return;}
+  if(!kfPremoveSelected&&kfPremoveQueued&&(square===kfPremoveQueued.from||square===kfPremoveQueued.to)){
+    kfPremoveBusy=true;
+    try{await kfPremoveRequest({clear:true},id);if(onlineGameId===id)kfPremoveQueued=null;}
+    catch(e){say("Premove cancellation failed: "+e.message,{error:true});}
+    finally{kfPremoveBusy=false;if(onlineGameId===id)draw();}
+    return;
+  }
+  if(piece&&piece.color===color){kfPremoveSelected=square;draw();return;}
+  if(!kfPremoveSelected)return;
+  var from=kfPremoveSelected;kfPremoveSelected=null;kfPremoveBusy=true;draw();
+  try{
+    await kfPremoveRequest({from:from,to:square,promotion:"q"},id);
+    if(onlineGameId===id&&onlineGame&&onlineGame.status==="active"&&onlineGame.turn!==color){
+      kfPremoveQueued={from:from,to:square};
+      say("Premove queued. Tap a marked square to cancel.",{silentToast:true});
+    }else if(onlineGameId===id){syncGameState(id);}
+  }catch(e){
+    if(onlineGameId===id){kfPremoveQueued=null;say("Premove rejected: "+e.message,{error:true});syncGameState(id);}
+  }finally{kfPremoveBusy=false;if(onlineGameId===id)draw();}
+}
 /* ===== CLICK SQUARE ===== */
 async function clickSquare(s){
   if(!game) return;
@@ -7082,10 +7135,12 @@ async function clickSquare(s){
       if(onlineGame.white_id === currentUser.id) myColor = "w";
       else if(onlineGame.black_id === currentUser.id) myColor = "b";
     }
-    if(!myColor || game.turn() !== myColor){
-      say("It's your opponent's turn.", {silentToast: true});
+    if(!myColor){
+      say("Only players may move.",{silentToast:true});
       return;
     }
+    if(game.turn()!==myColor){await kfHandlePremoveSquare(s,myColor);return;}
+    if(kfPremoveSelected||kfPremoveQueued){kfPremoveSelected=null;kfPremoveQueued=null;}
   }
 
   var p = game.get(s);
