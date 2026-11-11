@@ -7049,23 +7049,46 @@ async function kfHandlePremoveSquare(square,color){
   if(square===kfPremoveSelected){kfPremoveSelected=null;draw();return;}
   if(!kfPremoveSelected&&kfPremoveQueued&&(square===kfPremoveQueued.from||square===kfPremoveQueued.to)){
     kfPremoveBusy=true;
-    try{await kfPremoveRequest({clear:true},id);if(onlineGameId===id)kfPremoveQueued=null;}
-    catch(e){say("Premove cancellation failed: "+e.message,{error:true});}
+    var previousQueued=kfPremoveQueued;
+    kfPremoveQueued=null;
+    draw(); // Remove blue highlights immediately; server confirmation follows.
+    try{await kfPremoveRequest({clear:true},id);}
+    catch(e){
+      if(onlineGameId===id&&onlineGame&&onlineGame.status==="active"&&onlineGame.turn!==color){
+        kfPremoveQueued=previousQueued;
+      }
+      say("Premove cancellation failed: "+e.message,{error:true});
+    }
     finally{kfPremoveBusy=false;if(onlineGameId===id)draw();}
     return;
   }
   if(piece&&piece.color===color){kfPremoveSelected=square;draw();return;}
   if(!kfPremoveSelected)return;
-  var from=kfPremoveSelected;kfPremoveSelected=null;kfPremoveBusy=true;draw();
+  var from=kfPremoveSelected;
+  kfPremoveSelected=null;
+  kfPremoveBusy=true;
+  // Optimistic UI: show the chosen premove on this very tap, not after
+  // the network round-trip. This does not move a piece or change the clock.
+  kfPremoveQueued={from:from,to:square};
+  draw();
   try{
     await kfPremoveRequest({from:from,to:square,promotion:"q"},id);
     if(onlineGameId===id&&onlineGame&&onlineGame.status==="active"&&onlineGame.turn!==color){
-      kfPremoveQueued={from:from,to:square};
       say("Premove queued. Tap a marked square to cancel.",{silentToast:true});
-    }else if(onlineGameId===id){syncGameState(id);}
+    }else if(onlineGameId===id){
+      kfPremoveQueued=null;
+      syncGameState(id);
+    }
   }catch(e){
-    if(onlineGameId===id){kfPremoveQueued=null;say("Premove rejected: "+e.message,{error:true});syncGameState(id);}
-  }finally{kfPremoveBusy=false;if(onlineGameId===id)draw();}
+    if(onlineGameId===id){
+      kfPremoveQueued=null;
+      say("Premove rejected: "+e.message,{error:true});
+      syncGameState(id);
+    }
+  }finally{
+    kfPremoveBusy=false;
+    if(onlineGameId===id)draw();
+  }
 }
 /* ===== CLICK SQUARE ===== */
 async function clickSquare(s){
