@@ -82,6 +82,15 @@ header.topnav{
 .topnav-right{display:flex;gap:8px;align-items:center;flex:none}
 .get-vip-btn{border:1px solid var(--gold);border-radius:10px;padding:9px 11px;background:linear-gradient(135deg,rgba(237,197,107,.19),rgba(215,163,62,.08));color:var(--gold2);font-weight:800;font-size:11px;font-family:inherit;letter-spacing:.6px;white-space:nowrap;cursor:pointer;box-shadow:0 0 10px rgba(237,197,107,.13);transition:filter .2s,box-shadow .2s}
 .get-vip-btn:hover,.get-vip-btn:focus-visible{filter:brightness(1.15);box-shadow:0 0 13px rgba(237,197,107,.32)}
+/* Subtle double-beat heartbeat for the Home Get VIP button; transform avoids layout shifts. */
+.get-vip-btn{transform-origin:center;animation:kfVipHeartbeat 2.4s ease-in-out infinite;will-change:transform}
+@keyframes kfVipHeartbeat{
+  0%,12%,30%,100%{transform:scale(1)}
+  6%{transform:scale(1.09)}
+  20%{transform:scale(1.055)}
+}
+@media(prefers-reduced-motion:reduce){.get-vip-btn{animation:none;will-change:auto}}
+
 @media(max-width:600px){.get-vip-btn{padding:8px 7px;font-size:10px;letter-spacing:0}}
 @media(max-width:700px){
   .topnav-left{gap:10px}
