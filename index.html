@@ -3469,9 +3469,7 @@ async function joinTournamentGame(gameId, skipIntro){
     .subscribe(function(status){
       if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
         console.warn("Game channel issue:", status);
-        setTimeout(function(){
-          if(onlineGameId === gameId) reloadGameState(gameId);
-        }, 2000);
+        kfScheduleGameStateRecovery(gameId);
       }
     });
   return true;
@@ -3488,30 +3486,39 @@ async function syncGameState(gameId) {
     }
   } catch(e){ console.warn("sync error:", e); }
   }
+// Realtime channels reconnect internally. Fetching a fresh game snapshot must
+// not tear down and recreate the channel: that caused repeated socket joins.
+var kfGameRecoveryTimer=null;
+var kfGameReloadPromise=null;
+var kfGameReloadId=null;
+function kfScheduleGameStateRecovery(gameId){
+  if(!sb || !gameId || onlineGameId!==gameId || kfGameRecoveryTimer!=null) return;
+  kfGameRecoveryTimer=setTimeout(function(){
+    kfGameRecoveryTimer=null;
+    if(onlineGameId===gameId) reloadGameState(gameId);
+  },2000);
+}
 async function reloadGameState(gameId){
-  if(!sb || onlineGameId !== gameId) return;
-  try{
-    var res = await sb.from("kf_games").select("*").eq("id", gameId).maybeSingle();
-    if(res.error || !res.data) return;
-    applyOnlineGame(res.data);
-    if(gameChannel && sb){
-      try { sb.removeChannel(gameChannel); } catch(e){}
-      gameChannel = null;
-    }
-    gameChannel = sb.channel("kf-game-" + gameId)
-      .on("postgres_changes", {event:"UPDATE", schema:"public", table:"kf_games", filter:"id=eq." + gameId}, function(payload){ applyOnlineGame(payload.new); })
-      .subscribe(function(status){
-        if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
-          console.warn("Game channel issue:", status);
-          setTimeout(function(){
-            if(onlineGameId === gameId) reloadGameState(gameId);
-          }, 2000);
-        }
-      });
-    console.log("Game state reloaded successfully");
-  } catch(e){
-    console.warn("reloadGameState error:", e);
-  }
+  if(!sb || onlineGameId!==gameId) return;
+  if(kfGameReloadPromise && kfGameReloadId===gameId) return kfGameReloadPromise;
+  kfGameReloadId=gameId;
+  var requestGeneration=gameSyncGeneration;
+  var promise=(async function(){
+    try{
+      var res=await sb.from("kf_games").select("*").eq("id",gameId).maybeSingle();
+      if(res.error || !res.data){
+        if(res.error)console.warn("reloadGameState error:",res.error);
+        return;
+      }
+      // A server read is only a state refresh; existing Realtime subscription
+      // survives and the SDK handles transient socket reconnections.
+      if(onlineGameId===gameId && !submittingMove && !kfPendingClockMove &&
+         requestGeneration===gameSyncGeneration) applyOnlineGame(res.data);
+    }catch(e){console.warn("reloadGameState error:",e);}
+  })();
+  kfGameReloadPromise=promise;
+  try{await promise;}
+  finally{if(kfGameReloadPromise===promise){kfGameReloadPromise=null;kfGameReloadId=null;}}
 }
 // When a backgrounded game returns to the foreground, re-read the server state.
 // The full reconnect recovery below handles requests that remained stuck during an outage.
