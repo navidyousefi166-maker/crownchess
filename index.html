@@ -1989,19 +1989,7 @@ body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark
 var SUPABASE_URL = "https://cyqactlxetfjyjvklpox.supabase.co";
 var SUPABASE_KEY = "sb_publishable_5kPdWhNs53AY_PB29pRGBw_pvXiB0_k";
 var REDIRECT = "https://navidyousefi166-maker.github.io/crownchess/";
-var kfMoveTrace = null;
-// Measure dispatch after Supabase has finished obtaining the session token.
-// Keep only numeric timings, never credentials, request bodies or player IDs.
-function kfTimedFetch(input, init){
-  var url = typeof input === "string" ? input : input.url;
-  var trace = /\/functions\/v1\/kf-submit-fast-v1(?:\?|$)/.test(url) ? kfMoveTrace : null;
-  if(trace){ trace.fetchStart = performance.now(); trace.fetchWall = Date.now(); }
-  return fetch(input, init).then(function(response){
-    if(trace) trace.headersAt = performance.now();
-    return response;
-  });
-}
-var sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {global:{fetch:kfTimedFetch}}) : null;
+var sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 function $(id){ return document.getElementById(id); }
 
@@ -3820,7 +3808,6 @@ if(currentGameIsRoulette){
 
 function applyOnlineGame(row){
   if(!row || row.id !== onlineGameId) return;
-  var kfRealtimeApplyAt = performance.now();
   // The database already contains the complete opening; keep its snapshot
   // from replacing the board while the six moves are being animated locally.
   if(rouletteOpeningAnimating) return;
@@ -3909,7 +3896,7 @@ if(game && row.fen && game.fen()!==row.fen){
 // A rejected premove still needs a repaint of the authoritative position.
 var kfHadPremove=!!(kfPremoveQueued && row.status==="active" &&
   currentUser && row.turn===(row.white_id===currentUser.id?"w":"b"));
-var kfPremoveExecuted=kfHadPremove && kfMaybeExecuteLocalPremove(row,kfRealtimeApplyAt);
+var kfPremoveExecuted=kfHadPremove && kfMaybeExecuteLocalPremove(row);
 if(!kfPremoveExecuted &&
    (kfBoardNeedsDraw || (row.last_move_at!==prevLastMoveAt && game && row.fen===game.fen())))
   draw();
@@ -6459,16 +6446,11 @@ function updateEvalBar(idx){
   $("anEvalLabel").textContent = label;
   }
   /* ===== UNIFIED submitMove (FIX: try/finally + tournament ordering) ===== */
-async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove, premoveTiming){
+async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove){
   if(!sb || !onlineGameId || !onlineGame) return;
   if(submittingMove) return;
   submittingMove = true;
   var submittedGameId = onlineGameId;
-  var kfMoveRpcStart = performance.now();
-  var kfMoverColor = m.color === "w" ? "white" : "black";
-  var kfClockAtTap = kfMoverColor === "white" ? clockWhite : clockBlack;
-  var trace = {tapAt: moveStartedAt == null ? kfMoveRpcStart : moveStartedAt};
-  kfMoveTrace = trace;
   // Yield the expensive board/history paint until the RPC has started.
   var optimisticPaint = setTimeout(function(){
     optimisticPaint = null;
@@ -6521,42 +6503,6 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove,
         if(rejected && rejected.error) res.error.message = rejected.error;
       }catch(e){}
     }
-    var responseAt = performance.now();
-    var receivedAt = res.data && Date.parse(res.data.server_received_at);
-    var completedAt = res.data && Date.parse(res.data.server_completed_at);
-    var serverMs = Number.isFinite(receivedAt) && Number.isFinite(completedAt) ? Math.max(0, completedAt-receivedAt) : null;
-    var traceResult = {
-      version: 2,
-      prepareMs: Math.round((trace.fetchStart || responseAt)-trace.tapAt),
-      roundTripMs: trace.fetchStart == null ? null : Math.round(responseAt-trace.fetchStart),
-      serverMs: serverMs,
-      lockMs: res.data && res.data.lock_wait_ms != null ? Number(res.data.lock_wait_ms) : null,
-      writeMs: res.data && res.data.write_ms != null ? Number(res.data.write_ms) : null,
-      adjustmentMs: res.data ? Math.round((kfClockAtTap-Number(kfMoverColor === "white" ? res.data.white_time_left : res.data.black_time_left))*1000) : null,
-      ok: !res.error
-    };
-    if(isPremove===true && premoveTiming){
-      var realtimeApproxMs=premoveTiming.serverMoveAt?Math.round(premoveTiming.realtimeReceivedWall-premoveTiming.serverMoveAt):null;
-      var networkOtherMs=traceResult.roundTripMs!=null&&serverMs!=null?Math.round(traceResult.roundTripMs-serverMs):null;
-      var premoveSample={
-        move:premoveTiming.move,
-        serverToRealtimeApproxMs:realtimeApproxMs,
-        localDispatchMs:premoveTiming.localDispatchMs,
-        clientPrepareMs:traceResult.prepareMs,
-        httpRoundTripMs:traceResult.roundTripMs,
-        serverProcessingMs:serverMs,
-        httpOtherMs:networkOtherMs,
-        success:!res.error
-      };
-      window.kfPremoveTimeline=window.kfPremoveTimeline||[];
-      window.kfPremoveTimeline.push(premoveSample);
-      if(window.kfPremoveTimeline.length>30)window.kfPremoveTimeline.shift();
-      console.debug("[Kingsfall premove timing]",premoveSample);
-    }
-    window.kfClockDiagnostics = window.kfClockDiagnostics || [];
-    window.kfClockDiagnostics.push(traceResult);
-    if(window.kfClockDiagnostics.length > 30) window.kfClockDiagnostics.shift();
-    console.debug("[Kingsfall clock]", traceResult);
     if(onlineGameId !== submittedGameId) return;
     if(optimisticPaint != null){
       clearTimeout(optimisticPaint);
@@ -6621,14 +6567,6 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove,
     clockExpired = false;
     clockWhite = Number(res.data.white_time_left);
     clockBlack = Number(res.data.black_time_left);
-    var kfRpcDuration = performance.now() - kfMoveRpcStart;
-    var kfConfirmedTime = kfMoverColor === "white" ? clockWhite : clockBlack;
-    var kfAdjustment = kfClockAtTap - kfConfirmedTime;
-    // This difference is diagnostic only. Never animate the stopped clock,
-    // modify authoritative time, or compensate using untrusted client time.
-    if(kfRpcDuration >= 150){
-      console.debug("[Kingsfall clock] move RPC:",Math.round(kfRpcDuration)+"ms","server adjustment:",Math.round(kfAdjustment*1000)+"ms");
-    }
     // Blend only the newly running side. The stopped mover stays exact.
     kfPendingClockMove=false;
     clockPerfBaseWhite=clockWhite;clockPerfBaseBlack=clockBlack;
@@ -6653,7 +6591,6 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove,
     console.warn("[Kingsfall clock] move request failed",err);
   } finally {
     if(optimisticPaint != null) clearTimeout(optimisticPaint);
-    if(kfMoveTrace === trace) kfMoveTrace = null;
     submittingMove=false;kfPendingClockMove=false;kfClockBeforeMove=null;
     // Reconcile once with the server after ignored in-flight/realtime snapshots.
     if(onlineGameId === submittedGameId){
@@ -7204,7 +7141,7 @@ function kfStartOptimisticClock(m){
   lastClockAt=Date.now();
   if(onlineGame)onlineGame.turn=game.turn();
 }
-function kfMaybeExecuteLocalPremove(row,realtimeApplyAt){
+function kfMaybeExecuteLocalPremove(row){
   if(!row||!kfPremoveQueued||!game||!currentUser||submittingMove||kfPendingClockMove||
       row.id!==onlineGameId||row.status!=="active"||kfPremoveGameId!==row.id)return;
   var color=row.white_id===currentUser.id?"w":row.black_id===currentUser.id?"b":null;
@@ -7224,19 +7161,8 @@ function kfMaybeExecuteLocalPremove(row,realtimeApplyAt){
   kfStartOptimisticClock(move);
   // submitMove schedules the board repaint; avoid a redundant synchronous draw
   // before dispatching the premove request.
-  if(Number.isFinite(realtimeApplyAt)){
-    window.kfPremoveDispatchDiagnostics=window.kfPremoveDispatchDiagnostics||[];
-    window.kfPremoveDispatchDiagnostics.push(Math.round((performance.now()-realtimeApplyAt)*10)/10);
-    if(window.kfPremoveDispatchDiagnostics.length>30)window.kfPremoveDispatchDiagnostics.shift();
-  }
   // To the server this is a regular move with an optional clock minimum.
-  var premoveTiming={
-    move:move.san,
-    serverMoveAt:row.last_move_at?Date.parse(row.last_move_at):null,
-    realtimeReceivedWall:Date.now()-Math.max(0,performance.now()-realtimeApplyAt),
-    localDispatchMs:Number.isFinite(realtimeApplyAt)?Math.round((performance.now()-realtimeApplyAt)*10)/10:null
-  };
-  submitMove(move,Math.floor(clockWhite),Math.floor(clockBlack),moveStartedAt,true,premoveTiming);
+  submitMove(move,Math.floor(clockWhite),Math.floor(clockBlack),moveStartedAt,true);
   return true;
 }
 /* ===== CLICK SQUARE ===== */
