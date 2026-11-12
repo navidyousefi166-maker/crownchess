@@ -392,8 +392,8 @@ BEGIN
          IF nextgame.status<>'active' THEN
            explanation:='Next game already finished or is not active; admin review required';
          ELSIF NOT COALESCE(nextgame.is_tournament,false)
-            OR nextgame.white_id IS DISTINCT FROM ALL(ARRAY[s.player_id,opponent])
-            OR nextgame.black_id IS DISTINCT FROM ALL(ARRAY[s.player_id,opponent])
+            OR NOT (nextgame.white_id = ANY(ARRAY[s.player_id,opponent]))
+            OR NOT (nextgame.black_id = ANY(ARRAY[s.player_id,opponent]))
             OR nextgame.white_id=nextgame.black_id THEN
            explanation:='Next-game participants do not match sanctioned pairing; admin review';
          ELSE
