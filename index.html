@@ -6452,8 +6452,10 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
   if(submittingMove) return;
   submittingMove = true;
   var submittedGameId = onlineGameId;
-  // Yield the expensive board/history paint until the RPC has started.
-  var optimisticPaint = setTimeout(function(){
+  // A premove has already painted its affected squares synchronously.
+  // Avoid a second full 64-square redraw before the server has responded.
+  // Normal moves continue to use their existing optimistic paint.
+  var optimisticPaint = isPremove===true ? null : setTimeout(function(){
     optimisticPaint = null;
     if(onlineGameId !== submittedGameId) return;
     say(m.san, {silentToast:true});
@@ -6513,6 +6515,11 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
       clearTimeout(optimisticPaint);
       optimisticPaint = null;
       if(!res.error){ say(m.san, {silentToast:true}); draw(); updateHumilBadge(); }
+    }else if(isPremove===true && !res.error){
+      // Reconcile check markers, history, and all UI after the fast partial paint.
+      say(m.san, {silentToast:true});
+      draw();
+      updateHumilBadge();
     }
     
     if(res.error){
