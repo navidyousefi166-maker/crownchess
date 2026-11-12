@@ -5910,6 +5910,12 @@ async function runAnalysisWorkerPool(items,runId,readyAuxIndices,work,retry){
   var next=0,completed=0,results=new Array(items.length),retryList=[];
   async function runner(engineIndex){
     while(analysisRunning&&runId===analysisRunId){
+      // A dead auxiliary engine must not drain the queue with null results.
+      // Leave remaining work for the primary and other healthy engines.
+      if(engineIndex>0){
+        var aux=analysisAuxEngines[engineIndex-1];
+        if(!aux||!aux.alive())break;
+      }
       var idx=next++;
       if(idx>=items.length)break;
       var value=null;
@@ -6427,7 +6433,7 @@ function analyzeFenPromise(fen, moveTime, runId, multiPV, searchMoves){
         }
         finish({best: null, score: null, depth: -1});
       }, 1200);
-    }, 5000);
+    }, moveTime + 500);
   });
 }
 
