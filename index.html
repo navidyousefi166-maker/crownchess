@@ -3810,30 +3810,6 @@ if(currentGameIsRoulette){
 
 // The newest realtime snapshot may arrive before our previous RPC completes.
 // Keep it instead of discarding it and waiting for another network fetch.
-/* Opt-in premove latency probe; no network calls or gameplay mutations. */
-var kfPremoveTrace=null;
-window.kfPremoveProbe={
-  enabled:false,results:[],
-  start:function(){this.enabled=true;this.results=[];kfPremoveTrace=null;console.log("[KF PROBE] ON — queue a premove, then let the opponent move.");},
-  stop:function(){this.enabled=false;kfPremoveTrace=null;console.log("[KF PROBE] OFF");},
-  report:function(){console.table(this.results);return this.results;}
-};
-function kfProbeArrival(row){
-  if(!window.kfPremoveProbe.enabled||!kfPremoveQueued||!currentUser||!row||
-     row.id!==onlineGameId||row.status!=="active"||!row.last_move_at||
-     row.turn!==(row.white_id===currentUser.id?"w":"b"))return;
-  if(kfPremoveTrace&&kfPremoveTrace.moveAt===row.last_move_at)return;
-  var at=performance.now();
-  var estimatedServerToPhone=Date.now()+(kfServerOffsetKnown?kfServerOffsetMs:0)-Date.parse(row.last_move_at);
-  kfPremoveTrace={gameId:row.id,moveAt:row.last_move_at,arrival:at,
-    serverToPhoneApproxMs:Math.round(estimatedServerToPhone),
-    blockedAtArrival:!!(submittingMove||kfPendingClockMove),
-    applyCount:0};
-  console.log("[KF PROBE] opponent update received",{
-    serverToPhoneApproxMs:kfPremoveTrace.serverToPhoneApproxMs,
-    blockedAtArrival:kfPremoveTrace.blockedAtArrival
-  });
-}
 var kfDeferredGameRow=null;
 function kfDrainDeferredGameRow(){
   var row=kfDeferredGameRow;
@@ -3843,7 +3819,6 @@ function kfDrainDeferredGameRow(){
 }
 function applyOnlineGame(row){
   if(!row || row.id !== onlineGameId) return;
-  if(window.kfPremoveProbe.enabled)kfProbeArrival(row);
   // The database already contains the complete opening; keep its snapshot
   // from replacing the board while the six moves are being animated locally.
   if(rouletteOpeningAnimating) return;
@@ -7241,7 +7216,6 @@ function kfPaintPremoveSquaresImmediately(row,pm){
   }
 }
 function kfMaybeExecuteLocalPremove(row){
-  if(window.kfPremoveProbe.enabled&&kfPremoveTrace&&row&&row.id===kfPremoveTrace.gameId)kfPremoveTrace.applyCount++;
   if(!row||!kfPremoveQueued||!game||!currentUser||submittingMove||kfPendingClockMove||
       row.id!==onlineGameId||row.status!=="active"||kfPremoveGameId!==row.id)return;
   var color=row.white_id===currentUser.id?"w":row.black_id===currentUser.id?"b":null;
@@ -7261,27 +7235,10 @@ function kfMaybeExecuteLocalPremove(row){
   kfStartOptimisticClock(move);
   // Show the actual premove on the board before any async RPC work.
   // The following submitMove still schedules the complete paint.
-  var kfProbePaintStart=window.kfPremoveProbe.enabled&&kfPremoveTrace?performance.now():0;
   kfPaintPremoveSquaresImmediately(row,pm);
-  if(kfProbePaintStart)kfPremoveTrace.paintMs=performance.now()-kfProbePaintStart;
   // submitMove schedules the board repaint; avoid a redundant synchronous draw
   // before dispatching the premove request.
   // To the server this is a regular move with an optional clock minimum.
-  if(window.kfPremoveProbe.enabled&&kfPremoveTrace){
-    var trace=kfPremoveTrace;
-    var sample={
-      serverToPhoneApproxMs:trace.serverToPhoneApproxMs,
-      arrivalToPaintMs:Math.round((performance.now()-trace.arrival)*10)/10,
-      paintWorkMs:Math.round((trace.paintMs||0)*10)/10,
-      arrivalToSubmitMs:Math.round((performance.now()-trace.arrival)*10)/10,
-      blockedAtArrival:trace.blockedAtArrival,
-      applyAttempts:trace.applyCount,
-      move:pm.from+"-"+pm.to
-    };
-    window.kfPremoveProbe.results.push(sample);
-    console.log("[KF PROBE] PREMOVE TIMING",sample);
-    kfPremoveTrace=null;
-  }
   submitMove(move,Math.floor(clockWhite),Math.floor(clockBlack),moveStartedAt,true);
   return true;
 }
