@@ -6746,6 +6746,10 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
     kfRunningClockBlend=null;
     // ✅ سرور زمان دقیق رو برگردوند، ما هم همون رو ذخیره می‌کنیم
     onlineGame.turn = game.turn();
+    // Keep the confirmed position in sync for the next fast move/premove.
+    // This is only reached after the server accepts the move; deferred
+    // Realtime snapshots are reconciled in finally below.
+    onlineGame.fen = game.fen();
     onlineGame.white_time_left = res.data.white_time_left;
     onlineGame.black_time_left = res.data.black_time_left;
     onlineGame.last_move = {from: m.from, to: m.to, san: m.san};
