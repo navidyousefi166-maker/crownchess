@@ -38,7 +38,7 @@ Deno.serve(async(req:Request)=>{
   if(authError||!claims||!uuid(claims.sub)||!uuid(claims.session_id)||claims.role!=="authenticated")
     return reply({error:"Not authenticated"},401);
   const db=createClient(url,secret,{auth:{persistSession:false}});
-  const {data:g,error:readError}=await db.from("kf_games")
+  const {data:g,error:readError}=await userClient.from("kf_games")
     .select("id,white_id,black_id,status,turn,fen,pgn")
     .eq("id",input.game_id).maybeSingle();
   if(readError||!g) return reply({error:"Game unavailable"},404);
