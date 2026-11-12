@@ -1,0 +1,14 @@
+BEGIN;
+GRANT EXECUTE ON FUNCTION public.kf_apply_humiliation(p_game_id uuid, p_square text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_cancel_quick_play() TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_cancel_tournament_registration() TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_ensure_match_game(p_match_id uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_get_my_history(p_limit integer) TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_get_next_tournament() TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_join_bloodblade() TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_join_quick_play(p_is_roulette boolean) TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_offer_draw(p_game_id uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_player_joined_game(p_game_id uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_register_tournament() TO service_role;
+GRANT EXECUTE ON FUNCTION public.kf_report_match_result(p_match_id uuid, p_winner_id uuid) TO service_role;
+COMMIT;
