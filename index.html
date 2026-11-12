@@ -2297,6 +2297,19 @@ var kfClockSyncTimer=null, kfPendingClockMove=false, kfClockBeforeMove=null;
 // A visual-only phase correction for the running clock. The server's remaining
 // time is never modified, and timeout decisions use the unsmoothed time.
 var kfRunningClockBlend=null;
+// Browser-first display clock. Never add time to a visible clock within the
+// same game; the database values remain authoritative for timeout and scoring.
+var kfVisibleClockState={gameId:null,white:null,black:null};
+function kfNoUpwardClock(color,value){
+  if(!onlineGameId||!onlineGame||computerMode)return value;
+  if(kfVisibleClockState.gameId!==onlineGameId){
+    kfVisibleClockState={gameId:onlineGameId,white:null,black:null};
+  }
+  var prior=kfVisibleClockState[color],next=Math.max(0,Number(value)||0);
+  if(prior!=null)next=Math.min(next,prior);
+  kfVisibleClockState[color]=next;
+  return next;
+}
 function kfAuthoritativeRunningClock(now){
   if(!onlineGame || clockPerfAnchor==null)return null;
   var turn=onlineGame.turn||clockPerfTurn||"w";
@@ -2602,9 +2615,13 @@ function paintClocks(){
   var canRun = game && !clockExpired && !game.game_over();
   var displayTurn = (onlineGameId && onlineGame && onlineGame.turn) ? onlineGame.turn : (game ? game.turn() : "w");
   var colors = ["white", "black"];
+  // Clamp only the rendered clocks: never feed display-only values into the
+  // official clock calculation or the authenticated server move payload.
+  var visibleWhite=kfNoUpwardClock("white",clockWhite);
+  var visibleBlack=kfNoUpwardClock("black",clockBlack);
   for(var i=0;i<colors.length;i++){
     var color = colors[i];
-    var val = color === "white" ? clockWhite : clockBlack;
+    var val = color === "white" ? visibleWhite : visibleBlack;
     var ids = [color + "Clock", color + "ClockMobile"];
     for(var j=0;j<ids.length;j++){
       var el = $(ids[j]);
@@ -2621,9 +2638,9 @@ function paintClocks(){
   }
   if(document.body.classList.contains("game-focus")){
     var topColor = fsPlayerColor === "w" ? "black" : "white";
-    var topVal = topColor === "white" ? clockWhite : clockBlack;
+    var topVal = topColor === "white" ? visibleWhite : visibleBlack;
     var botColor = fsPlayerColor === "w" ? "white" : "black";
-    var botVal = botColor === "white" ? clockWhite : clockBlack;
+    var botVal = botColor === "white" ? visibleWhite : visibleBlack;
     var topEl = $("gfsTopClock"), botEl = $("gfsBotClock");
     if(topEl){
       topEl.textContent = fmtClockTenths(topVal);
@@ -2667,6 +2684,7 @@ function resetClocks(){
   clockPerfAnchor=null;
   kfPendingClockMove=false;kfClockBeforeMove=null;
   kfRunningClockBlend=null;
+  kfVisibleClockState={gameId:null,white:null,black:null};
   kfServerOffsetKnown=false;kfServerOffsetMs=0;
   firstMoveDeadlineAnchor=null;
   firstMoveDeadlinePerfAnchor = null;
@@ -4021,9 +4039,10 @@ function tickClock(){
   if(computerMode || !game || (game.game_over() && !kfPendingClockMove) || clockExpired){ paintClocks(); return; }
   if(!onlineGameId || !onlineGame || onlineGame.status !== "active"){ paintClocks(); return; }
 
-  // BETA FOLLOW-UP: the new turn does not officially begin until validation
-  // has committed. Do not consume the opponent's clock during that interval.
-  if(kfPendingClockMove){ paintClocks(); return; }
+  // The browser already applied the legal move optimistically. Keep the
+  // next side's *display* counting during the network/database round trip.
+  // Only the server can confirm the turn, and timeout claims stay disabled
+  // until its authoritative response arrives.
 
   // The server clock starts at clock_started_at, independently of player
   // page-entry timestamps and the visual VS/board transition. Never pause the
@@ -6554,8 +6573,8 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
       return;
     }
 
-    // The next turn's display was held until the validated server commit.
-    // It will now use last_move_at to account for delivery time.
+    // The browser has already started displaying the new turn. Reconcile
+    // against the authoritative receipt timestamp without an upward repaint.
     kfRunningClockBlend=null;
     // ✅ سرور زمان دقیق رو برگردوند، ما هم همون رو ذخیره می‌کنیم
     onlineGame.turn = game.turn();
@@ -7114,7 +7133,7 @@ function kfHandlePremoveSquare(square,color){
   kfPremoveQueued={from:from,to:square,promotion:"q"};
   draw();
 }
-function kfStartOptimisticClock(m){
+function kfStartOptimisticClock(m,isPremove){
   if(!onlineGameId)return;
   kfClockBeforeMove={
     turn:onlineGame?onlineGame.turn:m.color,
@@ -7126,11 +7145,15 @@ function kfStartOptimisticClock(m){
   if(clockPerfAnchor!=null){
     var perfNow=performance.now();
     var elapsedFromAnchor=Math.max(0,(perfNow-clockPerfAnchor)/1000);
+    // The queued premove was selected before the opponent's realtime event.
+    // Its already-visible clock is the best visual starting point; the server
+    // independently calculates and records the actual elapsed time.
+    var shownElapsed=isPremove===true?0:elapsedFromAnchor;
     if(clockPerfTurn==="w"){
-      clockWhite=Math.max(0,clockPerfBaseWhite-elapsedFromAnchor);
+      clockWhite=Math.max(0,clockPerfBaseWhite-shownElapsed);
       clockBlack=Math.max(0,clockPerfBaseBlack);
     }else{
-      clockBlack=Math.max(0,clockPerfBaseBlack-elapsedFromAnchor);
+      clockBlack=Math.max(0,clockPerfBaseBlack-shownElapsed);
       clockWhite=Math.max(0,clockPerfBaseWhite);
     }
   }
@@ -7158,7 +7181,7 @@ function kfMaybeExecuteLocalPremove(row){
   last={from:move.from,to:move.to};
   selected=null;targets=[];
   var moveStartedAt=performance.now();
-  kfStartOptimisticClock(move);
+  kfStartOptimisticClock(move,true);
   // submitMove schedules the board repaint; avoid a redundant synchronous draw
   // before dispatching the premove request.
   // To the server this is a regular move with an optional clock minimum.
