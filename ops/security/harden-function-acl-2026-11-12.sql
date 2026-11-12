@@ -1,0 +1,42 @@
+-- Restrict direct public execution of state-changing and internal functions.
+-- Keep player-facing RPCs available only to authenticated sessions.
+-- Allow service_role to retain internal maintenance invocation.
+BEGIN;
+REVOKE EXECUTE ON FUNCTION public.kf_apply_humiliation(p_game_id uuid, p_square text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_apply_humiliation(p_game_id uuid, p_square text) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_auto_handle_absent_players() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_auto_handle_absent_players() TO service_role;
+REVOKE EXECUTE ON FUNCTION public.kf_auto_start_tournament() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_auto_start_tournament() TO service_role;
+REVOKE EXECUTE ON FUNCTION public.kf_block_tournament_draw_offers() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_cancel_quick_play() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_cancel_quick_play() TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_cancel_tournament_registration() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_cancel_tournament_registration() TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_ensure_match_game(p_match_id uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_ensure_match_game(p_match_id uuid) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_get_my_history(p_limit integer) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_get_my_history(p_limit integer) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_get_next_tournament() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_get_next_tournament() TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_guard_tournament_match_winner() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_handle_game_completion() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_join_bloodblade() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_join_bloodblade() TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_join_quick_play(p_is_roulette boolean) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_join_quick_play(p_is_roulette boolean) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_offer_draw(p_game_id uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_offer_draw(p_game_id uuid) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_player_joined_game(p_game_id uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_player_joined_game(p_game_id uuid) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_process_first_move_deadlines() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_process_first_move_deadlines() TO service_role;
+REVOKE EXECUTE ON FUNCTION public.kf_register_tournament() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_register_tournament() TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_report_match_result(p_match_id uuid, p_winner_id uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_report_match_result(p_match_id uuid, p_winner_id uuid) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.kf_resolve_absent_game(p_game_id uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kf_resolve_absent_game(p_game_id uuid) TO service_role;
+REVOKE EXECUTE ON FUNCTION public.kf_tournament_resolve_draw() FROM PUBLIC, anon, authenticated;
+COMMIT;
