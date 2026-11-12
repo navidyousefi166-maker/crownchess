@@ -5783,6 +5783,49 @@ var analysisIndex = 0;
 var analysisRunning = false;
 var analysisRunId = 0;
 var adminReviewedPlayer = null;
+var KF_ANALYSIS_CACHE_KEY = "kf_analysis_local_cache_v1";
+var KF_ANALYSIS_CACHE_VERSION = "sf19-lite-threepass-20261112";
+var KF_ANALYSIS_CACHE_MAX = 12;
+var KF_ANALYSIS_CACHE_TTL = 21 * 24 * 60 * 60 * 1000;
+// This cache is on this browser only. No analysis results are sent to Supabase.
+function kfAnalysisCacheId(sourceGame){
+  try{
+    var h=sourceGame.history({verbose:true});
+    if(!h.length)return null;
+    var header=sourceGame.header?sourceGame.header():{};
+    var start=(header&&header.FEN)||"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    return JSON.stringify([KF_ANALYSIS_CACHE_VERSION,start,h.map(function(m){
+      return m.from+m.to+(m.promotion||"");
+    })]);
+  }catch(e){return null;}
+}
+function kfAnalysisReadCache(id){
+  if(!id)return null;
+  try{
+    var entries=JSON.parse(localStorage.getItem(KF_ANALYSIS_CACHE_KEY)||"[]");
+    if(!Array.isArray(entries))return null;
+    var item=entries.find(function(x){return x&&x.id===id&&
+      Date.now()-x.savedAt>=0&&Date.now()-x.savedAt<KF_ANALYSIS_CACHE_TTL;});
+    if(!item||!Array.isArray(item.moves)||!Array.isArray(item.positions)||
+       !item.moves.length||item.positions.length!==item.moves.length+1||
+       item.moves.some(function(m){return !m||!m.san||!m.fenAfter||
+         !m.quality||m.quality==="unrated";}))return null;
+    return item;
+  }catch(e){return null;}
+}
+function kfAnalysisWriteCache(id,moves,positions,progress){
+  if(!id||!moves.length||positions.length!==moves.length+1||
+     moves.some(function(m){return !m||m.quality==="unrated";}))return;
+  try{
+    var now=Date.now(),entries=JSON.parse(localStorage.getItem(KF_ANALYSIS_CACHE_KEY)||"[]");
+    if(!Array.isArray(entries))entries=[];
+    entries=entries.filter(function(x){return x&&x.id!==id&&
+      now-x.savedAt>=0&&now-x.savedAt<KF_ANALYSIS_CACHE_TTL;});
+    entries.unshift({id:id,savedAt:now,moves:moves,positions:positions,progress:progress});
+    localStorage.setItem(KF_ANALYSIS_CACHE_KEY,JSON.stringify(entries.slice(0,KF_ANALYSIS_CACHE_MAX)));
+  }catch(e){console.info("Kingsfall local analysis cache unavailable:",String(e&&e.message||e));}
+}
+
 
 /* Secondary engine: independent UCI state, never touches the game/primary engine. */
 var analysisAuxEngines = [];
@@ -5942,6 +5985,20 @@ function openAnalysis(){
     renderMoveList();
     gotoAnalysisIndex(0);
   }catch(previewError){console.warn("Analysis board preview:",previewError);}
+  // Reuse completed analysis of this exact move sequence from this device.
+  // Report reviews deliberately bypass the cache.
+  var cacheId=adminReviewedPlayer?null:kfAnalysisCacheId(game);
+  var cached=kfAnalysisReadCache(cacheId);
+  if(cached&&thisRun===analysisRunId){
+    analysisMoves=cached.moves;
+    analysisPositions=cached.positions;
+    $("anProgress").textContent="Analysis loaded from this device · "+analysisMoves.length+" moves";
+    renderMoveList();
+    renderSummary();
+    gotoAnalysisIndex(0);
+    console.info("[Kingsfall analysis] Local cache hit; Stockfish not started");
+    return;
+  }
   // Admin report review uses one engine so mobile browsers do not need
   // to initialize three separate WASM instances at the same time.
   if(!stockfishWorker) initStockfish();
@@ -6304,6 +6361,8 @@ async function runFullAnalysis(runId){
   analysisRunning = false;
   var unrated = moves.filter(function(move){ return move.quality === "unrated"; }).length;
   $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + "/" + moves.length + " moves · " + stockfishEngineName + " · Great checks: " + greatDiagnostics.candidates + "/" + greatDiagnostics.paired + "/" + greatDiagnostics.unique + " (alt: " + greatDiagnostics.alternative + ")" + (stockfishBootError ? " · Cause: " + stockfishBootError : "");
+  if(!adminReviewedPlayer && unrated===0)
+    kfAnalysisWriteCache(kfAnalysisCacheId(sourceGame),moves,positions,$("anProgress").textContent);
   renderMoveList();
   renderSummary();
   gotoAnalysisIndex(0);
