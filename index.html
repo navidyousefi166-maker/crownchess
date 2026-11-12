@@ -486,7 +486,10 @@ dialog::backdrop{background:rgba(2,6,17,.79);backdrop-filter:blur(4px)}
 .an-panel{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
 .an-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .an-head h2{margin:0;font-size:20px}
-.an-progress{background:var(--panel-bg2);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;color:var(--muted);text-align:center}
+.an-progress{position:relative;height:28px;overflow:hidden;background:var(--panel-bg2);border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.an-progress-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#368fba,#48bba1);transition:width .2s ease}
+.an-progress-percent{position:relative;z-index:1;font-size:12px;font-weight:900;color:#fff;text-shadow:0 1px 3px #000,0 0 3px #000}
+.an-progress.error .an-progress-fill{background:#b94141}
 .an-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(200px,1fr);gap:12px;align-items:start}
 .an-board-col{display:flex;flex-direction:column;gap:8px;min-width:0}
 .an-eval-wrap{display:flex;gap:8px;align-items:stretch;justify-content:center}
@@ -538,7 +541,7 @@ body.theme-ocean .an-eval-black{background:#0a1628}
   #analysisDialog{width:calc(100% - 12px);max-height:96vh}
   .an-panel{padding:10px;gap:8px}
   .an-head h2{font-size:16px}
-  .an-progress{padding:6px;font-size:11px}
+  .an-progress{height:26px}
   .an-layout{grid-template-columns:1fr;gap:10px}
   .an-nav button{padding:8px 3px;font-size:12px}
   .an-moves{max-height:180px}
@@ -1743,7 +1746,7 @@ body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark
       </div>
       <button class="close" type="button" id="analysisClose">×</button>
     </div>
-    <div class="an-progress" id="anProgress">Preparing analysis...</div>
+    <div class="an-progress" id="anProgress" role="progressbar" aria-label="Analysis progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="an-progress-fill" id="anProgressFill"></div><span class="an-progress-percent" id="anProgressPercent">0%</span></div>
     <div class="an-layout">
       <div class="an-board-col">
         <div class="an-eval-wrap">
@@ -5906,7 +5909,7 @@ function createAnalysisAuxEngine(runId){
   }
   return {ready:ready,analyze:analyze,close:close,alive:function(){return !closed;}};
 }
-async function runAnalysisWorkerPool(items,runId,readyAuxIndices,work,retry){
+async function runAnalysisWorkerPool(items,runId,readyAuxIndices,work,retry,onProgress){
   var next=0,completed=0,results=new Array(items.length),retryList=[];
   async function runner(engineIndex){
     while(analysisRunning&&runId===analysisRunId){
@@ -5915,6 +5918,7 @@ async function runAnalysisWorkerPool(items,runId,readyAuxIndices,work,retry){
       var value=null;
       try{value=await work(items[idx],engineIndex,idx,items.length);}catch(err){console.warn("Analysis job failed",err);}
       results[idx]=value;completed++;
+      if(onProgress&&analysisRunning&&runId===analysisRunId)onProgress(completed,items.length);
       if(engineIndex>0&&retry&&retry(value,engineIndex))retryList.push(idx);
     }
   }
@@ -5953,6 +5957,25 @@ $("anPrevBtn").onclick = function(){ gotoAnalysisIndex(analysisIndex - 1); };
 $("anNextBtn").onclick = function(){ gotoAnalysisIndex(analysisIndex + 1); };
 $("anEndBtn").onclick = function(){ gotoAnalysisIndex(analysisMoves.length); };
 
+function kfSetAnalysisProgress(runId,percent){
+  if(runId!==analysisRunId)return;
+  var wrapper=$("anProgress"),label=$("anProgressPercent"),fill=$("anProgressFill");
+  if(!wrapper||!label||!fill)return;
+  var old=Number(wrapper.getAttribute("aria-valuenow"))||0;
+  var value=Math.max(old,Math.min(100,Math.max(0,Math.floor(percent))));
+  wrapper.classList.remove("error");
+  wrapper.setAttribute("aria-valuenow",String(value));
+  fill.style.width=value+"%";
+  label.textContent=value+"%";
+}
+function kfAnalysisProgressError(runId,message){
+  if(runId!==analysisRunId)return;
+  var wrapper=$("anProgress");
+  if(!wrapper)return;
+  wrapper.classList.add("error");
+  wrapper.title=message;
+  $("anProgressPercent").textContent="Analysis error";
+}
 function openAnalysis(){
   closeAnalysisAuxEngines();
   analysisMoves = [];
@@ -5966,7 +5989,11 @@ function openAnalysis(){
   $("anEvalWhite").style.height = "50%";
   $("anEvalBlack").style.height = "50%";
   $("anEvalLabel").textContent = "0.0";
-  $("anProgress").textContent = "Loading chess engine...";
+  $("anProgress").setAttribute("aria-valuenow","0");
+  $("anProgress").classList.remove("error");
+  $("anProgress").removeAttribute("title");
+  $("anProgressFill").style.width="0%";
+  $("anProgressPercent").textContent="0%";
   $("analysisDialog").showModal();
   // Show the actual board immediately, even while Stockfish WASM initializes.
   try{
@@ -5992,7 +6019,7 @@ function openAnalysis(){
   if(cached&&thisRun===analysisRunId){
     analysisMoves=cached.moves;
     analysisPositions=cached.positions;
-    $("anProgress").textContent="Analysis loaded from this device · "+analysisMoves.length+" moves";
+    kfSetAnalysisProgress(thisRun,100);
     renderMoveList();
     renderSummary();
     gotoAnalysisIndex(0);
@@ -6017,7 +6044,7 @@ async function runFullAnalysis(runId){
   }
   if(runId !== analysisRunId) return;
   if(!stockfishWorker){
-    $("anProgress").textContent = "Engine unavailable. Please retry.";
+    kfAnalysisProgressError(runId,"Engine unavailable. Please retry.");
     return;
   }
   while(!stockfishReady && Date.now() - waitStart < 75000){
@@ -6026,7 +6053,7 @@ async function runFullAnalysis(runId){
   }
   if(runId !== analysisRunId) return;
   if(!stockfishReady){
-    $("anProgress").textContent = "Engine did not finish loading. Please retry.";
+    kfAnalysisProgressError(runId,"Engine did not finish loading. Please retry.");
     return;
   }
 
@@ -6039,7 +6066,7 @@ async function runFullAnalysis(runId){
   for(var i=0; i<history.length; i++){
     var replayed = chess.move(history[i]);
     if(!replayed){
-      $("anProgress").textContent = "Could not replay move " + (i + 1) + ".";
+      kfAnalysisProgressError(runId,"Could not replay move " + (i + 1) + ".");
       return;
     }
     positions.push(chess.fen());
@@ -6092,7 +6119,7 @@ async function runFullAnalysis(runId){
       if(!result||result.score==null)initialCache.delete(key);
       initialCompleted++;
       if(analysisRunning&&runId===analysisRunId)
-        $("anProgress").textContent="Analyzing "+initialCompleted+" / "+total;
+        kfSetAnalysisProgress(runId,70*initialCompleted/total);
       return result;
     },function(result){return !result||result.score==null;});
   if(!analysisRunning||runId!==analysisRunId)return;
@@ -6101,11 +6128,12 @@ async function runFullAnalysis(runId){
     initialAnalyses[p]=firstResults[p];
   }
   if(!stockfishWorker){
-    $("anProgress").textContent="Analysis stopped: engine became unavailable.";
+    kfAnalysisProgressError(runId,"Analysis stopped: engine became unavailable.");
     analysisRunning=false;
     closeAnalysisAuxEngines();
     return;
   }
+  kfSetAnalysisProgress(runId,70);
   var initialElapsed=performance.now()-timeInitialStart;
   var queuedCritical=new Set();
   for(var p=1;p<total;p++){
@@ -6140,10 +6168,11 @@ async function runFullAnalysis(runId){
         posAnalyses[at]=checked;
       criticalCount++;
       if(analysisRunning&&runId===analysisRunId)
-        $("anProgress").textContent="Checking critical positions "+criticalCount+" / "+refineIndices.length;
+        kfSetAnalysisProgress(runId,70+15*criticalCount/Math.max(1,refineIndices.length));
       return checked;
     },function(result){return !result||result.score==null;});
   if(!analysisRunning||runId!==analysisRunId)return;
+  kfSetAnalysisProgress(runId,85);
   var criticalElapsed=performance.now()-timeCriticalStart;
 
   // Review scores from the moving player's perspective using a bounded win chance,
@@ -6236,8 +6265,7 @@ async function runFullAnalysis(runId){
   var verifiedPairs=await runAnalysisWorkerPool(candidates,runId,readyAuxIndices,
     async function(candidate,engineIndex,idx){
       var mi=candidate.i,mm=candidate.m;
-      if(analysisRunning&&runId===analysisRunId)
-        $("anProgress").textContent="Verifying exceptional moves "+(idx+1)+"/"+candidates.length;
+      // Progress advances on completed checks, not on task assignment.
       var played=mm.from+mm.to+(history[mi].promotion||"");
       var legal=new Chess(positions[mi]).moves({verbose:true}).map(function(m){
         return m.from+m.to+(m.promotion||"");
@@ -6257,6 +6285,8 @@ async function runFullAnalysis(runId){
     },function(result,engineIndex){
       var aux=analysisAuxEngines[engineIndex-1];
       return !result&&(!aux||!aux.alive());
+    },function(completed,totalCandidates){
+      kfSetAnalysisProgress(runId,85+14*completed/Math.max(1,totalCandidates));
     });
   if(!analysisRunning||runId!==analysisRunId)return;
   for(var ci=0;ci<candidates.length;ci++){
@@ -6356,13 +6386,14 @@ async function runFullAnalysis(runId){
     critical:refineIndices.length,exceptional:candidates.length
   });
   closeAnalysisAuxEngines();
+  kfSetAnalysisProgress(runId,100);
   analysisMoves = moves;
   analysisPositions = positions;
   analysisRunning = false;
   var unrated = moves.filter(function(move){ return move.quality === "unrated"; }).length;
-  $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + "/" + moves.length + " moves · " + stockfishEngineName + " · Great checks: " + greatDiagnostics.candidates + "/" + greatDiagnostics.paired + "/" + greatDiagnostics.unique + " (alt: " + greatDiagnostics.alternative + ")" + (stockfishBootError ? " · Cause: " + stockfishBootError : "");
+  // Only the percentage is shown; detailed diagnostics remain in the console.
   if(!adminReviewedPlayer && unrated===0)
-    kfAnalysisWriteCache(kfAnalysisCacheId(sourceGame),moves,positions,$("anProgress").textContent);
+    kfAnalysisWriteCache(kfAnalysisCacheId(sourceGame),moves,positions,"100%");
   renderMoveList();
   renderSummary();
   gotoAnalysisIndex(0);
