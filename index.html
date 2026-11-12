@@ -7519,6 +7519,18 @@ $("adminRejectedMoves").addEventListener("click",async function(e){
 });
 // Private shadow-verification alerts, including completed games.
 $("adminAuditAlerts").addEventListener("click",async function(e){
+ var copy=e.target.closest(".kf-copy-accused-id");
+ if(copy&&this.contains(copy)){
+  var uid=copy.getAttribute("data-player-id")||"";
+  if(uid){
+   try{
+    if(navigator.clipboard&&navigator.clipboard.writeText)await navigator.clipboard.writeText(uid);
+    else{var field=document.createElement("textarea");field.value=uid;document.body.appendChild(field);field.select();var ok=document.execCommand("copy");field.remove();if(!ok)throw Error("Copy not supported");}
+    copy.textContent="Copied ✓";
+   }catch(err){say("Could not copy player ID.",{error:true});}
+  }
+  return;
+ }
  var button=e.target.closest(".kf-delete-audit-alert");
  if(!button||!this.contains(button)||!currentUser||currentUser.id!==adminOwnerId||button.disabled)return;
  var id=button.getAttribute("data-audit-id");
