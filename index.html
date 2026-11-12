@@ -4021,9 +4021,9 @@ function tickClock(){
   if(computerMode || !game || (game.game_over() && !kfPendingClockMove) || clockExpired){ paintClocks(); return; }
   if(!onlineGameId || !onlineGame || onlineGame.status !== "active"){ paintClocks(); return; }
 
-  // During a local optimistic move, the mover's clock is held, but the
-  // opponent's displayed clock keeps running. The database remains authoritative.
-  // Timeout claims are still suppressed until the server has confirmed the move.
+  // BETA FOLLOW-UP: the new turn does not officially begin until validation
+  // has committed. Do not consume the opponent's clock during that interval.
+  if(kfPendingClockMove){ paintClocks(); return; }
 
   // The server clock starts at clock_started_at, independently of player
   // page-entry timestamps and the visual VS/board transition. Never pause the
@@ -6554,10 +6554,8 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
       return;
     }
 
-    // The opponent's clock was already ticking optimistically during the
-    // request. Reconcile its running display smoothly with the server anchor.
-    var pendingShownTurn=onlineGame.turn||clockPerfTurn;
-    var pendingShownTime=pendingShownTurn==="w"?clockWhite:clockBlack;
+    // The next turn's display was held until the validated server commit.
+    // It will now use last_move_at to account for delivery time.
     kfRunningClockBlend=null;
     // ✅ سرور زمان دقیق رو برگردوند، ما هم همون رو ذخیره می‌کنیم
     onlineGame.turn = game.turn();
@@ -6574,7 +6572,6 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
     clockPerfBaseWhite=clockWhite;clockPerfBaseBlack=clockBlack;
     clockPerfTurn=onlineGame.turn||"w";
     anchorClockToServerTime(onlineGame.last_move_at||onlineGame.clock_started_at);
-    kfBlendClockAfterRebase(pendingShownTurn,pendingShownTime);
     lastClockAt=Date.now();tickClock();
 
   } catch(err) {
@@ -7117,7 +7114,7 @@ function kfHandlePremoveSquare(square,color){
   kfPremoveQueued={from:from,to:square,promotion:"q"};
   draw();
 }
-function kfStartOptimisticClock(m, isPremove){
+function kfStartOptimisticClock(m){
   if(!onlineGameId)return;
   kfClockBeforeMove={
     turn:onlineGame?onlineGame.turn:m.color,
@@ -7129,16 +7126,11 @@ function kfStartOptimisticClock(m, isPremove){
   if(clockPerfAnchor!=null){
     var perfNow=performance.now();
     var elapsedFromAnchor=Math.max(0,(perfNow-clockPerfAnchor)/1000);
-    // The premove arrives via the opponent's realtime snapshot. That snapshot
-    // may be delayed, but the player had already queued the move. Do not
-    // charge the entire realtime delivery delay to the optimistic display.
-    // The server still measures the actual receipt time and owns the clock.
-    var shownElapsed=isPremove===true?0:elapsedFromAnchor;
     if(clockPerfTurn==="w"){
-      clockWhite=Math.max(0,clockPerfBaseWhite-shownElapsed);
+      clockWhite=Math.max(0,clockPerfBaseWhite-elapsedFromAnchor);
       clockBlack=Math.max(0,clockPerfBaseBlack);
     }else{
-      clockBlack=Math.max(0,clockPerfBaseBlack-shownElapsed);
+      clockBlack=Math.max(0,clockPerfBaseBlack-elapsedFromAnchor);
       clockWhite=Math.max(0,clockPerfBaseWhite);
     }
   }
@@ -7166,7 +7158,7 @@ function kfMaybeExecuteLocalPremove(row){
   last={from:move.from,to:move.to};
   selected=null;targets=[];
   var moveStartedAt=performance.now();
-  kfStartOptimisticClock(move, true);
+  kfStartOptimisticClock(move);
   // submitMove schedules the board repaint; avoid a redundant synchronous draw
   // before dispatching the premove request.
   // To the server this is a regular move with an optional clock minimum.
