@@ -44,8 +44,7 @@ BEGIN
     false
   );
 END;
-$function$
-
+$function$;
 REVOKE ALL ON FUNCTION public.kf_submit_browser_fast_v1(uuid,text,text,text,text,text,text,text,text,text,text,uuid,uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.kf_submit_browser_fast_v1(uuid,text,text,text,text,text,text,text,text,text,text,uuid,uuid) TO authenticated;
 COMMIT;
