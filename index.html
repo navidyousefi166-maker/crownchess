@@ -5785,7 +5785,7 @@ var analysisRunning = false;
 var analysisRunId = 0;
 var adminReviewedPlayer = null;
 var KF_ANALYSIS_CACHE_KEY = "kf_analysis_local_cache_v1";
-var KF_ANALYSIS_CACHE_VERSION = "sf19-lite-threepass-book-v1-20261112";
+var KF_ANALYSIS_CACHE_VERSION = "sf19-lite-threepass-book-skip-v2-20261112";
 var KF_ANALYSIS_CACHE_MAX = 12;
 var kfOpeningBookPromise = null;
 // CC0 opening sequences from lichess-org/chess-openings, bundled with Kingsfall.
@@ -5803,16 +5803,12 @@ function kfLoadOpeningBook(){
   }
   return kfOpeningBookPromise;
 }
-function kfMarkBookMoves(moves,book){
+function kfCountBookMoves(moves,book){
   if(!book||!moves||!moves.length)return 0;
   var sequence="",count=0;
   for(var i=0;i<moves.length;i++){
-    var san=moves[i].san;
-    sequence+=(i?" ":"")+san;
+    sequence+=(i?" ":"")+moves[i].san;
     if(!book.has(sequence))break;
-    // Preserve raw engine result for possible future inspection.
-    moves[i].engineQuality=moves[i].quality;
-    moves[i].quality="book";
     count++;
   }
   return count;
@@ -6036,37 +6032,11 @@ function openAnalysis(){
     console.info("[Kingsfall analysis] Local cache hit; Stockfish not started");
     return;
   }
-  // Admin report review uses one engine so mobile browsers do not need
-  // to initialize three separate WASM instances at the same time.
-  if(!stockfishWorker) initStockfish();
-  analysisAuxEngines=adminReviewedPlayer?[]:Array.from({length:ANALYSIS_EXTRA_WORKERS},function(){
-    return createAnalysisAuxEngine(thisRun);
-  });
+  // Decide which moves belong to the book before starting any Stockfish workers.
   setTimeout(function(){ runFullAnalysis(thisRun); }, 50);
 }
 
 async function runFullAnalysis(runId){
-  var waitStart = Date.now();
-  if(!stockfishWorker) initStockfish();
-  while(!stockfishWorker && Date.now() - waitStart < 75000){
-    if(runId !== analysisRunId) return;
-    await new Promise(function(resolve){ setTimeout(resolve, 100); });
-  }
-  if(runId !== analysisRunId) return;
-  if(!stockfishWorker){
-    $("anProgress").textContent = "Engine unavailable. Please retry.";
-    return;
-  }
-  while(!stockfishReady && Date.now() - waitStart < 75000){
-    if(runId !== analysisRunId) return;
-    await new Promise(function(resolve){ setTimeout(resolve, 100); });
-  }
-  if(runId !== analysisRunId) return;
-  if(!stockfishReady){
-    $("anProgress").textContent = "Engine did not finish loading. Please retry.";
-    return;
-  }
-
   var sourceGame = game;
   var history = sourceGame.history({verbose: true});
   var header = sourceGame.header ? sourceGame.header() : {};
@@ -6083,11 +6053,53 @@ async function runFullAnalysis(runId){
   }
 
   var total = positions.length;
+  var openingBook=adminReviewedPlayer?null:await kfLoadOpeningBook();
+  if(runId!==analysisRunId)return;
+  var bookMoves=adminReviewedPlayer?0:kfCountBookMoves(history,openingBook);
+  console.info("[Kingsfall opening book]",{recognized:bookMoves,total:history.length,skippedEnginePositions:bookMoves});
+  if(bookMoves===history.length && bookMoves>0){
+    // Every move is documented in the opening book: no engine is launched.
+    analysisMoves=history.map(function(m,i){
+      return {san:m.san,color:m.color,from:m.from,to:m.to,quality:"book",fenAfter:positions[i+1],evalAfter:null};
+    });
+    analysisPositions=positions;
+    analysisRunning=false;
+    $("anProgress").textContent="Opening book · "+bookMoves+" moves · No engine analysis needed";
+    kfAnalysisWriteCache(kfAnalysisCacheId(sourceGame),analysisMoves,positions,$("anProgress").textContent);
+    renderMoveList();renderSummary();gotoAnalysisIndex(0);
+    return;
+  }
+  $("anProgress").textContent="Loading chess engine...";
+  var waitStart=Date.now();
+  if(!stockfishWorker)initStockfish();
+  // Admin review stays on a single engine to avoid unnecessary phone load.
+  analysisAuxEngines=adminReviewedPlayer?[]:Array.from({length:ANALYSIS_EXTRA_WORKERS},function(){
+    return createAnalysisAuxEngine(runId);
+  });
+  while(!stockfishWorker && Date.now()-waitStart<75000){
+    if(runId!==analysisRunId)return;
+    await new Promise(function(resolve){setTimeout(resolve,100);});
+  }
+  if(runId!==analysisRunId)return;
+  if(!stockfishWorker){
+    $("anProgress").textContent="Engine unavailable. Please retry.";
+    closeAnalysisAuxEngines();
+    return;
+  }
+  while(!stockfishReady && Date.now()-waitStart<75000){
+    if(runId!==analysisRunId)return;
+    await new Promise(function(resolve){setTimeout(resolve,100);});
+  }
+  if(runId!==analysisRunId)return;
+  if(!stockfishReady){
+    $("anProgress").textContent="Engine did not finish loading. Please retry.";
+    closeAnalysisAuxEngines();
+    return;
+  }
   var posAnalyses = new Array(total);
   var initialAnalyses = new Array(total);
   analysisRunning = true;
   var analysisStartedAt=performance.now();
-  var openingBookPromise=adminReviewedPlayer?Promise.resolve(null):kfLoadOpeningBook();
   // Three independent engines share a position queue across every analysis stage.
   // Failed/slow auxiliary workers are excluded; the primary worker always runs.
   var readyAuxIndices=[];
@@ -6116,7 +6128,9 @@ async function runFullAnalysis(runId){
     }
     return analyzeFenPromise(fen,ms,runId,1,searchMoves);
   }
-  var positionIndices=Array.from({length:total},function(_,i){return i;});
+  // A book move j does not need a search at position j; the first
+  // non-book move needs positions[bookMoves] and positions[bookMoves+1].
+  var positionIndices=Array.from({length:total-bookMoves},function(_,i){return bookMoves+i;});
   var firstResults=await runAnalysisWorkerPool(positionIndices,runId,readyAuxIndices,
     async function(p,engineIndex){
       var fen=positions[p],terminal=new Chess(fen);
@@ -6130,7 +6144,7 @@ async function runFullAnalysis(runId){
       if(!result||result.score==null)initialCache.delete(key);
       initialCompleted++;
       if(analysisRunning&&runId===analysisRunId)
-        $("anProgress").textContent="Analyzing "+initialCompleted+" / "+total;
+        $("anProgress").textContent="Analyzing "+initialCompleted+" / "+positionIndices.length+" (📖 "+bookMoves+" book moves skipped)";
       return result;
     },function(result){return !result||result.score==null;});
   if(!analysisRunning||runId!==analysisRunId)return;
@@ -6235,8 +6249,8 @@ async function runFullAnalysis(runId){
     var loss = evalBefore != null && evalAfter != null ? Math.max(0, evalBefore - evalAfter) : null;
     var winLoss = wBefore != null && wAfter != null ? Math.max(0, wBefore - wAfter) : null;
     var depthOk = before && after && before.depth >= 11 && after.depth >= 11;
-    var quality = "unrated";
-    if(winLoss != null && depthOk){
+    var quality = j<bookMoves ? "book" : "unrated";
+    if(j>=bookMoves && winLoss != null && depthOk){
       if(bestUci && playedUci === bestUci && winLoss <= 0.04) quality = "best";
       else if(winLoss <= 0.045) quality = "good";
       else if(winLoss <= 0.09) quality = "inaccuracy";
@@ -6394,11 +6408,7 @@ async function runFullAnalysis(runId){
     critical:refineIndices.length,exceptional:candidates.length
   });
   closeAnalysisAuxEngines();
-  // Keep full engine calculations intact; book labels are a UI classification.
-  var openingBook=await openingBookPromise;
-  if(runId!==analysisRunId||!analysisRunning)return;
-  var bookMoves=adminReviewedPlayer?0:kfMarkBookMoves(moves,openingBook);
-  console.info("[Kingsfall opening book]",{recognized:bookMoves,total:moves.length});
+  // Book moves were classified before searching; only non-book positions ran Stockfish.
   analysisMoves = moves;
   analysisPositions = positions;
   analysisRunning = false;
