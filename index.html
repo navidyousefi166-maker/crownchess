@@ -7146,6 +7146,31 @@ function kfStartOptimisticClock(m){
   lastClockAt=Date.now();
   if(onlineGame)onlineGame.turn=game.turn();
 }
+// Paint only squares affected by the incoming move and the premove.
+// The full board/history repaint remains scheduled by submitMove.
+// This keeps the first visual update independent of the heavy draw() path.
+function kfPaintPremoveSquaresImmediately(row,pm){
+  if(!_boardBuilt||!game||!_sqEls)return;
+  var squares=[pm.from,pm.to];
+  if(row&&row.last_move){
+    squares.push(row.last_move.from,row.last_move.to);
+  }
+  var seen={};
+  for(var i=0;i<squares.length;i++){
+    var s=squares[i],b=_sqEls[s];
+    if(!b||seen[s])continue;
+    seen[s]=true;
+    var p=game.get(s);
+    // Keep the coordinates element intact where it already exists.
+    var oldPiece=b.querySelector("svg");
+    if(oldPiece)oldPiece.remove();
+    if(p)b.insertAdjacentHTML("afterbegin",svg(p));
+    b.setAttribute("aria-label",s+(p?", "+(p.color==="w"?"white":"black")+" "+names[p.type]:""));
+    b.classList.remove("kf-premove-from","kf-premove-to","kf-premove-queued","selected");
+    b.style.backgroundImage=(s===pm.from||s===pm.to)?
+      "linear-gradient(#e5bd6545,#e5bd6545)":"";
+  }
+}
 function kfMaybeExecuteLocalPremove(row){
   if(!row||!kfPremoveQueued||!game||!currentUser||submittingMove||kfPendingClockMove||
       row.id!==onlineGameId||row.status!=="active"||kfPremoveGameId!==row.id)return;
@@ -7164,6 +7189,9 @@ function kfMaybeExecuteLocalPremove(row){
   selected=null;targets=[];
   var moveStartedAt=performance.now();
   kfStartOptimisticClock(move);
+  // Show the actual premove on the board before any async RPC work.
+  // The following submitMove still schedules the complete paint.
+  kfPaintPremoveSquaresImmediately(row,pm);
   // submitMove schedules the board repaint; avoid a redundant synchronous draw
   // before dispatching the premove request.
   // To the server this is a regular move with an optional clock minimum.
