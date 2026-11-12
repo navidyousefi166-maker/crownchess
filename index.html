@@ -1615,6 +1615,7 @@ body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark
 <div id="adminOverviewView">
 <div class="admin-stats" id="adminOverview"><div class="admin-stat registered-users-card" role="button" tabindex="0" aria-label="Show all registered users, newest first"><span>Registered users</span><strong>—</strong></div><div class="admin-stat"><span>Banned users</span><strong>—</strong></div><div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div><div class="admin-stat suspicious-players-card" role="button" tabindex="0"><span>Suspicious Players</span><strong>—</strong></div></div>
 <section class="admin-section" id="adminRejectedMovesSection"><div class="admin-section-head"><div><h2>🛡️ Rejected Move Reports</h2><p>Illegal move requests rejected by the server · reports are not automatic proof of cheating</p></div></div><div id="adminRejectedMoves" class="admin-users"><div class="admin-loading">Loading reports…</div></div></section>
+<section class="admin-section" id="adminMoveAuditSection"><div class="admin-section-head"><div><h2>🔎 Shadow Move Audit</h2><p>Server-verified moves and identity alerts · review-only findings are not automatic proof of cheating</p></div></div><div id="adminAuditAlerts" class="admin-users"><div class="admin-loading">Loading audit alerts…</div></div></section>
 
 <section class="admin-section"><div class="admin-section-head"><div><h2>⚙️ Feature Management</h2><p>Temporarily enable or disable game features</p></div></div><div id="adminFeatures" class="admin-features"><div class="admin-loading">Loading features…</div></div></section>
 <div class="admin-footnote">Administrative operations are verified by Supabase against the authenticated owner account.</div>
@@ -7516,6 +7517,51 @@ $("adminRejectedMoves").addEventListener("click",async function(e){
    say("Delete failed: "+(err.message||err),{error:true});
  }
 });
+// Private shadow-verification alerts, including completed games.
+$("adminAuditAlerts").addEventListener("click",async function(e){
+ var button=e.target.closest(".kf-delete-audit-alert");
+ if(!button||!this.contains(button)||!currentUser||currentUser.id!==adminOwnerId||button.disabled)return;
+ var id=button.getAttribute("data-audit-id");
+ if(!/^[1-9][0-9]*$/.test(id||""))return;
+ if(!confirm("Permanently delete this shadow-audit alert?"))return;
+ button.disabled=true;button.textContent="Deleting…";
+ try{
+  var r=await sb.rpc("kf_admin_delete_move_audit_alert",{p_alert_id:Number(id)});
+  if(r.error)throw r.error;
+  if(r.data!==true)throw Error("Alert no longer exists.");
+  var card=button.closest(".admin-user");if(card)card.remove();
+  if(!$("adminAuditAlerts").querySelector(".admin-user"))$("adminAuditAlerts").innerHTML='<div class="admin-empty">No shadow-audit alerts.</div>';
+ }catch(err){button.disabled=false;button.textContent="Delete";say("Delete failed: "+(err.message||err),{error:true});}
+});
+async function loadAdminMoveAuditAlerts(){
+ if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
+ var target=$("adminAuditAlerts");if(!target)return;
+ try{
+  var response=await sb.rpc("kf_admin_move_audit_alerts",{p_limit:30});
+  if(response.error)throw response.error;
+  var entries=Array.isArray(response.data)?response.data:[];
+  if(!entries.length){target.innerHTML='<div class="admin-empty">No shadow-audit alerts.</div>';return;}
+  target.innerHTML=entries.map(function(a){
+   var move=a.move_data||{};
+   var mark=a.verdict==="flagged"?"⚠️ Confirmed alert":"⚑ Manual review";
+   var snapshot={id:"audit-"+a.id,position_fen:a.before_fen,move_from:move.from,move_to:move.to,player_id:a.player_id};
+   return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident">'+
+     '<div class="admin-user-name">'+adminEscape(mark)+'</div>'+
+     '<div class="admin-user-meta">'+adminEscape(a.detail||"No details")+'</div>'+
+     '<div class="admin-user-meta">'+adminEscape(a.detected_at?new Date(a.detected_at).toLocaleString():"")+'</div></div></div>'+
+     '<div class="kf-accused-id"><span>Accused player ID</span><code>'+adminEscape(a.player_id||"Unknown")+'</code>'+
+     '<button type="button" class="kf-copy-accused-id" data-player-id="'+adminEscape(a.player_id||"")+'">Copy ID</button>'+
+     '<button type="button" class="kf-delete-audit-alert" data-audit-id="'+adminEscape(a.id)+'">Delete</button></div>'+
+     adminIllegalBoard(snapshot)+
+     '<details class="kf-evidence-details"><summary>Technical evidence (FEN, PGN, game ID)</summary>'+
+     '<div class="admin-user-meta">Game: '+adminEscape(a.game_id||"")+'</div>'+
+     '<div class="admin-user-meta">White: '+adminEscape(a.white_username||"")+' · Black: '+adminEscape(a.black_username||"")+'</div>'+
+     '<div class="admin-user-meta">Before FEN: '+adminEscape(a.before_fen||"")+'</div>'+
+     '<div class="admin-user-meta">After FEN: '+adminEscape(a.after_fen||"")+'</div>'+
+     '<div class="admin-user-meta">PGN: '+adminEscape(String(a.archived_pgn||a.after_pgn||"").slice(-1600))+'</div></details></article>';
+  }).join("");
+ }catch(err){target.innerHTML='<div class="admin-empty">Could not load shadow audit: '+adminEscape(err.message||err)+'</div>';}
+}
 async function loadAdminRejectedMoveReports(){
  if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
  var target=$("adminRejectedMoves");if(!target)return;
@@ -7618,6 +7664,7 @@ $("adminPlayerReportsList").addEventListener("click",async function(event){
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  loadAdminRejectedMoveReports();
+ loadAdminMoveAuditAlerts();
  loadAdminPlayerReportsCount();
  loadAdminSuspiciousPlayers();
  $("adminUsers").innerHTML='<div class="admin-loading">Loading registered users…</div>';
