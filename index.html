@@ -528,6 +528,7 @@ body.theme-ocean .an-eval-black{background:#0a1628}
 .q-brilliant{background:#26c2a3;color:#fff}
 .q-great{background:#1688e8;color:#fff}
 .q-best{background:#81b64c;color:#fff}
+.q-book{background:#4a698c;color:#fff;font-size:12px!important}
 .q-good{background:#95b776;color:#fff}
 .q-inaccuracy{background:#f7c631;color:#333}
 .q-mistake{background:#ffa459;color:#333}
@@ -5784,8 +5785,38 @@ var analysisRunning = false;
 var analysisRunId = 0;
 var adminReviewedPlayer = null;
 var KF_ANALYSIS_CACHE_KEY = "kf_analysis_local_cache_v1";
-var KF_ANALYSIS_CACHE_VERSION = "sf19-lite-threepass-20261112";
+var KF_ANALYSIS_CACHE_VERSION = "sf19-lite-threepass-book-v1-20261112";
 var KF_ANALYSIS_CACHE_MAX = 12;
+var kfOpeningBookPromise = null;
+// CC0 opening sequences from lichess-org/chess-openings, bundled with Kingsfall.
+// No outside service or Supabase query is used to recognize book moves.
+function kfLoadOpeningBook(){
+  if(!kfOpeningBookPromise){
+    kfOpeningBookPromise=fetch("engine/opening-book-v1.json")
+      .then(function(response){if(!response.ok)throw new Error("Opening book unavailable");return response.json();})
+      .then(function(lines){if(!Array.isArray(lines))throw new Error("Invalid opening book");return new Set(lines);})
+      .catch(function(error){
+        console.warn("Opening book unavailable; engine labels retained:",error);
+        kfOpeningBookPromise=null;
+        return null;
+      });
+  }
+  return kfOpeningBookPromise;
+}
+function kfMarkBookMoves(moves,book){
+  if(!book||!moves||!moves.length)return 0;
+  var sequence="",count=0;
+  for(var i=0;i<moves.length;i++){
+    var san=moves[i].san;
+    sequence+=(i?" ":"")+san;
+    if(!book.has(sequence))break;
+    // Preserve raw engine result for possible future inspection.
+    moves[i].engineQuality=moves[i].quality;
+    moves[i].quality="book";
+    count++;
+  }
+  return count;
+}
 var KF_ANALYSIS_CACHE_TTL = 21 * 24 * 60 * 60 * 1000;
 // This cache is on this browser only. No analysis results are sent to Supabase.
 function kfAnalysisCacheId(sourceGame){
@@ -6056,6 +6087,7 @@ async function runFullAnalysis(runId){
   var initialAnalyses = new Array(total);
   analysisRunning = true;
   var analysisStartedAt=performance.now();
+  var openingBookPromise=adminReviewedPlayer?Promise.resolve(null):kfLoadOpeningBook();
   // Three independent engines share a position queue across every analysis stage.
   // Failed/slow auxiliary workers are excluded; the primary worker always runs.
   var readyAuxIndices=[];
@@ -6362,12 +6394,17 @@ async function runFullAnalysis(runId){
     critical:refineIndices.length,exceptional:candidates.length
   });
   closeAnalysisAuxEngines();
+  // Keep full engine calculations intact; book labels are a UI classification.
+  var openingBook=await openingBookPromise;
+  if(runId!==analysisRunId||!analysisRunning)return;
+  var bookMoves=adminReviewedPlayer?0:kfMarkBookMoves(moves,openingBook);
+  console.info("[Kingsfall opening book]",{recognized:bookMoves,total:moves.length});
   analysisMoves = moves;
   analysisPositions = positions;
   analysisRunning = false;
   var unrated = moves.filter(function(move){ return move.quality === "unrated"; }).length;
   $("anProgress").textContent = "Analysis complete · " + (moves.length - unrated) + "/" + moves.length + " moves · " + stockfishEngineName + " · Great checks: " + greatDiagnostics.candidates + "/" + greatDiagnostics.paired + "/" + greatDiagnostics.unique + " (alt: " + greatDiagnostics.alternative + ")" + (stockfishBootError ? " · Cause: " + stockfishBootError : "");
-  if(!adminReviewedPlayer && unrated===0)
+  if(!adminReviewedPlayer && openingBook && unrated===0)
     kfAnalysisWriteCache(kfAnalysisCacheId(sourceGame),moves,positions,$("anProgress").textContent);
   renderMoveList();
   renderSummary();
@@ -6438,6 +6475,7 @@ function analyzeFenPromise(fen, moveTime, runId, multiPV, searchMoves){
 }
 
 function qualityMark(q){
+  if(q === "book") return "📖";
   if(q === "brilliant") return "!!";
   if(q === "great") return "!";
   if(q === "best") return "★";
@@ -6485,7 +6523,7 @@ function renderMoveList(){
 }
 
 function renderSummary(){
-  var counts = {brilliant:0, great:0, best:0, good:0, inaccuracy:0, mistake:0, blunder:0, unrated:0};
+  var counts = {book:0, brilliant:0, great:0, best:0, good:0, inaccuracy:0, mistake:0, blunder:0, unrated:0};
   analysisMoves.forEach(function(m){ counts[m.quality]++; });
   var el = $("anSummary");
   var playerScore = "";
@@ -6501,6 +6539,7 @@ function renderSummary(){
   }
   el.innerHTML = playerScore +
     '<div style="font-weight:800;margin-bottom:6px;">Move quality</div>' +
+    '<div class="stat-row"><span>📖 Book</span><span>' + counts.book + '</span></div>' +
     '<div class="stat-row"><span>!! Brilliant</span><span>' + counts.brilliant + '</span></div>' +
     '<div class="stat-row"><span>! Great</span><span>' + counts.great + '</span></div>' +
     '<div class="stat-row"><span>★ Best</span><span>' + counts.best + '</span></div>' +
