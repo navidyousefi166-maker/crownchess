@@ -5785,7 +5785,7 @@ var analysisRunning = false;
 var analysisRunId = 0;
 var adminReviewedPlayer = null;
 var KF_ANALYSIS_CACHE_KEY = "kf_analysis_local_cache_v1";
-var KF_ANALYSIS_CACHE_VERSION = "sf19-lite-threepass-book-skip-v2-20261112";
+var KF_ANALYSIS_CACHE_VERSION = "sf19-lite-threepass-book-skip-v3-safe-20261112";
 var KF_ANALYSIS_CACHE_MAX = 12;
 var kfOpeningBookPromise = null;
 // CC0 opening sequences from lichess-org/chess-openings, bundled with Kingsfall.
@@ -6480,7 +6480,7 @@ function analyzeFenPromise(fen, moveTime, runId, multiPV, searchMoves){
         }
         finish({best: null, score: null, depth: -1});
       }, 1200);
-    }, moveTime + 500);
+    }, 5000);
   });
 }
 
