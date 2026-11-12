@@ -2278,94 +2278,53 @@ var queuePoll = null;
 var queueTimeout = null;
 var gameChannel = null;
 var onlineGamePolling = null;
-// Broadcast-first premove experiment for two designated test accounts ONLY.
-// Postgres Changes remains subscribed and is the recovery/fallback path.
-var kfTrialChannel=null, kfTrialGameId=null, kfTrialRows=new Map();
-window.kfBroadcastTrial={
-  enabled:true, results:[], status:"idle",
-  disable:function(){
-    this.enabled=false;
-    kfStopTrialBroadcast();
-    console.log("[KF TRIAL] Disabled; Postgres Changes is still active.");
-  },
-  enable:function(){
-    this.enabled=true;
-    if(onlineGameId&&onlineGame)kfStartTrialBroadcast(onlineGameId,onlineGame);
-    console.log("[KF TRIAL] Enabled for test accounts.");
-  },
-  report:function(){console.table(this.results);return this.results;}
-};
-function kfTrialEligible(row){
-  if(!row||!currentUser||!window.kfBroadcastTrial.enabled)return false;
-  var a="cc80cc38-f476-4edd-8efc-45e2722f3c4f";
-  var b="7624d6ab-541e-4b29-b8df-fddc5ef1c47d";
-  return (row.white_id===a&&row.black_id===b||row.white_id===b&&row.black_id===a)
-      &&(currentUser.id===a||currentUser.id===b);
+// Authenticated, per-game Broadcast for fast move delivery. PostgreSQL
+// Changes remains the fallback for dropped/reconnecting Broadcast channels.
+var kfGameBroadcastChannel=null;
+var kfGameBroadcastId=null;
+function kfStopGameBroadcast(){
+  var previous=kfGameBroadcastChannel;
+  kfGameBroadcastChannel=null;
+  kfGameBroadcastId=null;
+  if(previous&&sb)sb.removeChannel(previous);
 }
-function kfStopTrialBroadcast(){
-  var ch=kfTrialChannel;
-  kfTrialChannel=null;
-  kfTrialGameId=null;
-  window.kfBroadcastTrial.status="idle";
-  kfTrialRows.clear();
-  if(ch&&sb)sb.removeChannel(ch);
-}
-function kfTrialMark(row,source){
-  if(!kfTrialChannel||!row||row.id!==kfTrialGameId||!row.last_move_at)return;
-  var key=row.last_move_at;
-  var record=kfTrialRows.get(key);
-  if(!record){
-    record={moveAt:key,broadcast:null,postgres:null};
-    kfTrialRows.set(key,record);
-    if(kfTrialRows.size>30)kfTrialRows.delete(kfTrialRows.keys().next().value);
-  }
-  if(record[source]!=null)return;
-  record[source]=performance.now();
-  if(record.broadcast!=null&&record.postgres!=null){
-    var diff=Math.round((record.broadcast-record.postgres)*10)/10;
-    var entry={move:record.moveAt,broadcastMinusPostgresMs:diff,
-      faster:diff<0?"Broadcast":diff>0?"Postgres Changes":"Tie"};
-    window.kfBroadcastTrial.results.push(entry);
-    console.log("[KF TRIAL]",entry);
-  }
-}
-function kfTrialPostgresRow(row){
+function kfReceivePostgresGameRow(row){
   if(!row)return;
-  kfTrialMark(row,"postgres");
-  // A broadcast may have already applied the exact same snapshot.
-  if(kfTrialChannel&&onlineGame&&row.id===onlineGame.id
-     &&row.updated_at===onlineGame.updated_at
-     &&row.last_move_at===onlineGame.last_move_at)return;
+  // Ignore only an exact snapshot already received from Broadcast.
+  if(kfGameBroadcastChannel&&onlineGame&&row.id===onlineGame.id
+      &&row.updated_at===onlineGame.updated_at
+      &&row.last_move_at===onlineGame.last_move_at)return;
   applyOnlineGame(row);
 }
-function kfStartTrialBroadcast(gid,row){
-  kfStopTrialBroadcast();
-  if(!sb||!kfTrialEligible(row))return;
-  kfTrialGameId=gid;
-  var channel=sb.channel("kf-benchmark:"+gid,{config:{private:true}})
-    .on("broadcast",{event:"kf_move_commit"},function(msg){
-      if(kfTrialGameId!==gid||onlineGameId!==gid||!window.kfBroadcastTrial.enabled)return;
-      var data=msg&&msg.payload&&msg.payload.row;
-      if(!data||data.id!==gid||data.last_move_at!==msg.payload.move_at)return;
-      kfTrialMark(data,"broadcast");
-      applyOnlineGame(data);
+function kfStartGameBroadcast(gameId,row){
+  kfStopGameBroadcast();
+  if(!sb||!gameId||!row||!currentUser||
+     (row.white_id!==currentUser.id&&row.black_id!==currentUser.id))return;
+  kfGameBroadcastId=gameId;
+  var channel=sb.channel("kf-game-broadcast:"+gameId,{config:{private:true}})
+    .on("broadcast",{event:"kf_move_commit"},function(message){
+      if(kfGameBroadcastId!==gameId||onlineGameId!==gameId)return;
+      var payload=message&&message.payload;
+      var row=payload&&payload.row;
+      if(!row||row.id!==gameId||row.last_move_at!==payload.move_at)return;
+      if(onlineGame&&row.updated_at===onlineGame.updated_at
+         &&row.last_move_at===onlineGame.last_move_at)return;
+      applyOnlineGame(row);
     });
-  kfTrialChannel=channel;
-  window.kfBroadcastTrial.status="connecting";
-  // A session token is required for the private channel RLS policy.
-  sb.auth.getSession().then(function(res){
-    if(kfTrialChannel!==channel||kfTrialGameId!==gid)return;
-    var token=res&&res.data&&res.data.session&&res.data.session.access_token;
-    if(!token){console.warn("[KF TRIAL] No authenticated session");return;}
+  kfGameBroadcastChannel=channel;
+  sb.auth.getSession().then(function(result){
+    if(kfGameBroadcastChannel!==channel||kfGameBroadcastId!==gameId)return;
+    var token=result&&result.data&&result.data.session&&result.data.session.access_token;
+    if(!token){console.warn("Game Broadcast unavailable: no signed-in session");return;}
     sb.realtime.setAuth(token);
     channel.subscribe(function(status){
-      if(kfTrialChannel!==channel)return;
-      window.kfBroadcastTrial.status=status;
+      if(kfGameBroadcastChannel!==channel)return;
       if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED")
-        console.warn("[KF TRIAL] Broadcast unavailable; Postgres fallback remains active:",status);
-      else if(status==="SUBSCRIBED")console.log("[KF TRIAL] Broadcast connected");
+        console.warn("Game Broadcast unavailable; PostgreSQL fallback remains active:",status);
     });
-  }).catch(function(err){console.warn("[KF TRIAL] subscription error:",err);});
+  }).catch(function(error){
+    console.warn("Game Broadcast subscription failed; PostgreSQL fallback active:",error);
+  });
 }
 
 var submittingMove = false;
@@ -3452,7 +3411,7 @@ async function startTournamentGame(match){
     try { setQuickState("5-minute game · Match by wins"); } catch(e){}
     try { setRouletteState("Random opening · variable-length line auto-played"); } catch(e){}
 
-    kfStopTrialBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+    kfStopGameBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
 
     if(onlineGameId && onlineGame && !onlineGame.is_tournament && onlineGame.status === "active"){
       var fWinner = (onlineGame.white_id === currentUser.id) ? onlineGame.black_id : onlineGame.white_id;
@@ -3506,7 +3465,7 @@ async function joinTournamentGame(gameId, skipIntro){
   var data = res.data;
   if($("tournDialog").open) $("tournDialog").close();
     startGamePolling();
-  kfStopTrialBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+  kfStopGameBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   onlineGameId = gameId;
   onlineGame = data;
   resetClocks();
@@ -3546,14 +3505,14 @@ async function joinTournamentGame(gameId, skipIntro){
   }
 
   gameChannel = sb.channel("kf-game-" + gameId)
-    .on("postgres_changes", {event:"UPDATE", schema:"public", table:"kf_games", filter:"id=eq." + gameId}, function(payload){ kfTrialPostgresRow(payload.new); })
+    .on("postgres_changes", {event:"UPDATE", schema:"public", table:"kf_games", filter:"id=eq." + gameId}, function(payload){ kfReceivePostgresGameRow(payload.new); })
     .subscribe(function(status){
       if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
         console.warn("Game channel issue:", status);
         kfScheduleGameStateRecovery(gameId);
       }
     });
-  kfStartTrialBroadcast(gameId,data);
+  kfStartGameBroadcast(gameId,data);
   return true;
 }
 async function syncGameState(gameId) {
@@ -3645,7 +3604,7 @@ async function leaveOnlineState(){
   if(computerTimer){ clearTimeout(computerTimer); computerTimer = null; }
   await stopQueuePoll();
   stopGamePolling();
-  kfStopTrialBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+  kfStopGameBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   onlineGameId = null;
   kfDeferredGameRow=null;
   onlineGame=null;submittingMove=false;
@@ -3754,7 +3713,7 @@ async function loadOnlineGame(id, skipIntro){
     var oldOverlay = $("vsOverlay");
     if(oldOverlay) oldOverlay.classList.remove("show");
   }
-  kfStopTrialBroadcast(); if(gameChannel) sb.removeChannel(gameChannel);
+  kfStopGameBroadcast(); if(gameChannel) sb.removeChannel(gameChannel);
   onlineGameId = id;
   onlineGame = data;
   resetClocks();
@@ -3777,7 +3736,7 @@ async function loadOnlineGame(id, skipIntro){
   updateFirstMoveDeadlineUI();
   gameChannel = sb.channel("kf-game-" + id)
     .on("postgres_changes", {event:"UPDATE", schema:"public", table:"kf_games", filter:"id=eq." + id}, function(payload){
-      if(payload.new && payload.new.id === onlineGameId) kfTrialPostgresRow(payload.new);
+      if(payload.new && payload.new.id === onlineGameId) kfReceivePostgresGameRow(payload.new);
     })
     .subscribe(function(status){
       if(status==="CHANNEL_ERROR" || status==="TIMED_OUT" || status==="CLOSED"){
@@ -3785,7 +3744,7 @@ async function loadOnlineGame(id, skipIntro){
         kfScheduleGameStateRecovery(id);
       }
     });
-kfStartTrialBroadcast(id,data);
+kfStartGameBroadcast(id,data);
 if(currentGameIsRoulette){
   // Roulette is server-authoritative: both players receive the same stored line.
   // Keep realtime snapshots and the normal clock-start fallback paused while
@@ -4087,7 +4046,7 @@ if(row.is_tournament){
   }
   if(row.rematch_status === "accepted" && row.rematch_game_id && !_rematchAccepting){
     var newId = row.rematch_game_id;
-    kfStopTrialBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+    kfStopGameBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
     hideCelebration();
     exitFullscreenGame();
     document.body.classList.remove("online", "computer-mode", "game-focus");
@@ -5007,7 +4966,7 @@ function handleQuickPlayCancelled(){
     hideCelebration();
     stopGamePolling();
     onlineGameId = null; onlineGame = null;
-    kfStopTrialBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+    kfStopGameBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
     exitFullscreenGame();
     document.body.classList.remove("online", "computer-mode", "game-focus");
     $("new").disabled = false;
@@ -5038,7 +4997,7 @@ $("celebExit").onclick = function(){
   hideCelebration();
   stopGamePolling();
   onlineGameId = null; onlineGame = null;
-  kfStopTrialBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+  kfStopGameBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   exitFullscreenGame();
   document.body.classList.remove("online", "computer-mode", "game-focus");
   $("new").disabled = false;
@@ -5139,7 +5098,7 @@ async function respondRematch(accept){
       rematchDialogShown = false;
       say("You declined the rematch.", {silentToast: true});
       onlineGameId = null; onlineGame = null;
-      kfStopTrialBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+      kfStopGameBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
       exitFullscreenGame();
       document.body.classList.remove("online", "computer-mode", "game-focus");
       $("new").disabled = false;
@@ -5154,7 +5113,7 @@ async function respondRematch(accept){
     hideCelebration();
     exitFullscreenGame();
     document.body.classList.remove("online", "computer-mode", "game-focus");
-    kfStopTrialBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+    kfStopGameBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
     currentGameIsRoulette = false;
     await loadOnlineGame(newGameId);
   } catch(e){
@@ -5242,7 +5201,7 @@ async function handleQuickPlayEnd(row){
     onDone: function(){
       stopGamePolling();
       onlineGameId = null; onlineGame = null;
-      kfStopTrialBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+      kfStopGameBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
       exitFullscreenGame();
       document.body.classList.remove("online", "computer-mode", "game-focus");
       $("new").disabled = false;
@@ -5281,7 +5240,7 @@ async function handleTournamentEnd(row){
     onDone: function(){
       stopGamePolling();
       onlineGameId = null; onlineGame = null; tournActiveMatch = null;
-      kfStopTrialBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
+      kfStopGameBroadcast(); if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
       exitFullscreenGame();
       document.body.classList.remove("online", "computer-mode", "game-focus");
       $("new").disabled = false;
