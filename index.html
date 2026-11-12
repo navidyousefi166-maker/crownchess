@@ -3556,6 +3556,7 @@ async function leaveOnlineState(){
   stopGamePolling();
   if(gameChannel && sb){ sb.removeChannel(gameChannel); gameChannel = null; }
   onlineGameId = null;
+  kfDeferredGameRow=null;
   onlineGame=null;submittingMove=false;
   kfPendingClockMove=false;kfClockBeforeMove=null;
   kfRunningClockBlend=null;
@@ -3807,14 +3808,29 @@ if(currentGameIsRoulette){
 }
 }
 
+// The newest realtime snapshot may arrive before our previous RPC completes.
+// Keep it instead of discarding it and waiting for another network fetch.
+var kfDeferredGameRow=null;
+function kfDrainDeferredGameRow(){
+  var row=kfDeferredGameRow;
+  kfDeferredGameRow=null;
+  if(row && row.id===onlineGameId && !submittingMove && !kfPendingClockMove)
+    applyOnlineGame(row);
+}
 function applyOnlineGame(row){
   if(!row || row.id !== onlineGameId) return;
   // The database already contains the complete opening; keep its snapshot
   // from replacing the board while the six moves are being animated locally.
   if(rouletteOpeningAnimating) return;
-  // Do not let realtime/reload snapshots rewind the optimistic board mid-move.
-  // A fresh server sync runs immediately after the submission finishes.
-  if(submittingMove || kfPendingClockMove) return;
+  // Never replace an in-flight optimistic board. Process the newest update
+  // as soon as the RPC ends instead of waiting for the next polling cycle.
+  if(submittingMove || kfPendingClockMove){
+    var pendingAt=kfDeferredGameRow&&kfDeferredGameRow.last_move_at?
+      Date.parse(kfDeferredGameRow.last_move_at):0;
+    var incomingAt=row.last_move_at?Date.parse(row.last_move_at):0;
+    if(!kfDeferredGameRow || incomingAt>=pendingAt)kfDeferredGameRow=row;
+    return;
+  }
 
   // Realtime events can arrive out of order; never apply an older move snapshot.
   var incomingMoveTime = row.last_move_at ? Date.parse(row.last_move_at) : 0;
@@ -3866,8 +3882,10 @@ var kfBoardNeedsDraw=false;
 if(game && row.fen && game.fen()!==row.fen){
   try{
     var kfLoaded=false;
-    if(prevConfirmedFen && game.fen()===prevConfirmedFen &&
-       row.last_move && row.last_move.from && row.last_move.to){
+    // The local game may already contain our just-submitted move. Try the
+    // incoming one-move delta from that position and verify the resulting FEN.
+    // If it doesn't match, undo and safely fall back to the server snapshot.
+    if(row.last_move && row.last_move.from && row.last_move.to){
       var kfDelta=null;
       try{
         kfDelta=game.move({
@@ -6604,6 +6622,9 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
   } finally {
     if(optimisticPaint != null) clearTimeout(optimisticPaint);
     submittingMove=false;kfPendingClockMove=false;kfClockBeforeMove=null;
+    // Apply the newest buffered Realtime update before the fallback fetch.
+    // This is especially important when both players use fast premoves.
+    if(onlineGameId===submittedGameId)kfDrainDeferredGameRow();
     // Reconcile once with the server after ignored in-flight/realtime snapshots.
     if(onlineGameId === submittedGameId){
       setTimeout(function(){ syncGameState(submittedGameId); }, 120);
