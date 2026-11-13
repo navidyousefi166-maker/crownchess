@@ -4403,21 +4403,30 @@ function stopFullscreenNameMarquee(){
   draw();
 }
 
+var kfFullscreenStatsRequestId = 0;
 async function renderFullscreenStats(){
   if(!currentUser || !onlineGame || !sb) return;
+  var requestId = ++kfFullscreenStatsRequestId;
   var gameSnapshot = onlineGame;
-  var myIsWhite = (gameSnapshot.white_id === currentUser.id);
+  var userId = currentUser.id;
+  var myIsWhite = (gameSnapshot.white_id === userId);
   var oppId = myIsWhite ? gameSnapshot.black_id : gameSnapshot.white_id;
   var myWins = 0, myTrophyWins = 0, oppWins = 0, oppTrophyWins = 0;
+  function isCurrent(){
+    return requestId === kfFullscreenStatsRequestId &&
+      !!onlineGame && onlineGame.id === gameSnapshot.id &&
+      !!currentUser && currentUser.id === userId &&
+      document.body.classList.contains("game-focus");
+  }
   try{
     // Read canonical stats from kf_player_stats, not stale/missing per-game fields.
-    var myStatsRes = await sb.from("kf_player_stats").select("wins,tournament_wins").eq("user_id", currentUser.id).maybeSingle();
+    var myStatsRes = await sb.from("kf_player_stats").select("wins,tournament_wins").eq("user_id", userId).maybeSingle();
     if(myStatsRes.data){
       myWins = Number(myStatsRes.data.wins || 0);
       myTrophyWins = Number(myStatsRes.data.tournament_wins || 0);
     }
   } catch(e){ console.warn("Could not load own profile stats:", e); }
-  $("gfsBotStats").innerHTML = '<span class="gfs-stat">🏆 ' + fmtStat(myTrophyWins) + '</span><span class="gfs-stat">' + fmtStat(myWins) + ' crowns</span>';
+  if(!isCurrent()) return;
 
   if(oppId){
     try{
@@ -4428,8 +4437,9 @@ async function renderFullscreenStats(){
       }
     } catch(e){ console.warn("Could not load opponent profile stats:", e); }
   }
-  // Avoid an older async request painting stats over a newly opened game.
-  if(!onlineGame || onlineGame.id !== gameSnapshot.id || !currentUser || currentUser.id !== gameSnapshot[myIsWhite ? "white_id" : "black_id"]) return;
+  // Only the latest request for the visible game may update either stats panel.
+  if(!isCurrent()) return;
+  $("gfsBotStats").innerHTML = '<span class="gfs-stat">🏆 ' + fmtStat(myTrophyWins) + '</span><span class="gfs-stat">' + fmtStat(myWins) + ' crowns</span>';
   $("gfsTopStats").innerHTML = '<span class="gfs-stat">🏆 ' + fmtStat(oppTrophyWins) + '</span><span class="gfs-stat">' + fmtStat(oppWins) + ' crowns</span>';
 }
 
