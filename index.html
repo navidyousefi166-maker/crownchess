@@ -4068,12 +4068,6 @@ if(row.is_tournament){
     return;
   }
 
-  /* Quick Play cancelled: show the cancellation screen without winner or stats. */
-  if(row.status === "cancelled" && !row.is_tournament){
-    if(!$("celebrationScreen").classList.contains("show")) handleQuickPlayCancelled();
-    return;
-  }
-
   /* Game completed */
   if(row.status === "completed"){
     /* Completion scoring and tournament progression happen in database triggers. */
