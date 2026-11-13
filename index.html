@@ -4111,7 +4111,17 @@ if(game && row.fen && game.fen()!==row.fen){
 // A rejected premove still needs a repaint of the authoritative position.
 var kfHadPremove=!!(kfPremoveQueued && row.status==="active" &&
   currentUser && row.turn===(row.white_id===currentUser.id?"w":"b"));
-var kfPremoveExecuted=kfHadPremove && kfMaybeExecuteLocalPremove(row);
+var kfServerCommittedPremove=!!(kfPremoveQueued&&currentUser&&
+  row.id===kfPremoveGameId&&row.last_move&&
+  row.last_move.from===kfPremoveQueued.from&&
+  row.last_move.to===kfPremoveQueued.to&&
+  row.turn!==(row.white_id===currentUser.id?"w":"b")&&
+  kfPremoveQueued.expectedFen&&row.fen!==kfPremoveQueued.expectedFen);
+if(kfServerCommittedPremove){
+  kfPremoveQueued=null;kfPremoveSelected=null;kfPremoveQueueSerial++;
+}
+var kfPremoveExecuted=!kfServerCommittedPremove&&kfHadPremove&&
+  kfMaybeExecuteLocalPremove(row);
 if(!kfPremoveExecuted &&
    (kfBoardNeedsDraw || (row.last_move_at!==prevLastMoveAt && game && row.fen===game.fen())))
   draw();
@@ -7403,6 +7413,68 @@ function updateHistory(){
 
 /* ===== Browser-only premove: legality checked on the newly received turn ===== */
 var kfPremoveSelected=null,kfPremoveQueued=null,kfPremoveGameId=null;
+var kfPremoveQueueSerial=0;
+function kfBuildPremoveCandidates(pm){
+  if(!onlineGame||!game||!pm||!onlineGame.pgn)return [];
+  var simulation=new Chess();
+  try{
+    if(!simulation.load_pgn(onlineGame.pgn) ||
+       simulation.fen()!==onlineGame.fen)return [];
+  }catch(e){return [];}
+  var choices=[];
+  try{
+    var replies=simulation.moves({verbose:true});
+    for(var i=0;i<replies.length;i++){
+      var opponent=replies[i],played=null,reply=null;
+      try{
+        played=simulation.move({from:opponent.from,to:opponent.to,
+          promotion:opponent.promotion||"q"});
+        if(!played||simulation.game_over())continue;
+        var oppFen=simulation.fen();
+        reply=simulation.move({from:pm.from,to:pm.to,
+          promotion:pm.promotion||"q"});
+        if(!reply||simulation.game_over())continue;
+        choices.push({opponent_fen:oppFen,from:pm.from,to:pm.to,
+          promotion:pm.promotion||null,fen:simulation.fen(),
+          pgn:simulation.pgn(),san:reply.san,
+          new_turn:simulation.turn(),status:"active"});
+      }catch(e){}finally{
+        if(reply)simulation.undo();
+        if(played)simulation.undo();
+      }
+    }
+  }catch(e){return [];}
+  return choices;
+}
+function kfCancelQueuedServerPremove(){
+  kfPremoveQueueSerial++;
+  if(sb&&onlineGameId)sb.rpc("kf_cancel_premove_cache_v1",
+    {p_game_id:onlineGameId}).then(function(){},function(){});
+}
+function kfQueueServerPremove(pm){
+  if(!sb||!onlineGame||!onlineGameId||!pm)return;
+  var expected=onlineGame.fen,gameId=onlineGameId;
+  var candidates=kfBuildPremoveCandidates(pm);
+  // Unavailable candidate coverage safely falls back to ordinary submission.
+  if(!candidates.length)return;
+  var serial=++kfPremoveQueueSerial;
+  pm.expectedFen=expected;pm.serverPending=true;
+  sb.rpc("kf_queue_premove_cache_v1",{
+    p_game_id:gameId,p_expected_fen:expected,
+    p_from:pm.from,p_to:pm.to,p_promotion:pm.promotion||null,
+    p_candidates:candidates
+  }).then(function(res){
+    if(serial!==kfPremoveQueueSerial||kfPremoveQueued!==pm||
+       onlineGameId!==gameId){
+      if(sb&&gameId)sb.rpc("kf_cancel_premove_cache_v1",
+        {p_game_id:gameId}).then(function(){},function(){});
+      return;
+    }
+    pm.serverPending=false;
+    pm.serverReady=!res.error&&res.data===true;
+  }).catch(function(){pm.serverPending=false;});
+}
+
 // Fast, speculative premove geometry. Opponent pieces may move before
 // execution, so this deliberately does not claim future legality.
 function kfPremoveGeometry(from,to,color){
@@ -7452,9 +7524,10 @@ async function kfHandlePremoveSquare(square,color){
   if(square===kfPremoveSelected){kfPremoveSelected=null;draw();return;}
   if(!kfPremoveSelected&&kfPremoveQueued&&
     (square===kfPremoveQueued.from||square===kfPremoveQueued.to)){
-    kfPremoveQueued=null;draw();return;
+    kfCancelQueuedServerPremove();kfPremoveQueued=null;draw();return;
   }
   if(piece&&piece.color===color){
+    if(kfPremoveQueued){kfCancelQueuedServerPremove();kfPremoveQueued=null;}
     kfPremoveSelected=square;
     draw();
     return;
@@ -7481,9 +7554,9 @@ async function kfHandlePremoveSquare(square,color){
       draw();return;
     }
   }
-  // Entirely browser-local: nothing is sent to Supabase at queue time.
   kfPremoveQueued={from:from,to:square,promotion:promotion};
   draw();
+  kfQueueServerPremove(kfPremoveQueued);
 }
 function kfStartOptimisticClock(m){
   if(!onlineGameId)return;
@@ -7545,6 +7618,7 @@ function kfMaybeExecuteLocalPremove(row){
   var pm=kfPremoveQueued;
   kfPremoveQueued=null;
   kfPremoveSelected=null;
+  kfPremoveQueueSerial++;
   var move=null;
   try{move=game.move({from:pm.from,to:pm.to,promotion:pm.promotion||"q"});}catch(e){}
   if(!move){
