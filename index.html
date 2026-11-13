@@ -4120,8 +4120,16 @@ var kfServerCommittedPremove=!!(kfPremoveQueued&&currentUser&&
 if(kfServerCommittedPremove){
   kfPremoveQueued=null;kfPremoveSelected=null;kfPremoveQueueSerial++;
 }
+// If the queue was accepted by PostgreSQL, do not race the same move
+// through the old browser RPC when an intermediate opponent snapshot arrives.
 var kfPremoveExecuted=!kfServerCommittedPremove&&kfHadPremove&&
+  !(kfPremoveQueued&&(kfPremoveQueued.serverPending||kfPremoveQueued.serverReady))&&
   kfMaybeExecuteLocalPremove(row);
+if(kfHadPremove && kfPremoveQueued && kfPremoveQueued.serverReady){
+  // The database may decline an illegal premove without changing the turn.
+  // Repaint from server truth and drop the queued visual preview.
+  kfPremoveQueued=null;kfPremoveSelected=null;kfPremoveQueueSerial++;
+}
 if(!kfPremoveExecuted &&
    (kfBoardNeedsDraw || (row.last_move_at!==prevLastMoveAt && game && row.fen===game.fen())))
   draw();
@@ -7415,11 +7423,13 @@ function updateHistory(){
 var kfPremoveSelected=null,kfPremoveQueued=null,kfPremoveGameId=null;
 var kfPremoveQueueSerial=0;
 function kfBuildPremoveCandidates(pm){
-  if(!onlineGame||!game||!pm||!onlineGame.pgn)return [];
+  if(!onlineGame||!game||!pm)return [];
   var simulation=new Chess();
   try{
-    if(!simulation.load_pgn(onlineGame.pgn) ||
-       simulation.fen()!==onlineGame.fen)return [];
+    if(onlineGame.pgn){
+      if(!simulation.load_pgn(onlineGame.pgn))return [];
+    }
+    if(simulation.fen()!==onlineGame.fen)return [];
   }catch(e){return [];}
   var choices=[];
   try{
