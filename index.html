@@ -4146,7 +4146,9 @@ var kfServerCommittedPremove=!!(kfPremoveQueued&&currentUser&&
   row.last_move.to===kfPremoveQueued.to&&
   row.turn!==(row.white_id===currentUser.id?"w":"b")&&
   kfPremoveQueued.expectedFen&&row.fen!==kfPremoveQueued.expectedFen);
-if(kfServerCommittedPremove){
+var kfHistoryConfirmed=!!(currentUser&&row.status==="active"&&row.id===kfPremoveGameId&&
+  kfPremoveQueued&&kfPremoveConfirmedByHistory(kfPremoveQueued,row));
+if(kfServerCommittedPremove||kfHistoryConfirmed){
   kfPremoveQueued=null;kfPremoveSelected=null;kfPremoveQueueSerial++;
 }
 // The local fallback clears the head before submit; only the authoritative
@@ -4156,7 +4158,9 @@ var kfLocalPremoveConfirmed=!!(kfPremoveAwaiting&&currentUser&&row.id===kfPremov
   row.last_move.to===kfPremoveAwaiting.to&&
   row.turn!==(row.white_id===currentUser.id?"w":"b")&&
   row.fen!==kfPremoveAwaiting.expectedFen);
-if(kfServerCommittedPremove||kfLocalPremoveConfirmed){
+kfLocalPremoveConfirmed=kfLocalPremoveConfirmed||
+  !!(currentUser&&kfPremoveAwaiting&&kfPremoveConfirmedByHistory(kfPremoveAwaiting,row));
+if(kfServerCommittedPremove||kfHistoryConfirmed||kfLocalPremoveConfirmed){
   kfAdvancePremoveHead(row,true);
 } else if(kfPremoveAwaiting&&currentUser&&row.turn!==(row.white_id===currentUser.id?"w":"b")&&
           row.fen!==kfPremoveAwaiting.expectedFen){
@@ -4165,7 +4169,7 @@ if(kfServerCommittedPremove||kfLocalPremoveConfirmed){
 }
 // If the queue was accepted by PostgreSQL, do not race the same move
 // through the old browser RPC when an intermediate opponent snapshot arrives.
-var kfPremoveExecuted=!kfServerCommittedPremove&&!kfLocalPremoveConfirmed&&kfHadPremove&&
+var kfPremoveExecuted=!kfServerCommittedPremove&&!kfHistoryConfirmed&&!kfLocalPremoveConfirmed&&kfHadPremove&&
   !(kfPremoveQueued&&(kfPremoveQueued.serverPending||
     (kfPremoveQueued.serverReady&&
       (!kfPremoveQueued.terminalOpponentFens||
@@ -7506,16 +7510,38 @@ function kfPremoveBoard(){
   }
   return board;
 }
+function kfPremoveConfirmedByHistory(pm,row){
+  if(!pm||!row||!row.pgn||pm.expectedPly==null)return false;
+  var probe=new Chess();
+  try{if(!probe.load_pgn(row.pgn)||probe.fen()!==row.fen)return false;}
+  catch(e){return false;}
+  var moves=probe.history({verbose:true}),index=pm.expectedPly+1;
+  return !!(moves[index]&&moves[index].from===pm.from&&moves[index].to===pm.to&&
+    (!pm.promotion||moves[index].promotion===pm.promotion));
+}
 function kfAdvancePremoveHead(row,completed){
-  if(!row||!currentUser||row.status!=="active")return;
+  if(!completed||!row||!currentUser||row.status!=="active")return;
   var myColor=row.white_id===currentUser.id?"w":row.black_id===currentUser.id?"b":null;
-  if(!myColor||row.turn===myColor)return;
-  if(completed){
-    kfPremoveAwaiting=null;
-    kfPremoveQueued=kfPremoveTail.shift()||null;
-    kfPremoveSelected=null;
-    if(kfPremoveQueued)kfQueueServerPremove(kfPremoveQueued);
-  }
+  if(!myColor)return;
+  kfPremoveAwaiting=null;
+  kfPremoveQueued=kfPremoveTail.shift()||null;
+  kfPremoveSelected=null;
+  if(!kfPremoveQueued)return;
+  if(row.turn!==myColor){kfQueueServerPremove(kfPremoveQueued);return;}
+  // Realtime skipped the intermediate opponent-turn snapshot: the next
+  // opponent move is already committed. Consume this head immediately.
+  var next=kfPremoveQueued;
+  kfPremoveQueued=null;kfPremoveQueueSerial++;
+  kfPremoveAwaiting=next;next.expectedFen=row.fen;
+  next.expectedPly=Math.max(0,game.history().length-1);
+  var move=null;
+  try{move=game.move({from:next.from,to:next.to,promotion:next.promotion||"q"});}catch(e){}
+  if(!move){kfResetPremovePlan();draw();return;}
+  last={from:move.from,to:move.to};selected=null;targets=[];
+  var startedAt=performance.now();
+  kfStartOptimisticClock(move);
+  kfPaintPremoveSquaresImmediately(row,next);
+  submitMove(move,Math.floor(clockWhite),Math.floor(clockBlack),startedAt,true);
 }
 
 function kfBuildPremoveCandidates(pm){
@@ -7568,6 +7594,8 @@ function kfCancelQueuedServerPremove(){
 function kfQueueServerPremove(pm){
   if(!sb||!onlineGame||!onlineGameId||!pm)return;
   var expected=onlineGame.fen,gameId=onlineGameId;
+  pm.expectedFen=expected;
+  pm.expectedPly=game.history().length;
   var candidates=kfBuildPremoveCandidates(pm);
   // Unavailable candidate coverage safely falls back to ordinary submission.
   if(!candidates.length)return;
@@ -7579,11 +7607,7 @@ function kfQueueServerPremove(pm){
     p_candidates:candidates
   }).then(function(res){
     if(serial!==kfPremoveQueueSerial||kfPremoveQueued!==pm||
-       onlineGameId!==gameId){
-      if(sb&&gameId)sb.rpc("kf_cancel_premove_cache_v1",
-        {p_game_id:gameId}).then(function(){},function(){});
-      return;
-    }
+       onlineGameId!==gameId)return;
     pm.serverPending=false;
     pm.serverReady=!res.error&&res.data===true;
     // If the opponent played before this queue could reach PostgreSQL,
@@ -7769,7 +7793,8 @@ function kfMaybeExecuteLocalPremove(row){
   var color=row.white_id===currentUser.id?"w":row.black_id===currentUser.id?"b":null;
   if(!color||row.turn!==color||game.turn()!==color||game.fen()!==row.fen)return;
   var pm=kfPremoveQueued;
-  pm.expectedFen=row.fen;
+  pm.expectedFen=pm.expectedFen||onlineGame.fen;
+  if(pm.expectedPly==null)pm.expectedPly=Math.max(0,game.history().length-1);
   kfPremoveAwaiting=pm;
   kfPremoveQueued=null;
   kfPremoveSelected=null;
