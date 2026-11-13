@@ -8149,7 +8149,13 @@ async function loadAdminStreakReviews(){
   target.innerHTML=rows.length?rows.map(function(r){
    var games=Array.isArray(r.game_snapshots)?r.game_snapshots:[];
    var buttons=games.map(function(g,i){
-    return '<button type="button" class="btn" data-streak-id="'+adminEscape(String(r.id))+'" data-streak-game="'+i+'">Analyze game '+(i+1)+'</button>';
+    var pgn=typeof g.pgn==="string"?g.pgn:"";
+    return '<div class="admin-report-details" style="margin:10px 0;padding:9px;border:1px solid var(--line);border-radius:8px">'+
+      '<strong>Game '+(i+1)+' · PGN</strong>'+
+      '<div class="admin-report-actions">'+
+      '<button type="button" class="btn" data-streak-id="'+adminEscape(String(r.id))+'" data-streak-copy="'+i+'" '+(pgn?'':'disabled')+'>Copy PGN</button>'+
+      '<button type="button" class="btn" data-streak-id="'+adminEscape(String(r.id))+'" data-streak-game="'+i+'" '+(pgn?'':'disabled')+'>Analyze game '+(i+1)+'</button></div>'+
+      '<div style="white-space:pre-wrap;overflow-wrap:anywhere;user-select:text;font-size:12px;line-height:1.6">'+adminEscape(pgn||"PGN unavailable")+'</div></div>';
    }).join("");
    var outcome=reportById[String(r.id)]||{};
    var eng=outcome.report||null;
@@ -8190,6 +8196,28 @@ $("adminStreakReviewsList").addEventListener("click",async function(event){
  var id=button.getAttribute("data-streak-id");
  var record=kfStreakReviewRows.find(function(x){return String(x.id)===id;});
  if(!record)return;
+ if(button.hasAttribute("data-streak-copy")){
+  var copyIndex=Number(button.getAttribute("data-streak-copy"));
+  var copyGame=Array.isArray(record.game_snapshots)?record.game_snapshots[copyIndex]:null;
+  var pgnText=copyGame&&typeof copyGame.pgn==="string"?copyGame.pgn:"";
+  if(!pgnText){say("PGN unavailable.",{error:true});return;}
+  try{
+   await navigator.clipboard.writeText(pgnText);
+   say("Game "+(copyIndex+1)+" PGN copied.",{silentToast:true});
+  }catch(e){
+   var area=document.createElement("textarea");
+   area.value=pgnText;
+   area.style.position="fixed";area.style.opacity="0";
+   document.body.appendChild(area);
+   area.focus();area.select();
+   var copied=false;
+   try{copied=document.execCommand("copy");}catch(ignore){}
+   area.remove();
+   if(copied)say("Game "+(copyIndex+1)+" PGN copied.",{silentToast:true});
+   else say("Could not copy PGN. Select the displayed text to copy.",{error:true});
+  }
+  return;
+ }
  if(button.hasAttribute("data-streak-delete")){
   if(!confirm("Permanently delete this anti-cheat case and its saved analysis from Supabase? This cannot be undone."))return;
   button.disabled=true;
