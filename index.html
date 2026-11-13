@@ -6689,8 +6689,7 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
       // Error-only, fire-and-forget diagnostic. Never runs for accepted moves.
       // Server independently verifies legality from the authoritative game FEN.
       // Do not await: UI rollback, clock and premoves must remain independent.
-      if(status !== "completed" && onlineGame && onlineGame.fen &&
-         m && m.from && m.to){
+      if(onlineGame && onlineGame.fen && m && m.from && m.to){
         try{
           var rejectedReport = sb.functions.invoke("kf-report-rejected-move", {
             body: {
