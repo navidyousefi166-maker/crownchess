@@ -2811,17 +2811,33 @@ function renderLeaderboardRows(){
     else if(rankNum === 3) rankClass = " bronze";
     var medals = ["🥇","🥈","🥉"];
     var rankText = rankNum <= 3 ? medals[rankNum-1] : String(rankNum);
+    // Build a fixed template: database-supplied names and avatar URLs must
+    // never be parsed as HTML or as attributes.
     div.innerHTML =
-      '<div class="lb-rank' + rankClass + '">' + rankText + '</div>' +
-      '<div class="lb-user">' +
-        '<img src="' + (row.avatar_url || defaultAvatar()) + '" alt="">' +
-        '<div class="lb-name">' + (row.username || "Player") + (isMe ? ' <span style="color:var(--gold);font-size:10px">(YOU)</span>' : '') + '</div>' +
-      '</div>' +
-      '<div class="lb-stat wins">' + fmtStat(row.wins || 0) + '</div>' +
-      '<div class="lb-stat trophies">' + fmtStat(row.tournament_wins || 0) + '</div>' +
-      '<div class="lb-stat humil">' + fmtStat(row.humiliation_losses || 0) + '</div>' +
-      '<div class="lb-stat bt" title="Blood Tributes wins">' + fmtStat(row.bt_wins || 0) + '</div>' +
-      '<div class="lb-stat overall" title="Crowns + BT + 20 × Tournament wins">' + fmtStat(getLeaderboardOverall(row)) + '</div>';
+      '<div class="lb-rank' + rankClass + '"></div>' +
+      '<div class="lb-user"><img alt=""><div class="lb-name"></div></div>' +
+      '<div class="lb-stat wins"></div>' +
+      '<div class="lb-stat trophies"></div>' +
+      '<div class="lb-stat humil"></div>' +
+      '<div class="lb-stat bt" title="Blood Tributes wins"></div>' +
+      '<div class="lb-stat overall" title="Crowns + BT + 20 × Tournament wins"></div>';
+    div.querySelector(".lb-rank").textContent = rankText;
+    var avatar = div.querySelector(".lb-user img");
+    var avatarUrl = typeof row.avatar_url === "string" ? row.avatar_url.trim() : "";
+    avatar.src = /^https:\/\//i.test(avatarUrl) ? avatarUrl : defaultAvatar();
+    var nameNode = div.querySelector(".lb-name");
+    nameNode.textContent = row.username || "Player";
+    if(isMe){
+      var you = document.createElement("span");
+      you.style.cssText = "color:var(--gold);font-size:10px";
+      you.textContent = " (YOU)";
+      nameNode.appendChild(you);
+    }
+    div.querySelector(".lb-stat.wins").textContent = fmtStat(row.wins || 0);
+    div.querySelector(".lb-stat.trophies").textContent = fmtStat(row.tournament_wins || 0);
+    div.querySelector(".lb-stat.humil").textContent = fmtStat(row.humiliation_losses || 0);
+    div.querySelector(".lb-stat.bt").textContent = fmtStat(row.bt_wins || 0);
+    div.querySelector(".lb-stat.overall").textContent = fmtStat(getLeaderboardOverall(row));
     list.appendChild(div);
   }
 }
@@ -2858,8 +2874,8 @@ async function loadLeaderboard(){
   var res = await sb.rpc("kf_get_leaderboard_bt", {p_limit: 100});
   if(res.error){
     console.error("Leaderboard error:", res);
-    list.innerHTML = '<div class="lb-empty">Could not load leaderboard.<br><small style="color:#ef8b83;word-break:break-word;display:block;margin-top:8px">'+
-      (res.error.message || JSON.stringify(res.error)) + '</small></div>';
+    list.innerHTML = '<div class="lb-empty">Could not load leaderboard.<small style="color:#ef8b83;word-break:break-word;display:block;margin-top:8px"></small></div>';
+    list.querySelector("small").textContent = res.error.message || JSON.stringify(res.error);
     return;
   }
   var data = res.data || [];
