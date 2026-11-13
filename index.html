@@ -2700,7 +2700,7 @@ function setPlayer(color, player){
 // the stopped player's clock with a post-move visual animation.
 function paintClocks(){
   // A clock repaint used to replay the move history up to six times.
-  var canRun = game && !clockExpired && !(onlineGame && onlineGame.kf_mate_pending) && !game.game_over();
+  var canRun = game && !clockExpired && !game.game_over();
   var displayTurn = (onlineGameId && onlineGame && onlineGame.turn) ? onlineGame.turn : (game ? game.turn() : "w");
   var colors = ["white", "black"];
   for(var i=0;i<colors.length;i++){
@@ -4043,7 +4043,6 @@ function applyOnlineGame(row){
   var prevClockTurn = onlineGame ? onlineGame.turn : clockPerfTurn;
   // Keep the received server snapshot independent of local optimistic turns.
   onlineGame = Object.assign({},row);
-  if(row.kf_mate_pending)kfRequestMateReviewIfPending(row);
   if(kfPremoveGameId&&kfPremoveGameId!==row.id){kfPremoveSelected=null;kfPremoveQueued=null;}
   if(row.status!=="active"){kfPremoveSelected=null;kfPremoveQueued=null;}
   kfPremoveGameId=row.id;
@@ -4109,26 +4108,6 @@ if(game && row.fen && game.fen()!==row.fen){
   }
 }
 
-// Both players may request post-commit verification. Never await this call
-// in the fast premove path; retries happen on the next game-state sync.
-var kfMateReviewRequests=Object.create(null);
-function kfRequestMateReviewIfPending(row){
-  if(!sb||!currentUser||!row||!row.kf_mate_pending||
-    (currentUser.id!==row.white_id&&currentUser.id!==row.black_id))return;
-  var key=row.id+"|"+row.fen+"|"+row.last_move_at;
-  var prev=kfMateReviewRequests[key],now=Date.now();
-  if(prev && (prev.busy || now-prev.at<1800))return;
-  kfMateReviewRequests[key]={at:now,busy:true};
-  sb.functions.invoke("kf-submit-terminal-v1",{
-    body:{mode:"verify_premove_mate",game_id:row.id}
-  }).then(function(res){
-    kfMateReviewRequests[key]={at:Date.now(),busy:false};
-    if(!res.error && onlineGameId===row.id)syncGameState(row.id);
-  }).catch(function(){
-    kfMateReviewRequests[key]={at:Date.now(),busy:false};
-  });
-}
-
 // A rejected premove still needs a repaint of the authoritative position.
 var kfHadPremove=!!(kfPremoveQueued && row.status==="active" &&
   currentUser && row.turn===(row.white_id===currentUser.id?"w":"b"));
@@ -4147,8 +4126,7 @@ var kfPremoveExecuted=!kfServerCommittedPremove&&kfHadPremove&&
   !(kfPremoveQueued&&(kfPremoveQueued.serverPending||
     (kfPremoveQueued.serverReady&&
       (!kfPremoveQueued.terminalOpponentFens||
-       kfPremoveQueued.terminalOpponentFens.indexOf(row.fen)===-1||
-       (kfPremoveQueued.mateOpponentFens||[]).indexOf(row.fen)!==-1))))&&
+       kfPremoveQueued.terminalOpponentFens.indexOf(row.fen)===-1))))&&
   kfMaybeExecuteLocalPremove(row);
 if(kfHadPremove && kfPremoveQueued && kfPremoveQueued.serverReady){
   // The database may decline an illegal premove without changing the turn.
@@ -4263,10 +4241,7 @@ if(row.is_tournament){
   }
   }
 function tickClock(){
-  if((onlineGame && onlineGame.kf_mate_pending) ||
-     computerMode || !game || (game.game_over() && !kfPendingClockMove) || clockExpired){
-    paintClocks(); return;
-  }
+  if(computerMode || !game || (game.game_over() && !kfPendingClockMove) || clockExpired){ paintClocks(); return; }
   if(!onlineGameId || !onlineGame || onlineGame.status !== "active"){ paintClocks(); return; }
 
   // BETA FOLLOW-UP: the new turn does not officially begin until validation
@@ -7463,7 +7438,6 @@ function kfBuildPremoveCandidates(pm){
   try{
     var replies=simulation.moves({verbose:true});
     pm.terminalOpponentFens=[];
-    pm.mateOpponentFens=[];
     for(var i=0;i<replies.length;i++){
       var opponent=replies[i],played=null,reply=null;
       try{
@@ -7475,17 +7449,8 @@ function kfBuildPremoveCandidates(pm){
           promotion:pm.promotion||"q"});
         if(!reply)continue;
         if(simulation.game_over()){
+          // This position must use the existing fully-verified terminal move path.
           pm.terminalOpponentFens.push(oppFen);
-          if(simulation.in_checkmate()){
-            // Only checkmate premoves use the pre-existing one-hop DB route.
-            // The server verifies the result after the atomic clock pause.
-            pm.mateOpponentFens.push(oppFen);
-            choices.push({opponent_fen:oppFen,from:pm.from,to:pm.to,
-              promotion:pm.promotion||null,fen:simulation.fen(),
-              pgn:simulation.pgn(),san:reply.san,
-              new_turn:simulation.turn(),status:"mate_pending"});
-          }
-          // All other terminal outcomes retain the original verified endpoint.
           continue;
         }
         choices.push({opponent_fen:oppFen,from:pm.from,to:pm.to,
@@ -8148,10 +8113,9 @@ async function loadAdminRejectedMoveReports(){
    var opponent=side==="White"?a.black_username:a.white_username;
    var when=a.reported_at?new Date(a.reported_at).toLocaleString():"Unknown time";
    return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">⚠️ '+adminEscape(name||"Unknown player")+' · '+side+'</div><div class="admin-user-meta">Against '+adminEscape(opponent||"Unknown")+' · '+adminEscape(when)+'</div></div></div>'+
-    (String(a.reason||"").indexOf("Invalid Endgame")===0?'<div class="kf-invalid-endgame-tag" style="display:inline-block;margin:5px 0;padding:4px 9px;border:1px solid #e4aa44;border-radius:8px;color:#e4aa44;font-weight:700">Invalid Endgame</div>':'')+
     '<div class="kf-accused-id"><span>Accused player ID</span><code>'+adminEscape(a.player_id||"Unknown")+'</code><button type="button" class="kf-copy-accused-id" data-player-id="'+adminEscape(a.player_id||"")+'">Copy ID</button><button type="button" class="kf-delete-illegal-report" data-report-id="'+adminEscape(a.id||"")+'">Delete</button></div>'+
     adminIllegalBoard(a)+
-    '<details class="kf-evidence-details"><summary>Technical details (FEN, PGN, IDs)</summary><div class="admin-user-meta">Reason: '+adminEscape(a.reason||"")+'</div><div class="admin-user-meta">Game: '+adminEscape(a.game_id||"")+' · Account: '+adminEscape(a.player_id||"")+'</div><div class="admin-user-meta">FEN: '+adminEscape(a.position_fen||"")+'</div><div class="admin-user-meta">PGN: '+adminEscape(String(a.position_pgn||"").slice(-1000)||"—")+'</div></details></article>';
+    '<details class="kf-evidence-details"><summary>Technical details (FEN, PGN, IDs)</summary><div class="admin-user-meta">Game: '+adminEscape(a.game_id||"")+' · Account: '+adminEscape(a.player_id||"")+'</div><div class="admin-user-meta">FEN: '+adminEscape(a.position_fen||"")+'</div><div class="admin-user-meta">PGN: '+adminEscape(String(a.position_pgn||"").slice(-1000)||"—")+'</div></details></article>';
   }).join("");
  }catch(err){target.innerHTML='<div class="admin-empty">Could not load rejected moves: '+adminEscape(err.message||err)+'</div>';}
 }
