@@ -4151,14 +4151,14 @@ if(kfServerCommittedPremove){
 }
 // The local fallback clears the head before submit; only the authoritative
 // server acknowledgement can advance its remaining queued moves.
-var kfLocalPremoveConfirmed=!!(kfPremoveAwaiting&&row.id===kfPremoveGameId&&
+var kfLocalPremoveConfirmed=!!(kfPremoveAwaiting&&currentUser&&row.id===kfPremoveGameId&&
   row.last_move&&row.last_move.from===kfPremoveAwaiting.from&&
   row.last_move.to===kfPremoveAwaiting.to&&
   row.turn!==(row.white_id===currentUser.id?"w":"b")&&
   row.fen!==kfPremoveAwaiting.expectedFen);
 if(kfServerCommittedPremove||kfLocalPremoveConfirmed){
   kfAdvancePremoveHead(row,true);
-} else if(kfPremoveAwaiting&&row.turn!==(row.white_id===currentUser.id?"w":"b")&&
+} else if(kfPremoveAwaiting&&currentUser&&row.turn!==(row.white_id===currentUser.id?"w":"b")&&
           row.fen!==kfPremoveAwaiting.expectedFen){
   // A failed optimistic submission cannot carry speculative moves forward.
   kfResetPremovePlan();
