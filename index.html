@@ -7701,7 +7701,10 @@ async function loadChampion(){
   if(res.error || !res.data) return;
   var d = res.data;
   var banner = $("championBanner");
-  if(d.status === "champion"){
+  var crownedAt = Date.parse(d.completed_at);
+  var withinChampionHour = Number.isFinite(crownedAt) &&
+    Date.now() >= crownedAt && Date.now() - crownedAt < 60 * 60 * 1000;
+  if(d.status === "champion" && withinChampionHour){
     $("championAvatar").src = d.winner_avatar || defaultAvatar();
     $("championName").textContent = d.winner_username || "Unknown";
     $("championSub").textContent = "Crowned " + fmtTimeLocal(d.completed_at);
