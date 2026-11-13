@@ -2432,6 +2432,7 @@ var tournActiveMatch = null;
 var startingTournMatchId = null;
 var tournStartBlockedMatchId = null;
 var tournBracketRendered = null;
+var tournPlayersLoadState = "loading";
 var tournStateRequestId = 0;
 var tournBracketRequestId = 0;
 var tournEntryRequestId = 0;
@@ -2881,15 +2882,25 @@ async function loadTournamentState(){
       ++tournEntryRequestId;
       tournBracketRendered = null;
       tournMyEntry = null;
+      tournPlayersLoadState = "loading";
     }
     tournCurrent = nextTournament;
     if(nextId){
       var bracketRequestId = ++tournBracketRequestId;
-      var chRes = await sb.rpc("kf_get_tournament_full", {p_tournament_id: nextId});
+      if(!tournBracketRendered) tournPlayersLoadState = "loading";
+      var chRes;
+      try{
+        chRes = await sb.rpc("kf_get_tournament_full", {p_tournament_id: nextId});
+      } catch(err){
+        chRes = {error:err};
+      }
       if(requestId !== tournStateRequestId || bracketRequestId !== tournBracketRequestId) return;
       if(tournCurrent && tournCurrent.id === nextId && !chRes.error &&
          chRes.data && chRes.data.id === nextId && Array.isArray(chRes.data.entries)){
         tournBracketRendered = chRes.data;
+        tournPlayersLoadState = "ready";
+      } else if(!tournBracketRendered){
+        tournPlayersLoadState = "error";
       }
     }
     await loadLastTournamentState();
@@ -2955,11 +2966,22 @@ async function refreshTournLive(){
   if(!sb || !tournCurrent || !tournCurrent.id) return;
   var tournamentId = tournCurrent.id;
   var requestId = ++tournBracketRequestId;
-  var chRes = await sb.rpc("kf_get_tournament_full", {p_tournament_id: tournamentId});
+  if(!tournBracketRendered) tournPlayersLoadState = "loading";
+  var chRes;
+  try{
+    chRes = await sb.rpc("kf_get_tournament_full", {p_tournament_id: tournamentId});
+  } catch(err){
+    chRes = {error:err};
+  }
   if(requestId !== tournBracketRequestId || !tournCurrent ||
      tournCurrent.id !== tournamentId) return;
   if(!chRes.error && chRes.data && chRes.data.id === tournamentId &&
-     Array.isArray(chRes.data.entries)) tournBracketRendered = chRes.data;
+     Array.isArray(chRes.data.entries)){
+    tournBracketRendered = chRes.data;
+    tournPlayersLoadState = "ready";
+  } else if(!tournBracketRendered){
+    tournPlayersLoadState = "error";
+  }
   await checkMyTournamentEntry();
   if(requestId !== tournBracketRequestId || !tournCurrent ||
      tournCurrent.id !== tournamentId) return;
@@ -3158,7 +3180,17 @@ function renderPlayerList(){
   list.innerHTML = "";
   var entries = tournBracketRendered && tournCurrent && tournBracketRendered.id === tournCurrent.id &&
     Array.isArray(tournBracketRendered.entries) ? tournBracketRendered.entries : [];
-  $("tournPlayerCount").textContent = entries.length + " players" ;
+  var hasEntriesData = !!(tournBracketRendered && tournCurrent &&
+    tournBracketRendered.id === tournCurrent.id &&
+    Array.isArray(tournBracketRendered.entries));
+  if(!hasEntriesData){
+    $("tournPlayerCount").textContent = "— players";
+    list.innerHTML = tournPlayersLoadState === "error"
+      ? '<div class="tourn-empty">Unable to load players. Please try again.</div>'
+      : '<div class="tourn-empty">Loading players...</div>';
+    return;
+  }
+  $("tournPlayerCount").textContent = entries.length + " players";
   if(!entries.length){
     list.innerHTML = '<div class="tourn-empty">No players registered yet.<br>Be the first!</div>';
     return;
