@@ -2936,7 +2936,7 @@ async function refreshTournLive(){
 
 function handleTournUpdate(row){
   if(!row) return;
-  if(!tournCurrent || row.id === tournCurrent.id){
+  if(tournCurrent && row.id === tournCurrent.id){
     tournCurrent = row;
     if(row.status === "completed"){
       loadChampion();
