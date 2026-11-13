@@ -1,0 +1,31 @@
+name: Kingsfall Post-Game Anti-Cheat Review
+
+on:
+  schedule:
+    - cron: "7,17,27,37,47,57 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: kingsfall-anti-cheat
+  cancel-in-progress: false
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout review script
+        uses: actions/checkout@v4
+      - name: Install Stockfish and chess library
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq stockfish
+          python3 -m pip install --user --disable-pip-version-check 'python-chess==1.999'
+      - name: Analyze queued three-win cases
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: python3 scripts/anti_cheat_analyze.py
