@@ -7491,7 +7491,30 @@ function kfQueueServerPremove(pm){
     }
     pm.serverPending=false;
     pm.serverReady=!res.error&&res.data===true;
-  }).catch(function(){pm.serverPending=false;});
+    // If the opponent played before this queue could reach PostgreSQL,
+    // immediately use the existing authenticated fast move path.
+    if(!pm.serverReady&&onlineGame&&onlineGame.status==="active"&&
+       currentUser&&game&&onlineGameId===gameId){
+      var me=onlineGame.white_id===currentUser.id?"w":"b";
+      if(onlineGame.turn===me){
+        if(!kfMaybeExecuteLocalPremove(onlineGame)){
+          kfPremoveQueued=null;draw();
+        }
+      }
+    }
+  }).catch(function(){
+    pm.serverPending=false;
+    if(serial===kfPremoveQueueSerial&&onlineGame&&
+       onlineGame.status==="active"&&currentUser&&
+       onlineGameId===gameId&&kfPremoveQueued===pm){
+      var me=onlineGame.white_id===currentUser.id?"w":"b";
+      if(onlineGame.turn===me){
+        if(!kfMaybeExecuteLocalPremove(onlineGame)){
+          kfPremoveQueued=null;draw();
+        }
+      }
+    }
+  });
 }
 
 // Fast, speculative premove geometry. Opponent pieces may move before
@@ -7559,7 +7582,7 @@ async function kfHandlePremoveSquare(square,color){
     draw();return;
   }
   // Select underpromotion while queuing, never in the time-critical execution path.
-  var promotion="q";
+  var promotion=null;
   var queuedPiece=game.get(from);
   if(queuedPiece && queuedPiece.type==="p" &&
      square.charAt(1)===(color==="w"?"8":"1")){
