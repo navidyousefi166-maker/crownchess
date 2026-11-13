@@ -1643,12 +1643,14 @@ body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark
 <div class="admin-stats" id="adminSecurityFolders">
 <div class="admin-stat player-reports-card" role="button" tabindex="0" aria-label="View player reports"><span>Player Reports</span><strong>—</strong></div>
 <div class="admin-stat shadow-audit-card" role="button" tabindex="0" aria-label="Review verified move anomalies"><span>🔎 Move Integrity</span><strong>—</strong></div>
+<div class="admin-stat clock-reports-card" role="button" tabindex="0" aria-label="Review clock violations"><span>⏱️ Clock Violations</span><strong>—</strong></div>
 <div class="admin-stat streak-reviews-card" role="button" tabindex="0" aria-label="Review three-win streaks"><span>Anti-Cheat Cases</span><strong>—</strong></div>
 <div class="admin-stat suspicious-players-card" role="button" tabindex="0"><span>Suspicious Players</span><strong>—</strong></div>
 </div>
-<div class="admin-footnote">Player Reports = player-submitted allegations · Move Integrity = independent server verification alerts · Anti-Cheat Cases = three-win investigations · Suspicious Players = manual watchlist.</div>
+<div class="admin-footnote">Player Reports = player-submitted allegations · Move Integrity = independent server verification alerts · Clock Violations = server-time discrepancies · Anti-Cheat Cases = three-win investigations · Suspicious Players = manual watchlist.</div>
 </section>
 <section class="admin-section" id="adminFeaturesSection" hidden><div class="admin-section-head"><div><h2>⚙️ Feature Management</h2><p>Temporarily enable or disable game features</p></div></div><div id="adminFeatures" class="admin-features"><div class="admin-loading">Loading features…</div></div></section>
+<section class="admin-section" id="adminClockReportsSection" hidden><div class="admin-section-head"><div><h2>⏱️ Clock Violations</h2><p>Server clock anomalies · independent evidence, not automatic proof of cheating</p></div></div><div id="adminClockReportsList" class="admin-users"><div class="admin-loading">Loading clock reports…</div></div></section>
 <section class="admin-section" id="adminMoveAuditSection" hidden><div class="admin-section-head"><div><h2>🔎 Move Integrity</h2><p>Server-side checks of move legality, position and identity · alerts need manual review</p></div></div><div id="adminAuditAlerts" class="admin-users"><div class="admin-loading">Loading audit alerts…</div></div></section>
 <section class="admin-section" id="adminRejectedMovesSection" hidden aria-hidden="true"><div id="adminRejectedMoves" class="admin-users" hidden></div></section>
 <section class="admin-section" id="adminPlayerReportsSection" hidden><div class="admin-section-head"><div><h2>⚑ Player Reports</h2><p>Player-submitted allegations · not automatic proof of cheating</p></div></div><div id="adminPlayerReportsList" class="admin-users"><div class="admin-loading">Loading reports…</div></div></section>
@@ -8211,6 +8213,7 @@ $("adminPlayerReportsList").addEventListener("click",async function(event){
 async function loadAdminPanel(){
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  loadAdminMoveAuditAlerts();
+ loadAdminClockReports();
  loadAdminPlayerReportsCount();
  loadAdminSuspiciousPlayers();
  loadAdminStreakReviews();
@@ -8270,8 +8273,71 @@ function renderAdminFeatures(rows){
 $("navAdmin").onclick=function(){if(currentUser&&currentUser.id===adminOwnerId)showPage("admin");};
 $("adminRefresh").onclick=loadAdminPanel;$("adminUserSearch").addEventListener("input",renderAdminUsers);
 
+async function loadAdminClockReports(){
+ if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
+ var target=$("adminClockReportsList");
+ try{
+  var response=await sb.rpc("kf_admin_clock_violation_reports",{p_limit:50});
+  if(response.error)throw response.error;
+  var reports=Array.isArray(response.data)?response.data:[];
+  var count=$("adminSecurityFolders").querySelector(".clock-reports-card strong");
+  if(count)count.textContent=fmtStat(reports.length);
+  if(!reports.length){target.innerHTML='<div class="admin-empty">No clock violations reported. Clock auditing is not active yet.</div>';return;}
+  target.innerHTML=reports.map(function(r){
+   function showTime(v){return v==null?"—":Number(v).toFixed(3)+"s";}
+   var id=adminEscape(String(r.id||""));
+   var player=adminEscape(String(r.player_id||"Unknown"));
+   var title=adminEscape(String(r.rule_code||"Clock anomaly").replace(/_/g," "));
+   return '<article class="admin-user"><div class="admin-user-top"><div class="admin-user-ident"><div class="admin-user-name">⏱️ '+title+'</div>'+
+    '<div class="admin-user-meta">'+adminEscape(r.detail||"Clock review required")+'</div>'+
+    '<div class="admin-user-meta">'+adminEscape(r.detected_at?new Date(r.detected_at).toLocaleString():"")+'</div></div></div>'+
+    '<div class="kf-accused-id"><span>Player ID</span><code>'+player+'</code><button type="button" class="kf-clock-copy-id" data-player-id="'+player+'">Copy ID</button>'+
+    '<button type="button" class="kf-clock-delete-report" data-report-id="'+id+'">Delete</button></div>'+
+    '<div class="admin-user-meta">Game: <code>'+adminEscape(r.game_id||"—")+'</code> · Move: '+adminEscape(r.move_number==null?"—":String(r.move_number))+'</div>'+
+    '<div class="admin-user-meta">White: '+showTime(r.previous_white_time)+' → '+showTime(r.current_white_time)+'</div>'+
+    '<div class="admin-user-meta">Black: '+showTime(r.previous_black_time)+' → '+showTime(r.current_black_time)+'</div>'+
+    '<details class="kf-evidence-details"><summary>Server evidence</summary><div class="admin-user-meta">Previous timestamp: '+adminEscape(r.previous_received_at||"—")+'</div>'+
+    '<div class="admin-user-meta">Current timestamp: '+adminEscape(r.current_received_at||"—")+'</div>'+
+    '<pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+adminEscape(JSON.stringify(r.evidence||{},null,2))+'</pre></details></article>';
+  }).join("");
+ }catch(e){target.innerHTML='<div class="admin-empty">Could not load clock reports: '+adminEscape(e.message||e)+'</div>';}
+}
+$("adminClockReportsList").addEventListener("click",async function(e){
+ var copy=e.target.closest(".kf-clock-copy-id");
+ if(copy){
+  var value=copy.getAttribute("data-player-id")||"";
+  try{
+   if(navigator.clipboard&&navigator.clipboard.writeText)await navigator.clipboard.writeText(value);
+   else{var t=document.createElement("textarea");t.value=value;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove();}
+   copy.textContent="Copied ✓";
+  }catch(err){say("Could not copy ID.",{error:true});}
+  return;
+ }
+ var button=e.target.closest(".kf-clock-delete-report");
+ if(!button||button.disabled||!currentUser||currentUser.id!==adminOwnerId)return;
+ var id=button.getAttribute("data-report-id");
+ if(!/^[1-9][0-9]*$/.test(id||"")||!confirm("Permanently delete this clock report?"))return;
+ button.disabled=true;
+ try{
+  var r=await sb.rpc("kf_admin_delete_clock_violation_report",{p_report_id:Number(id)});
+  if(r.error)throw r.error;
+  if(r.data!==true)throw Error("Report already deleted");
+  await loadAdminClockReports();
+ }catch(err){button.disabled=false;say("Could not delete clock report: "+(err.message||err),{error:true});}
+});
+function showClockReports(){
+ if(!currentUser||currentUser.id!==adminOwnerId)return;
+ adminSecurityFolderOpen=true;
+ ["adminOverviewView","adminSecurityHubView","adminFeaturesSection","adminMoveAuditSection","adminStreakReviewsSection","adminSuspiciousPlayersSection","adminPlayerReportsSection","adminUserManagementSection"].forEach(function(id){$(id).hidden=true;});
+ $("adminClockReportsSection").hidden=false;
+ $("adminPageTitle").textContent="⏱️ Clock Violations";
+ $("adminPageSubtitle").textContent="Independent clock anomalies · Admin only";
+ $("adminBackToOverview").hidden=false;
+ loadAdminClockReports();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
 var adminSecurityFolderOpen=false;
-function showSecurityHub(){
+function showSecurityHub(){$("adminClockReportsSection").hidden=true;
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  ["adminOverviewView","adminFeaturesSection","adminMoveAuditSection","adminStreakReviewsSection","adminSuspiciousPlayersSection","adminPlayerReportsSection","adminUserManagementSection"].forEach(function(id){$(id).hidden=true;});
  $("adminSecurityHubView").hidden=false;
@@ -8279,10 +8345,10 @@ function showSecurityHub(){
  $("adminPageTitle").textContent="🛡️ Security Reports";
  $("adminPageSubtitle").textContent="Reports, verification alerts and investigations · Admin only";
  $("adminBackToOverview").hidden=false;
- loadAdminPlayerReportsCount();loadAdminMoveAuditAlerts();loadAdminStreakReviews();loadAdminSuspiciousPlayers();
+ loadAdminPlayerReportsCount();loadAdminMoveAuditAlerts();loadAdminClockReports();loadAdminStreakReviews();loadAdminSuspiciousPlayers();
  window.scrollTo({top:0,behavior:"smooth"});
 }
-function showShadowMoveAudit(){$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=true;
+function showShadowMoveAudit(){$("adminClockReportsSection").hidden=true;$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=true;
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  ["adminOverviewView","adminRejectedMovesSection","adminStreakReviewsSection","adminSuspiciousPlayersSection","adminPlayerReportsSection","adminUserManagementSection"].forEach(function(id){$(id).hidden=true;});
  $("adminMoveAuditSection").hidden=false;
@@ -8292,7 +8358,7 @@ function showShadowMoveAudit(){$("adminSecurityHubView").hidden=true;adminSecuri
  loadAdminMoveAuditAlerts();
  window.scrollTo({top:0,behavior:"smooth"});
 }
-function showStreakReviews(){$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=true;$("adminMoveAuditSection").hidden=true;
+function showStreakReviews(){$("adminClockReportsSection").hidden=true;$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=true;$("adminMoveAuditSection").hidden=true;
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  ["adminOverviewView","adminRejectedMovesSection","adminSuspiciousPlayersSection","adminPlayerReportsSection","adminUserManagementSection"].forEach(function(id){$(id).hidden=true;});
  $("adminStreakReviewsSection").hidden=false;
@@ -8428,13 +8494,13 @@ $("adminStreakReviewsList").addEventListener("click",async function(event){
   openAnalysis();
  }catch(e){say("Could not analyze case: "+(e.message||e),{error:true});}
 });
-function showPlayerReports(){$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=true;$("adminMoveAuditSection").hidden=true;$("adminRejectedMovesSection").hidden=true;$("adminStreakReviewsSection").hidden=true;$("adminSuspiciousPlayersSection").hidden=true;
+function showPlayerReports(){$("adminClockReportsSection").hidden=true;$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=true;$("adminMoveAuditSection").hidden=true;$("adminRejectedMovesSection").hidden=true;$("adminStreakReviewsSection").hidden=true;$("adminSuspiciousPlayersSection").hidden=true;
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  $("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=true;$("adminPlayerReportsSection").hidden=false;
  $("adminPageTitle").textContent="⚑ Player Reports";$("adminPageSubtitle").textContent="Player submissions for admin review";$("adminBackToOverview").hidden=false;
  loadAdminPlayerReports();window.scrollTo({top:0,behavior:"smooth"});
 }
-function showSuspiciousPlayers(){$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=true;$("adminMoveAuditSection").hidden=true;$("adminRejectedMovesSection").hidden=true;$("adminStreakReviewsSection").hidden=true;
+function showSuspiciousPlayers(){$("adminClockReportsSection").hidden=true;$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=true;$("adminMoveAuditSection").hidden=true;$("adminRejectedMovesSection").hidden=true;$("adminStreakReviewsSection").hidden=true;
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  $("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=true;$("adminPlayerReportsSection").hidden=true;$("adminSuspiciousPlayersSection").hidden=false;
  $("adminPageTitle").textContent="⚠ Suspicious Players";$("adminPageSubtitle").textContent="Private watchlist · Admin only";$("adminBackToOverview").hidden=false;loadAdminSuspiciousPlayers();window.scrollTo({top:0,behavior:"smooth"});
@@ -8456,9 +8522,9 @@ $("adminSuspiciousForm").addEventListener("submit",async function(e){
  catch(err){say("Could not save suspicious player: "+(err.message||err),{error:true});}
  finally{button.disabled=false;}
 });
-function showRegisteredUsers(){$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=false;$("adminMoveAuditSection").hidden=true;$("adminRejectedMovesSection").hidden=true;$("adminStreakReviewsSection").hidden=true;$("adminSuspiciousPlayersSection").hidden=true;if(!currentUser||currentUser.id!==adminOwnerId)return;$("adminPlayerReportsSection").hidden=true;$("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=false;$("adminPageTitle").textContent="👥 User Management";$("adminPageSubtitle").textContent="Manage Kingsfall accounts";$("adminBackToOverview").hidden=false;$("adminUserSearch").value="";renderAdminUsers();window.scrollTo({top:0,behavior:"smooth"});}
-function showAdminOverview(){$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=false;$("adminFeaturesSection").hidden=true;$("adminMoveAuditSection").hidden=true;$("adminRejectedMovesSection").hidden=true;$("adminStreakReviewsSection").hidden=true;$("adminSuspiciousPlayersSection").hidden=true;$("adminPlayerReportsSection").hidden=true;$("adminUserManagementSection").hidden=true;$("adminOverviewView").hidden=false;$("adminPageTitle").textContent="🛡️ Admin Panel";$("adminPageSubtitle").textContent="Private administration · Owner access only";$("adminBackToOverview").hidden=true;window.scrollTo({top:0,behavior:"smooth"});}
-function showAdminFeatureManagement(){$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=false;
+function showRegisteredUsers(){$("adminClockReportsSection").hidden=true;$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=false;$("adminMoveAuditSection").hidden=true;$("adminRejectedMovesSection").hidden=true;$("adminStreakReviewsSection").hidden=true;$("adminSuspiciousPlayersSection").hidden=true;if(!currentUser||currentUser.id!==adminOwnerId)return;$("adminPlayerReportsSection").hidden=true;$("adminOverviewView").hidden=true;$("adminUserManagementSection").hidden=false;$("adminPageTitle").textContent="👥 User Management";$("adminPageSubtitle").textContent="Manage Kingsfall accounts";$("adminBackToOverview").hidden=false;$("adminUserSearch").value="";renderAdminUsers();window.scrollTo({top:0,behavior:"smooth"});}
+function showAdminOverview(){$("adminClockReportsSection").hidden=true;$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=false;$("adminFeaturesSection").hidden=true;$("adminMoveAuditSection").hidden=true;$("adminRejectedMovesSection").hidden=true;$("adminStreakReviewsSection").hidden=true;$("adminSuspiciousPlayersSection").hidden=true;$("adminPlayerReportsSection").hidden=true;$("adminUserManagementSection").hidden=true;$("adminOverviewView").hidden=false;$("adminPageTitle").textContent="🛡️ Admin Panel";$("adminPageSubtitle").textContent="Private administration · Owner access only";$("adminBackToOverview").hidden=true;window.scrollTo({top:0,behavior:"smooth"});}
+function showAdminFeatureManagement(){$("adminClockReportsSection").hidden=true;$("adminSecurityHubView").hidden=true;adminSecurityFolderOpen=false;
  if(!currentUser||currentUser.id!==adminOwnerId)return;
  ["adminOverviewView","adminMoveAuditSection","adminRejectedMovesSection","adminStreakReviewsSection","adminSuspiciousPlayersSection","adminPlayerReportsSection","adminUserManagementSection"].forEach(function(id){$(id).hidden=true;});
  $("adminFeaturesSection").hidden=false;
@@ -8470,8 +8536,8 @@ function showAdminFeatureManagement(){$("adminSecurityHubView").hidden=true;admi
 $("adminBackToOverview").addEventListener("click",function(){if(adminSecurityFolderOpen)showSecurityHub();else showAdminOverview();});
 $("adminOverview").addEventListener("click",function(e){if(e.target.closest(".registered-users-card"))showRegisteredUsers();else if(e.target.closest(".security-reports-card"))showSecurityHub();else if(e.target.closest(".feature-management-card"))showAdminFeatureManagement();});
 $("adminOverview").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;if(e.target.closest(".registered-users-card")){e.preventDefault();showRegisteredUsers();}else if(e.target.closest(".security-reports-card")){e.preventDefault();showSecurityHub();}else if(e.target.closest(".feature-management-card")){e.preventDefault();showAdminFeatureManagement();}});
-$("adminSecurityFolders").addEventListener("click",function(e){if(e.target.closest(".player-reports-card"))showPlayerReports();else if(e.target.closest(".shadow-audit-card"))showShadowMoveAudit();else if(e.target.closest(".streak-reviews-card"))showStreakReviews();else if(e.target.closest(".suspicious-players-card"))showSuspiciousPlayers();});
-$("adminSecurityFolders").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;if(e.target.closest(".player-reports-card")){e.preventDefault();showPlayerReports();}else if(e.target.closest(".shadow-audit-card")){e.preventDefault();showShadowMoveAudit();}else if(e.target.closest(".streak-reviews-card")){e.preventDefault();showStreakReviews();}else if(e.target.closest(".suspicious-players-card")){e.preventDefault();showSuspiciousPlayers();}});
+$("adminSecurityFolders").addEventListener("click",function(e){if(e.target.closest(".player-reports-card"))showPlayerReports();else if(e.target.closest(".shadow-audit-card"))showShadowMoveAudit();else if(e.target.closest(".clock-reports-card"))showClockReports();else if(e.target.closest(".streak-reviews-card"))showStreakReviews();else if(e.target.closest(".suspicious-players-card"))showSuspiciousPlayers();});
+$("adminSecurityFolders").addEventListener("keydown",function(e){if(e.key!=="Enter"&&e.key!==" ")return;if(e.target.closest(".player-reports-card")){e.preventDefault();showPlayerReports();}else if(e.target.closest(".shadow-audit-card")){e.preventDefault();showShadowMoveAudit();}else if(e.target.closest(".clock-reports-card")){e.preventDefault();showClockReports();}else if(e.target.closest(".streak-reviews-card")){e.preventDefault();showStreakReviews();}else if(e.target.closest(".suspicious-players-card")){e.preventDefault();showSuspiciousPlayers();}});
 var adminWinsTargetId=null,adminWinsTargetMetric="wins",adminWinsValue=0,adminWinsDragY=null,adminWinsDragRemainder=0;
 function updateAdminWinsDisplay(){var n=$("adminWinsNumber");n.textContent=adminWinsValue.toLocaleString("en-US");$("adminWinsWheel").setAttribute("aria-valuenow",String(adminWinsValue));}
 function openAdminWinsEditor(userId,metric){var u=adminUsersCache.find(function(x){return x.id===userId;});if(!u)return;var labels={wins:"Wins",tournament_wins:"Trophies",humiliation_losses:"Humiliation"};if(!Object.prototype.hasOwnProperty.call(labels,metric))return;adminWinsTargetId=userId;adminWinsTargetMetric=metric;adminWinsValue=Math.max(metric==="humiliation_losses"?-100000000:0,Math.min(100000000,Number(u[metric])||0));$("adminWinsTitle").textContent=labels[metric];$("adminWinsSave").textContent="Save "+labels[metric].toLowerCase();$("adminWinsPlayer").textContent=u.username||"Player";updateAdminWinsDisplay();$("adminWinsEditor").hidden=false;}
