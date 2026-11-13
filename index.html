@@ -4072,8 +4072,8 @@ function applyOnlineGame(row){
   var prevClockTurn = onlineGame ? onlineGame.turn : clockPerfTurn;
   // Keep the received server snapshot independent of local optimistic turns.
   onlineGame = Object.assign({},row);
-  if(kfPremoveGameId&&kfPremoveGameId!==row.id){kfPremoveSelected=null;kfPremoveQueued=null;}
-  if(row.status!=="active"){kfPremoveSelected=null;kfPremoveQueued=null;}
+  if(kfPremoveGameId&&kfPremoveGameId!==row.id)kfResetPremovePlan();
+  if(row.status!=="active")kfResetPremovePlan();
   kfPremoveGameId=row.id;
   // Paint only after applying the latest board and clock snapshot.
 
@@ -4149,9 +4149,23 @@ var kfServerCommittedPremove=!!(kfPremoveQueued&&currentUser&&
 if(kfServerCommittedPremove){
   kfPremoveQueued=null;kfPremoveSelected=null;kfPremoveQueueSerial++;
 }
+// The local fallback clears the head before submit; only the authoritative
+// server acknowledgement can advance its remaining queued moves.
+var kfLocalPremoveConfirmed=!!(kfPremoveAwaiting&&row.id===kfPremoveGameId&&
+  row.last_move&&row.last_move.from===kfPremoveAwaiting.from&&
+  row.last_move.to===kfPremoveAwaiting.to&&
+  row.turn!==(row.white_id===currentUser.id?"w":"b")&&
+  row.fen!==kfPremoveAwaiting.expectedFen);
+if(kfServerCommittedPremove||kfLocalPremoveConfirmed){
+  kfAdvancePremoveHead(row,true);
+} else if(kfPremoveAwaiting&&row.turn!==(row.white_id===currentUser.id?"w":"b")&&
+          row.fen!==kfPremoveAwaiting.expectedFen){
+  // A failed optimistic submission cannot carry speculative moves forward.
+  kfResetPremovePlan();
+}
 // If the queue was accepted by PostgreSQL, do not race the same move
 // through the old browser RPC when an intermediate opponent snapshot arrives.
-var kfPremoveExecuted=!kfServerCommittedPremove&&kfHadPremove&&
+var kfPremoveExecuted=!kfServerCommittedPremove&&!kfLocalPremoveConfirmed&&kfHadPremove&&
   !(kfPremoveQueued&&(kfPremoveQueued.serverPending||
     (kfPremoveQueued.serverReady&&
       (!kfPremoveQueued.terminalOpponentFens||
@@ -4160,7 +4174,7 @@ var kfPremoveExecuted=!kfServerCommittedPremove&&kfHadPremove&&
 if(kfHadPremove && kfPremoveQueued && kfPremoveQueued.serverReady){
   // The database may decline an illegal premove without changing the turn.
   // Repaint from server truth and drop the queued visual preview.
-  kfPremoveQueued=null;kfPremoveSelected=null;kfPremoveQueueSerial++;
+  kfResetPremovePlan();
 }
 if(!kfPremoveExecuted &&
    (kfBoardNeedsDraw || (row.last_move_at!==prevLastMoveAt && game && row.fen===game.fen())))
@@ -7406,8 +7420,8 @@ function draw(){
       var pmVisible=!!(onlineGameId&&onlineGame&&currentUser&&onlineGame.status==="active"&&
         (onlineGame.white_id===currentUser.id?"w":onlineGame.black_id===currentUser.id?"b":null)!==game.turn());
       b.classList.toggle("kf-premove-from",pmVisible&&kfPremoveSelected===s);
-      b.classList.toggle("kf-premove-to",pmVisible&&!!kfPremoveQueued&&kfPremoveQueued.to===s);
-      b.classList.toggle("kf-premove-queued",pmVisible&&!!kfPremoveQueued&&kfPremoveQueued.from===s);
+      b.classList.toggle("kf-premove-to",pmVisible&&((!!kfPremoveQueued&&kfPremoveQueued.to===s)||kfPremoveTail.some(function(m){return m.to===s;})));
+      b.classList.toggle("kf-premove-queued",pmVisible&&((!!kfPremoveQueued&&kfPremoveQueued.from===s)||kfPremoveTail.some(function(m){return m.from===s;})));
       b.classList.remove("humil-dim", "humil-target");
       b.style.backgroundImage = "";
       if(humilSelecting){
@@ -7469,6 +7483,41 @@ function updateHistory(){
 /* ===== Browser-only premove: legality checked on the newly received turn ===== */
 var kfPremoveSelected=null,kfPremoveQueued=null,kfPremoveGameId=null;
 var kfPremoveQueueSerial=0;
+// The head uses the existing fast PostgreSQL cache. Remaining moves are local
+// until a confirmed turn transition makes them the new head.
+var kfPremoveTail=[],kfPremoveAwaiting=null,kfPremoveMax=5;
+function kfResetPremovePlan(){
+  kfPremoveSelected=null;kfPremoveQueued=null;
+  kfPremoveTail=[];kfPremoveAwaiting=null;kfPremoveQueueSerial++;
+}
+function kfPremoveBoard(){
+  var board={};
+  if(!game)return board;
+  for(var file=97;file<=104;file++)for(var rank=1;rank<=8;rank++){
+    var sqr=String.fromCharCode(file)+rank,p=game.get(sqr);
+    if(p)board[sqr]={type:p.type,color:p.color};
+  }
+  var moves=(kfPremoveQueued?[kfPremoveQueued]:[]).concat(kfPremoveTail);
+  for(var i=0;i<moves.length;i++){
+    var m=moves[i],p=board[m.from];
+    if(!p)continue;
+    delete board[m.from];
+    board[m.to]={type:m.promotion||p.type,color:p.color};
+  }
+  return board;
+}
+function kfAdvancePremoveHead(row,completed){
+  if(!row||!currentUser||row.status!=="active")return;
+  var myColor=row.white_id===currentUser.id?"w":row.black_id===currentUser.id?"b":null;
+  if(!myColor||row.turn===myColor)return;
+  if(completed){
+    kfPremoveAwaiting=null;
+    kfPremoveQueued=kfPremoveTail.shift()||null;
+    kfPremoveSelected=null;
+    if(kfPremoveQueued)kfQueueServerPremove(kfPremoveQueued);
+  }
+}
+
 function kfBuildPremoveCandidates(pm){
   if(!onlineGame||!game||!pm)return [];
   var simulation=new Chess();
@@ -7565,9 +7614,10 @@ function kfQueueServerPremove(pm){
 
 // Fast, speculative premove geometry. Opponent pieces may move before
 // execution, so this deliberately does not claim future legality.
-function kfPremoveGeometry(from,to,color){
+function kfPremoveGeometry(from,to,color,board){
+  var getPiece=board?function(s){return board[s]||null;}:function(s){return game.get(s);};
   if(!/^[a-h][1-8]$/.test(from)||!/^[a-h][1-8]$/.test(to)||from===to)return false;
-  var piece=game.get(from);
+  var piece=getPiece(from);
   // A friendly piece on the destination may be captured by the opponent
   // before our turn. It must not block speculative premove selection.
   if(!piece||piece.color!==color)return false;
@@ -7577,10 +7627,10 @@ function kfPremoveGeometry(from,to,color){
   if(type==="k"){
     if(Math.max(ax,ay)===1)return true;
     if(ay!==0||ax!==2)return false;
-    var rookSquare=(x>0?"h":"a")+from[1],rook=game.get(rookSquare);
+    var rookSquare=(x>0?"h":"a")+from[1],rook=getPiece(rookSquare);
     return !!rook&&rook.color===color&&rook.type==="r"&&
-      !game.get((x>0?"f":"d")+from[1])&&
-      (x>0||!game.get("b"+from[1]));
+      !getPiece((x>0?"f":"d")+from[1])&&
+      (x>0||!getPiece("b"+from[1]));
   }
   if(type==="p"){
     var step=color==="w"?1:-1;
@@ -7588,7 +7638,7 @@ function kfPremoveGeometry(from,to,color){
     if(x!==0)return false;
     if(y===step)return true; // opposing blocker may leave on their turn
     if(y===2*step&&Number(from[1])===(color==="w"?2:7)){
-      return !game.get(from[0]+(Number(from[1])+step));
+      return !getPiece(from[0]+(Number(from[1])+step));
     }
     return false;
   }
@@ -7599,7 +7649,7 @@ function kfPremoveGeometry(from,to,color){
   var sx=Math.sign(x),sy=Math.sign(y),n=Math.max(ax,ay);
   for(var i=1;i<n;i++){
     var square=String.fromCharCode(from.charCodeAt(0)+sx*i)+(Number(from[1])+sy*i);
-    var blocker=game.get(square);
+    var blocker=getPiece(square);
     if(blocker&&blocker.color===color)return false;
     // Enemy pieces can move on the upcoming turn: don't reject prematurely.
   }
@@ -7608,20 +7658,19 @@ function kfPremoveGeometry(from,to,color){
 async function kfHandlePremoveSquare(square,color){
   if(!onlineGameId||!onlineGame||onlineGame.status!=="active")return;
   if(kfPremoveGameId!==onlineGameId){
-    kfPremoveGameId=onlineGameId;kfPremoveSelected=null;kfPremoveQueued=null;
+    kfResetPremovePlan();kfPremoveGameId=onlineGameId;
   }
-  var piece=game.get(square);
+  var virtualBoard=kfPremoveBoard();
+  var piece=virtualBoard[square]||null;
   if(square===kfPremoveSelected){kfPremoveSelected=null;draw();return;}
-  if(!kfPremoveSelected&&kfPremoveQueued&&
-    (square===kfPremoveQueued.from||square===kfPremoveQueued.to)){
-    kfCancelQueuedServerPremove();kfPremoveQueued=null;draw();return;
+  if(!kfPremoveSelected&&kfPremoveQueued&&square===kfPremoveQueued.from){
+    kfCancelQueuedServerPremove();kfResetPremovePlan();draw();return;
   }
   // A selected piece gets first chance to target this square, even when
   // currently occupied by our own piece (conditional recapture premove).
   // An incompatible friendly square instead switches the selected piece.
   if(piece&&piece.color===color&&
-     (!kfPremoveSelected||!kfPremoveGeometry(kfPremoveSelected,square,color))){
-    if(kfPremoveQueued){kfCancelQueuedServerPremove();kfPremoveQueued=null;}
+     (!kfPremoveSelected||!kfPremoveGeometry(kfPremoveSelected,square,color,virtualBoard))){
     kfPremoveSelected=square;
     draw();
     return;
@@ -7629,13 +7678,13 @@ async function kfHandlePremoveSquare(square,color){
   if(!kfPremoveSelected)return;
   var from=kfPremoveSelected;
   kfPremoveSelected=null;
-  if(!kfPremoveGeometry(from,square,color)){
+  if(!kfPremoveGeometry(from,square,color,virtualBoard)){
     say("That premove does not match this piece's movement.",{silentToast:true});
     draw();return;
   }
   // Select underpromotion while queuing, never in the time-critical execution path.
   var promotion=null;
-  var queuedPiece=game.get(from);
+  var queuedPiece=virtualBoard[from];
   if(queuedPiece && queuedPiece.type==="p" &&
      square.charAt(1)===(color==="w"?"8":"1")){
     var pendingGameId=onlineGameId;
@@ -7643,14 +7692,24 @@ async function kfHandlePremoveSquare(square,color){
     // The opponent may have moved while the picker was open.
     if(!promotion || onlineGameId!==pendingGameId || !onlineGame ||
        onlineGame.status!=="active" || game.turn()===color ||
-       !game.get(from) || game.get(from).type!=="p" ||
-       game.get(from).color!==color){
+       !kfPremoveBoard()[from] || kfPremoveBoard()[from].type!=="p" ||
+       kfPremoveBoard()[from].color!==color){
       draw();return;
     }
   }
-  kfPremoveQueued={from:from,to:square,promotion:promotion};
-  draw();
-  kfQueueServerPremove(kfPremoveQueued);
+  var nextPm={from:from,to:square,promotion:promotion};
+  if(!kfPremoveQueued){
+    kfPremoveQueued=nextPm;
+    draw();
+    kfQueueServerPremove(kfPremoveQueued);
+  }else{
+    if(kfPremoveTail.length>=kfPremoveMax-1){
+      say("Maximum "+kfPremoveMax+" premoves.",{silentToast:true});
+      draw();return;
+    }
+    kfPremoveTail.push(nextPm);
+    draw();
+  }
 }
 function kfStartOptimisticClock(m){
   if(!onlineGameId)return;
@@ -7710,12 +7769,15 @@ function kfMaybeExecuteLocalPremove(row){
   var color=row.white_id===currentUser.id?"w":row.black_id===currentUser.id?"b":null;
   if(!color||row.turn!==color||game.turn()!==color||game.fen()!==row.fen)return;
   var pm=kfPremoveQueued;
+  pm.expectedFen=row.fen;
+  kfPremoveAwaiting=pm;
   kfPremoveQueued=null;
   kfPremoveSelected=null;
   kfPremoveQueueSerial++;
   var move=null;
   try{move=game.move({from:pm.from,to:pm.to,promotion:pm.promotion||"q"});}catch(e){}
   if(!move){
+    kfResetPremovePlan();
     // No server submission: caller repaints the real board after cancellation.
     return false;
   }
@@ -7805,7 +7867,7 @@ async function clickSquare(s){
       return;
     }
     if(game.turn()!==myColor){await kfHandlePremoveSquare(s,myColor);return;}
-    if(kfPremoveSelected||kfPremoveQueued){kfPremoveSelected=null;kfPremoveQueued=null;}
+    if(kfPremoveSelected||kfPremoveQueued||kfPremoveTail.length||kfPremoveAwaiting)kfResetPremovePlan();
   }
 
   var p = game.get(s);
