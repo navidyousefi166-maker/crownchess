@@ -1984,9 +1984,31 @@ body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark
 </div>
 
 <div class="bracket-celebrate" id="celebrateLayer"></div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <!-- chess.js v1.4.0 is imported by the application module below. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+<script type="module">
+import { Chess as ChessV14 } from "https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm";
+// Preserve Kingsfall's proven synchronous move/clock pipeline while adapting
+// the v0.10 API to the pinned v1.4 chess rules engine.
+class KingsfallChess extends ChessV14 {
+  game_over(){ return this.isGameOver(); }
+  in_check(){ return this.isCheck(); }
+  in_checkmate(){ return this.isCheckmate(); }
+  in_draw(){ return this.isDraw(); }
+  load(fen, options){
+    try { super.load(fen, options); return true; }
+    catch(error){ return false; }
+  }
+  load_pgn(pgn, options){
+    try { super.loadPgn(pgn, options); return true; }
+    catch(error){ return false; }
+  }
+  move(move, options){
+    try { return super.move(move, options); }
+    catch(error){ return null; }
+  }
+}
+window.Chess = KingsfallChess;
 (function(){
 "use strict";
 
