@@ -2865,7 +2865,7 @@ async function loadLastTournamentState(){
 async function loadTournamentState(){
   if(!sb) return;
   try{
-    var res = await sb.rpc("kf_get_next_tournament");
+    var res = await sb.rpc(currentUser ? "kf_get_next_tournament" : "kf_get_current_tournament_public");
     if(res.error) throw res.error;
     tournCurrent = res.data;
     if(tournCurrent && tournCurrent.id){
