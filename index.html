@@ -2432,6 +2432,9 @@ var tournActiveMatch = null;
 var startingTournMatchId = null;
 var tournStartBlockedMatchId = null;
 var tournBracketRendered = null;
+var tournStateRequestId = 0;
+var tournBracketRequestId = 0;
+var tournEntryRequestId = 0;
 var tournLast = null;
 var tournLastBracketRendered = null;
 var tournView = "next";
@@ -2864,38 +2867,61 @@ async function loadLastTournamentState(){
 
 async function loadTournamentState(){
   if(!sb) return;
+  var requestId = ++tournStateRequestId;
   try{
     var res = await sb.rpc(currentUser ? "kf_get_next_tournament" : "kf_get_current_tournament_public");
+    if(requestId !== tournStateRequestId) return;
     if(res.error) throw res.error;
-    tournCurrent = res.data;
-    if(tournCurrent && tournCurrent.id){
-      var chRes = await sb.rpc("kf_get_tournament_full", {p_tournament_id: tournCurrent.id});
-      if(!chRes.error && chRes.data) tournBracketRendered = chRes.data;
+    var nextTournament = res.data;
+    var nextId = nextTournament && nextTournament.id;
+    var previousId = tournCurrent && tournCurrent.id;
+    if(nextId !== previousId){
+      // A bracket and registration always belong to exactly one tournament.
+      ++tournBracketRequestId;
+      ++tournEntryRequestId;
+      tournBracketRendered = null;
+      tournMyEntry = null;
+    }
+    tournCurrent = nextTournament;
+    if(nextId){
+      var bracketRequestId = ++tournBracketRequestId;
+      var chRes = await sb.rpc("kf_get_tournament_full", {p_tournament_id: nextId});
+      if(requestId !== tournStateRequestId || bracketRequestId !== tournBracketRequestId) return;
+      if(tournCurrent && tournCurrent.id === nextId && !chRes.error &&
+         chRes.data && chRes.data.id === nextId && Array.isArray(chRes.data.entries)){
+        tournBracketRendered = chRes.data;
+      }
     }
     await loadLastTournamentState();
+    if(requestId !== tournStateRequestId) return;
     if(currentUser) await checkMyTournamentEntry();
+    if(requestId !== tournStateRequestId) return;
     updateTournButton();
+    if($("tournDialog").open && tournView === "next") renderTournDialog();
     startTournChannel();
-  } catch(err){ console.warn("Tournament state error:", err); }
+  } catch(err){ if(requestId === tournStateRequestId) console.warn("Tournament state error:", err); }
 }
 
 async function checkMyTournamentEntry(){
+  var requestId = ++tournEntryRequestId;
   tournMyEntry = null;
   if(!sb || !currentUser || !tournCurrent || !tournCurrent.id) return;
+  var tournamentId = tournCurrent.id;
+  var userId = currentUser.id;
 
-  // The tournament RPC already returns the registered players. Use that same
-  // data for the current user's entry so the button does not depend on direct
-  // SELECT permission/RLS on kf_tournament_entries.
-  var entries = tournBracketRendered && Array.isArray(tournBracketRendered.entries)
-    ? tournBracketRendered.entries : null;
+  // Never use registration entries cached for a different tournament.
+  var entries = tournBracketRendered && tournBracketRendered.id === tournamentId &&
+    Array.isArray(tournBracketRendered.entries) ? tournBracketRendered.entries : null;
   if(entries){
-    tournMyEntry = entries.find(function(e){ return e.user_id === currentUser.id; }) || null;
+    tournMyEntry = entries.find(function(e){ return e.user_id === userId; }) || null;
     return;
   }
 
   // Fallback only when the tournament RPC has not supplied its entries yet.
   var res = await sb.from("kf_tournament_entries")
-    .select("*").eq("tournament_id", tournCurrent.id).eq("user_id", currentUser.id).maybeSingle();
+    .select("*").eq("tournament_id", tournamentId).eq("user_id", userId).maybeSingle();
+  if(requestId !== tournEntryRequestId || !tournCurrent ||
+     tournCurrent.id !== tournamentId || !currentUser || currentUser.id !== userId) return;
   if(!res.error && res.data) tournMyEntry = res.data;
 }
 
@@ -2926,10 +2952,17 @@ function startTournChannel(){
 }
 
 async function refreshTournLive(){
-  if(!tournCurrent || !tournCurrent.id) return;
-  var chRes = await sb.rpc("kf_get_tournament_full", {p_tournament_id: tournCurrent.id});
-  if(!chRes.error && chRes.data) tournBracketRendered = chRes.data;
+  if(!sb || !tournCurrent || !tournCurrent.id) return;
+  var tournamentId = tournCurrent.id;
+  var requestId = ++tournBracketRequestId;
+  var chRes = await sb.rpc("kf_get_tournament_full", {p_tournament_id: tournamentId});
+  if(requestId !== tournBracketRequestId || !tournCurrent ||
+     tournCurrent.id !== tournamentId) return;
+  if(!chRes.error && chRes.data && chRes.data.id === tournamentId &&
+     Array.isArray(chRes.data.entries)) tournBracketRendered = chRes.data;
   await checkMyTournamentEntry();
+  if(requestId !== tournBracketRequestId || !tournCurrent ||
+     tournCurrent.id !== tournamentId) return;
   if($("tournDialog").open) renderTournDialog();
   updateTournButton();
 }
@@ -3123,7 +3156,8 @@ function renderTournDialog(){
 function renderPlayerList(){
   var list = $("tournPlayerList");
   list.innerHTML = "";
-  var entries = tournBracketRendered && tournBracketRendered.entries ? tournBracketRendered.entries : [];
+  var entries = tournBracketRendered && tournCurrent && tournBracketRendered.id === tournCurrent.id &&
+    Array.isArray(tournBracketRendered.entries) ? tournBracketRendered.entries : [];
   $("tournPlayerCount").textContent = entries.length + " players" ;
   if(!entries.length){
     list.innerHTML = '<div class="tourn-empty">No players registered yet.<br>Be the first!</div>';
