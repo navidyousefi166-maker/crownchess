@@ -4076,14 +4076,7 @@ if(row.is_tournament){
 
   /* Game completed */
   if(row.status === "completed"){
-    /* Tournament wins and bracket progression are handled by the database completion trigger. */
-    if(!row.is_tournament){
-      if(!window._kfFinalizedGames) window._kfFinalizedGames = {};
-      if(!window._kfFinalizedGames[row.id] && row.winner_id === currentUser.id){
-        window._kfFinalizedGames[row.id] = true;
-        finalizeOnlineGame(row.winner_id).catch(function(e){ console.warn("finalize error:", e); });
-      }
-    }
+    /* Completion scoring and tournament progression happen in database triggers. */
     if(!celebTimer){
       if(row.is_tournament) handleTournamentEnd(row);
       else handleQuickPlayEnd(row);
@@ -5252,11 +5245,6 @@ async function handleTournamentEnd(row){
       setTimeout(loadHistory, 300);
     }
   });
-}
-
-/* FIX: این تابع فقط برای QUICK PLAY استفاده می‌شود (تورنمنت skip می‌شود) */
-async function finalizeOnlineGame(winnerId){
-  
 }
 
 async function handleOnlineTimeout(loserColor){
