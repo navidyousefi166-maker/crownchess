@@ -1272,6 +1272,20 @@ body.game-focus #firstMoveDeadlineNormal{display:none!important}
 .admin-stat,.admin-section{border:1px solid var(--line2);border-radius:10px;background:linear-gradient(145deg,var(--panel-bg1),var(--panel-bg2));padding:14px}
 .admin-stat.feature-management-card{cursor:pointer;transition:border-color .18s,transform .18s}.admin-stat.feature-management-card:hover,.admin-stat.feature-management-card:focus-visible{border-color:var(--gold2);transform:translateY(-2px);outline:none}
 .admin-stat.registered-users-card{cursor:pointer;transition:border-color .18s,transform .18s}.admin-stat.registered-users-card:hover,.admin-stat.registered-users-card:focus-visible{border-color:var(--gold2);transform:translateY(-2px);outline:none}
+
+/* Distinct but theme-compatible admin dashboard card accents. */
+.admin-stat.registered-users-card{--card-accent:#287fbe;--card-text:#d9f1ff;background:linear-gradient(135deg,color-mix(in srgb, #287fbe 36%, #22050e),color-mix(in srgb, #287fbe 13%, #160409));border:1px solid color-mix(in srgb, #287fbe 70%, #46202b);box-shadow:inset 3px 0 0 #287fbe;}
+.admin-stats > .admin-stat:nth-child(2){--card-accent:#b84f52;--card-text:#ffe2e5;background:linear-gradient(135deg,color-mix(in srgb, #b84f52 36%, #22050e),color-mix(in srgb, #b84f52 13%, #160409));border:1px solid color-mix(in srgb, #b84f52 70%, #46202b);box-shadow:inset 3px 0 0 #b84f52;}
+.admin-stat.player-reports-card{--card-accent:#bc7b25;--card-text:#fff0d0;background:linear-gradient(135deg,color-mix(in srgb, #bc7b25 36%, #22050e),color-mix(in srgb, #bc7b25 13%, #160409));border:1px solid color-mix(in srgb, #bc7b25 70%, #46202b);box-shadow:inset 3px 0 0 #bc7b25;}
+.admin-stat.suspicious-players-card{--card-accent:#a265c7;--card-text:#f3ddff;background:linear-gradient(135deg,color-mix(in srgb, #a265c7 36%, #22050e),color-mix(in srgb, #a265c7 13%, #160409));border:1px solid color-mix(in srgb, #a265c7 70%, #46202b);box-shadow:inset 3px 0 0 #a265c7;}
+.admin-stat.streak-reviews-card{--card-accent:#c45373;--card-text:#ffe0e8;background:linear-gradient(135deg,color-mix(in srgb, #c45373 36%, #22050e),color-mix(in srgb, #c45373 13%, #160409));border:1px solid color-mix(in srgb, #c45373 70%, #46202b);box-shadow:inset 3px 0 0 #c45373;}
+.admin-stat.rejected-moves-card{--card-accent:#558d50;--card-text:#e0ffda;background:linear-gradient(135deg,color-mix(in srgb, #558d50 36%, #22050e),color-mix(in srgb, #558d50 13%, #160409));border:1px solid color-mix(in srgb, #558d50 70%, #46202b);box-shadow:inset 3px 0 0 #558d50;}
+.admin-stat.shadow-audit-card{--card-accent:#2b9a9b;--card-text:#d6ffff;background:linear-gradient(135deg,color-mix(in srgb, #2b9a9b 36%, #22050e),color-mix(in srgb, #2b9a9b 13%, #160409));border:1px solid color-mix(in srgb, #2b9a9b 70%, #46202b);box-shadow:inset 3px 0 0 #2b9a9b;}
+.admin-stat.feature-management-card{--card-accent:#bd914a;--card-text:#fff1bd;background:linear-gradient(135deg,color-mix(in srgb, #bd914a 36%, #22050e),color-mix(in srgb, #bd914a 13%, #160409));border:1px solid color-mix(in srgb, #bd914a 70%, #46202b);box-shadow:inset 3px 0 0 #bd914a;}
+.admin-stats > .admin-stat span{color:#f2dfe5;font-weight:600;}
+.admin-stats > .admin-stat strong{color:var(--card-text,var(--gold2));}
+.admin-stats > .admin-stat[role="button"]{cursor:pointer;transition:transform .18s,border-color .18s,filter .18s;}
+.admin-stats > .admin-stat[role="button"]:hover,.admin-stats > .admin-stat[role="button"]:focus-visible{filter:brightness(1.2);transform:translateY(-2px);outline:2px solid var(--card-accent);outline-offset:1px;}
 .admin-stat span{display:block;color:var(--muted);font-size:11px}.admin-stat strong{display:block;color:var(--gold2);font-size:25px;margin-top:4px;font-variant-numeric:tabular-nums}
 .admin-section{margin:14px 0}.admin-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.admin-section-head h2{font-size:17px;margin:0;color:var(--gold2)}
 .admin-search{width:100%;padding:11px 13px;border:1px solid var(--line2);border-radius:8px;background:var(--panel-bg2);color:var(--text);font:inherit;margin-bottom:12px}
