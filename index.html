@@ -6686,6 +6686,27 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
     }
     
     if(res.error){
+      // Error-only, fire-and-forget diagnostic. Never runs for accepted moves.
+      // Server independently verifies legality from the authoritative game FEN.
+      // Do not await: UI rollback, clock and premoves must remain independent.
+      if(status !== "completed" && onlineGame && onlineGame.fen &&
+         m && m.from && m.to){
+        try{
+          var rejectedReport = sb.functions.invoke("kf-report-rejected-move", {
+            body: {
+              game_id: submittedGameId,
+              request_id: crypto.randomUUID(),
+              from: m.from,
+              to: m.to,
+              promotion: m.promotion || null,
+              expected_fen: onlineGame.fen
+            }
+          });
+          if(rejectedReport && typeof rejectedReport.catch === "function"){
+            rejectedReport.catch(function(){ /* Optional diagnostics must not affect play. */ });
+          }
+        }catch(reportError){ /* Non-blocking report channel. */ }
+      }
       if(kfClockBeforeMove){
         clockPerfBaseWhite=kfClockBeforeMove.white;
         clockPerfBaseBlack=kfClockBeforeMove.black;
