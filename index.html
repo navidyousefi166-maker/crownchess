@@ -6822,7 +6822,7 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
 }
 
 /* ===== askPromotion ===== */
-function askPromotion(color){
+function askPromotion(color,allowCancel){
   return new Promise(function(resolve){
     var dlg = $("promotionDialog"), grid = $("promoGrid");
     grid.innerHTML = "";
@@ -6838,7 +6838,7 @@ function askPromotion(color){
         grid.appendChild(btn);
       })(pieces[i]);
     }
-    dlg.oncancel = function(e){ e.preventDefault(); dlg.close(); resolve("q"); };
+    dlg.oncancel = function(e){ e.preventDefault(); dlg.close(); resolve(allowCancel ? null : "q"); };
     dlg.showModal();
   });
 }
@@ -7197,7 +7197,10 @@ function draw(){
         var pmPiece = game.get(kfPremoveQueued.from);
         if(pmPiece&&pmPiece.color===pmColor){
           if(s===kfPremoveQueued.from)p=null;
-          else if(s===kfPremoveQueued.to)p=pmPiece;
+          else if(s===kfPremoveQueued.to){
+            p=(pmPiece.type==="p" && (s.charAt(1)==="8" || s.charAt(1)==="1"))?
+              {color:pmColor,type:kfPremoveQueued.promotion||"q"}:pmPiece;
+          }
         }
       }
       var b = _sqEls[s];
@@ -7309,7 +7312,7 @@ function kfPremoveGeometry(from,to,color){
   }
   return true;
 }
-function kfHandlePremoveSquare(square,color){
+async function kfHandlePremoveSquare(square,color){
   if(!onlineGameId||!onlineGame||onlineGame.status!=="active")return;
   if(kfPremoveGameId!==onlineGameId){
     kfPremoveGameId=onlineGameId;kfPremoveSelected=null;kfPremoveQueued=null;
@@ -7332,8 +7335,23 @@ function kfHandlePremoveSquare(square,color){
     say("That premove does not match this piece's movement.",{silentToast:true});
     draw();return;
   }
+  // Select underpromotion while queuing, never in the time-critical execution path.
+  var promotion="q";
+  var queuedPiece=game.get(from);
+  if(queuedPiece && queuedPiece.type==="p" &&
+     square.charAt(1)===(color==="w"?"8":"1")){
+    var pendingGameId=onlineGameId;
+    promotion=await askPromotion(color,true);
+    // The opponent may have moved while the picker was open.
+    if(!promotion || onlineGameId!==pendingGameId || !onlineGame ||
+       onlineGame.status!=="active" || game.turn()===color ||
+       !game.get(from) || game.get(from).type!=="p" ||
+       game.get(from).color!==color){
+      draw();return;
+    }
+  }
   // Entirely browser-local: nothing is sent to Supabase at queue time.
-  kfPremoveQueued={from:from,to:square,promotion:"q"};
+  kfPremoveQueued={from:from,to:square,promotion:promotion};
   draw();
 }
 function kfStartOptimisticClock(m){
