@@ -8133,9 +8133,16 @@ async function loadAdminStreakReviews(){
  if(!sb||!currentUser||currentUser.id!==adminOwnerId)return;
  var target=$("adminStreakReviewsList");
  try{
-  var res=await sb.rpc("kf_admin_win_streak_reviews");
-  if(res.error)throw res.error;
-  var rows=Array.isArray(res.data)?res.data:[];
+  var responses=await Promise.all([
+   sb.rpc("kf_admin_win_streak_reviews"),
+   sb.rpc("kf_admin_win_streak_engine_reports")
+  ]);
+  if(responses[0].error)throw responses[0].error;
+  if(responses[1].error)throw responses[1].error;
+  var rows=Array.isArray(responses[0].data)?responses[0].data:[];
+  var analyses=Array.isArray(responses[1].data)?responses[1].data:[];
+  var reportById={};
+  analyses.forEach(function(x){reportById[String(x.id)]=x;});
   kfStreakReviewRows=rows;
   var total=$("adminOverview").querySelector(".streak-reviews-card strong");
   if(total)total.textContent=fmtStat(rows.filter(function(x){return x.review_status==="pending";}).length);
@@ -8144,11 +8151,28 @@ async function loadAdminStreakReviews(){
    var buttons=games.map(function(g,i){
     return '<button type="button" class="btn" data-streak-id="'+adminEscape(String(r.id))+'" data-streak-game="'+i+'">Analyze game '+(i+1)+'</button>';
    }).join("");
+   var outcome=reportById[String(r.id)]||{};
+   var eng=outcome.report||null;
+   var summary=eng&&eng.aggregate;
+   var analysisText="Stockfish: "+(outcome.status||"pending");
+   if(summary){
+    analysisText+=" · Top 1: "+fmtStat(summary.weighted_top1_pct)+"% · Top 3: "+fmtStat(summary.weighted_top3_pct)+
+      "% · Average CPL: "+fmtStat(summary.weighted_average_centipawn_loss)+" ("+fmtStat(summary.evaluated_moves)+" moves)";
+   }
+   var gameMetrics=eng&&Array.isArray(eng.games)?eng.games.map(function(g,i){
+     if(g.status!=="analyzed")return 'Game '+(i+1)+': '+String(g.status||"unknown");
+     return 'Game '+(i+1)+': Top 1 '+g.top1_pct+'%, Top 3 '+g.top3_pct+
+       '%, ACPL '+g.average_centipawn_loss+', large errors '+g.large_errors;
+   }).join(" | "):"";
    return '<article class="admin-report-row"><strong>'+adminEscape(r.player_username||"Player")+
     ' · '+fmtStat(r.consecutive_wins||3)+' straight wins</strong>'+
     '<small>Player ID: <code>'+adminEscape(r.player_id)+'</code></small>'+
     '<small>Created: '+adminEscape(r.created_at?new Date(r.created_at).toLocaleString():"—")+
     ' · '+adminEscape(r.review_status||"pending")+'</small>'+
+    '<small>'+adminEscape(analysisText)+'</small>'+
+    (gameMetrics?'<small>'+adminEscape(gameMetrics)+'</small>':'')+
+    (outcome.error?'<small>Worker error: '+adminEscape(outcome.error)+'</small>':'')+
+    '<small>Engine agreement is a review signal, not proof of cheating. No automatic ban.</small>'+
     '<div class="admin-report-actions">'+buttons+
     '<button type="button" class="btn" data-streak-id="'+adminEscape(String(r.id))+
     '" data-streak-status="'+(r.review_status==="pending"?"reviewed":"pending")+'">'+
