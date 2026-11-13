@@ -5944,7 +5944,9 @@ $("analyze").onclick = function(){
   if(!game || game.history().length < 1){ say("Play some moves first.", {silentToast: true}); return; }
   openAnalysis();
 };
-$("analysisClose").onclick = function(){
+// The native dialog 'close' event also fires after Escape/browser Back,
+// so cleanup must not depend on the visible X button alone.
+$("analysisDialog").addEventListener("close", function(){
   analysisRunning = false;
   analysisRunId++;
   closeAnalysisAuxEngines();
@@ -5956,9 +5958,11 @@ $("analysisClose").onclick = function(){
     stockfishAnalysisMode = false;
     stockfishCallback = null;
   }
-  $("analysisDialog").close();
   if(pendingAnalysisGame){ game = pendingAnalysisGame; pendingAnalysisGame = null; draw(); }
   adminReviewedPlayer=null;
+});
+$("analysisClose").onclick = function(){
+  $("analysisDialog").close();
 };
 $("anStartBtn").onclick = function(){ gotoAnalysisIndex(0); };
 $("anPrevBtn").onclick = function(){ gotoAnalysisIndex(analysisIndex - 1); };
