@@ -6810,7 +6810,7 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
     // Endings require independent server-side chess verification.
     // Ordinary moves and premoves preserve the original one-hop fast RPC.
     var res;
-    if(status === "completed"){
+    if(status === "completed" && !game.in_checkmate()){
       res = await sb.functions.invoke("kf-submit-terminal-v1", {
         body: {
           game_id: onlineGameId,
@@ -6833,9 +6833,11 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
         p_fen: game.fen(),
         p_pgn: game.pgn(),
         p_turn: game.turn(),
-        p_status: status,
-        p_result: result,
-        p_winner_id: winnerId,
+        // The server independently derives mate. Never trust terminal claims
+        // from the browser on the fast route.
+        p_status: "active",
+        p_result: null,
+        p_winner_id: null,
         p_request_id: crypto.randomUUID()
       });
     }
@@ -6908,6 +6910,11 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
     // If the server completed a move attempt while the local board was still active,
     // it was an authoritative timeout result.
     if(res.data.status === "completed"){
+      if(game.in_checkmate()){
+        // A native, server-verified checkmate is not a timeout.
+        await reloadGameState(onlineGameId);
+        return;
+      }
       clockExpired = true;
       clockWhite = res.data.white_time_left;
       clockBlack = res.data.black_time_left;
@@ -7448,11 +7455,13 @@ function kfBuildPremoveCandidates(pm){
         reply=simulation.move({from:pm.from,to:pm.to,
           promotion:pm.promotion||"q"});
         if(!reply)continue;
-        if(simulation.game_over()){
-          // This position must use the existing fully-verified terminal move path.
+        if(simulation.game_over() && !simulation.in_checkmate()){
+          // Non-mate endings retain their verified fallback path.
           pm.terminalOpponentFens.push(oppFen);
           continue;
         }
+        // A checkmating premove uses the same fast server queue as
+        // every other premove. PostgreSQL independently verifies mate.
         choices.push({opponent_fen:oppFen,from:pm.from,to:pm.to,
           promotion:pm.promotion||null,fen:simulation.fen(),
           pgn:simulation.pgn(),san:reply.san,
