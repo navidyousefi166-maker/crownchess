@@ -8282,7 +8282,7 @@ async function loadAdminClockReports(){
   var reports=Array.isArray(response.data)?response.data:[];
   var count=$("adminSecurityFolders").querySelector(".clock-reports-card strong");
   if(count)count.textContent=fmtStat(reports.length);
-  if(!reports.length){target.innerHTML='<div class="admin-empty">No clock violations reported. Clock auditing is not active yet.</div>';return;}
+  if(!reports.length){target.innerHTML='<div class="admin-empty">No clock violations reported.</div>';return;}
   target.innerHTML=reports.map(function(r){
    function showTime(v){return v==null?"—":Number(v).toFixed(3)+"s";}
    var id=adminEscape(String(r.id||""));
