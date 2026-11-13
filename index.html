@@ -4123,7 +4123,10 @@ if(kfServerCommittedPremove){
 // If the queue was accepted by PostgreSQL, do not race the same move
 // through the old browser RPC when an intermediate opponent snapshot arrives.
 var kfPremoveExecuted=!kfServerCommittedPremove&&kfHadPremove&&
-  !(kfPremoveQueued&&(kfPremoveQueued.serverPending||kfPremoveQueued.serverReady))&&
+  !(kfPremoveQueued&&(kfPremoveQueued.serverPending||
+    (kfPremoveQueued.serverReady&&
+      (!kfPremoveQueued.terminalOpponentFens||
+       kfPremoveQueued.terminalOpponentFens.indexOf(row.fen)===-1))))&&
   kfMaybeExecuteLocalPremove(row);
 if(kfHadPremove && kfPremoveQueued && kfPremoveQueued.serverReady){
   // The database may decline an illegal premove without changing the turn.
@@ -7434,6 +7437,7 @@ function kfBuildPremoveCandidates(pm){
   var choices=[];
   try{
     var replies=simulation.moves({verbose:true});
+    pm.terminalOpponentFens=[];
     for(var i=0;i<replies.length;i++){
       var opponent=replies[i],played=null,reply=null;
       try{
@@ -7443,7 +7447,12 @@ function kfBuildPremoveCandidates(pm){
         var oppFen=simulation.fen();
         reply=simulation.move({from:pm.from,to:pm.to,
           promotion:pm.promotion||"q"});
-        if(!reply||simulation.game_over())continue;
+        if(!reply)continue;
+        if(simulation.game_over()){
+          // This position must use the existing fully-verified terminal move path.
+          pm.terminalOpponentFens.push(oppFen);
+          continue;
+        }
         choices.push({opponent_fen:oppFen,from:pm.from,to:pm.to,
           promotion:pm.promotion||null,fen:simulation.fen(),
           pgn:simulation.pgn(),san:reply.san,
