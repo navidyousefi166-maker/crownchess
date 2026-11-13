@@ -220,6 +220,10 @@ header.topnav{
   transition:transform .15s ease,box-shadow .15s ease;
 }
 #avatarThumb:hover{transform:scale(1.08);box-shadow:0 0 10px var(--gold)}
+#profileFlagBadge{display:none;font-size:20px;line-height:1;align-self:center;flex-shrink:0}
+.kf-country-toggle{display:flex;align-items:center;gap:9px;margin:12px 0 8px;font-size:13px;cursor:pointer}
+.kf-country-toggle input{width:17px;height:17px;accent-color:var(--gold);flex-shrink:0}
+.kf-country-wrap select{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel-bg1);color:var(--text)}
 #userBadge{font-size:12px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis}
 .account-gate{position:fixed;inset:0;z-index:30000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(10,0,4,.97);backdrop-filter:blur(8px)}
 .account-gate[hidden]{display:none!important}
@@ -1417,6 +1421,7 @@ body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark
     <div class="topnav-right">
       <button class="get-vip-btn" id="getVipBtn" type="button" title="Get VIP">Get VIP</button>
       <img id="avatarThumb" alt="Profile photo" title="Open profile">
+      <span id="profileFlagBadge" aria-label="Country flag"></span>
       <span id="userBadge"></span>
       <button class="btn" id="signIn">Sign In</button>
       <button class="btn gold" id="signUp">Sign Up</button>
@@ -1687,6 +1692,7 @@ body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark
       <label for="signupName">Choose a username</label>
       <input id="signupName" type="text" minlength="3" maxlength="20" autocomplete="nickname" placeholder="e.g. PersianKnight">
     </div>
+    <div id="signupCountryOption" hidden><label class="kf-country-toggle"><input id="signupFlagEnabled" type="checkbox"> Show my country flag on my profile</label><div id="signupCountryWrap" class="kf-country-wrap" hidden><label for="signupCountry">Choose your country</label><select id="signupCountry"></select></div></div>
     <label for="email">Email address</label>
     <input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
     <label for="password">Password</label>
@@ -1716,7 +1722,9 @@ body.vip-board-sunset{--board-light1:#ffd9c8;--board-light2:#f7bea2;--board-dark
     <label for="profileName">Username</label>
     <input id="profileName" type="text" minlength="3" maxlength="20" required autocomplete="nickname" placeholder="Choose a username">
     <p class="hint">Use 3–20 letters, numbers, spaces, underscores or hyphens.</p>
-    <button class="btn gold submit" type="submit" id="profileSave">Save username</button>
+    <label class="kf-country-toggle"><input id="profileFlagEnabled" type="checkbox"> Show my country flag on my profile</label>
+    <div id="profileCountryWrap" class="kf-country-wrap" hidden><label for="profileCountry">Choose your country</label><select id="profileCountry"></select></div>
+    <button class="btn gold submit" type="submit" id="profileSave">Save profile</button>
     <div id="profileMessage"></div>
   </form>
 </dialog>
@@ -7018,6 +7026,14 @@ function closeAuthDialog(){
   var dialog=$("authDialog");
   if(dialog) dialog.classList.remove("is-open");
 }
+var kfCountryCodes=["AF","AL","DZ","AD","AO","AG","AR","AM","AU","AT","AZ","BS","BH","BD","BB","BY","BE","BZ","BJ","BT","BO","BA","BW","BR","BN","BG","BF","BI","KH","CM","CA","CV","CF","TD","CL","CN","CO","KM","CG","CD","CR","CI","HR","CU","CY","CZ","DK","DJ","DM","DO","EC","EG","SV","GQ","ER","EE","SZ","ET","FJ","FI","FR","GA","GM","GE","DE","GH","GR","GD","GT","GN","GW","GY","HT","HN","HU","IS","IN","ID","IR","IQ","IE","IL","IT","JM","JP","JO","KZ","KE","KI","XK","KW","KG","LA","LV","LB","LS","LR","LY","LI","LT","LU","MG","MW","MY","MV","ML","MT","MH","MR","MU","MX","FM","MD","MC","MN","ME","MA","MZ","MM","NA","NR","NP","NL","NZ","NI","NE","NG","KP","MK","NO","OM","PK","PW","PS","PA","PG","PY","PE","PH","PL","PT","QA","RO","RU","RW","KN","LC","VC","WS","SM","ST","SA","SN","RS","SC","SL","SG","SK","SI","SB","SO","ZA","KR","SS","ES","LK","SD","SR","SE","CH","SY","TW","TJ","TZ","TH","TL","TG","TO","TT","TN","TR","TM","TV","UG","UA","AE","GB","US","UY","UZ","VU","VA","VE","VN","YE","ZM","ZW"];
+var kfCountryNames=(function(){try{return new Intl.DisplayNames(["en"],{type:"region"});}catch(e){return null;}})();
+function kfFlagEmoji(code){if(!/^[A-Z]{2}$/.test(code||""))return "";return String.fromCodePoint(code.charCodeAt(0)+127397,code.charCodeAt(1)+127397);}
+function kfSelectedCountry(checkboxId,selectId){var enabled=$(checkboxId).checked,code=$(selectId).value; if(enabled&&!kfCountryCodes.includes(code))throw new Error("Choose your country to show its flag.");return enabled?code:"";}
+function kfSetupCountryPicker(toggleId,wrapId,selectId){var toggle=$(toggleId),wrap=$(wrapId),select=$(selectId);select.innerHTML='<option value="">Select your country</option>';kfCountryCodes.map(function(code){return {code:code,name:kfCountryNames?kfCountryNames.of(code):code};}).sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(item){var option=document.createElement("option");option.value=item.code;option.textContent=kfFlagEmoji(item.code)+" "+item.name;select.appendChild(option);});toggle.addEventListener("change",function(){wrap.hidden=!toggle.checked;select.required=toggle.checked;});}
+function kfSetCountryPicker(toggleId,wrapId,selectId,code){code=kfCountryCodes.includes(code)?code:"";$(toggleId).checked=!!code;$(selectId).value=code;$(wrapId).hidden=!code;$(selectId).required=!!code;}
+kfSetupCountryPicker("signupFlagEnabled","signupCountryWrap","signupCountry");
+kfSetupCountryPicker("profileFlagEnabled","profileCountryWrap","profileCountry");
 function openAuth(m){
   mode = m;
   $("authForm").reset();
@@ -7031,6 +7047,8 @@ function openAuth(m){
   $("password").autocomplete = up ? "new-password" : "current-password";
   $("signupNameWrap").hidden = !up;
   $("signupName").required = up;
+  $("signupCountryOption").hidden = !up;
+  kfSetCountryPicker("signupFlagEnabled","signupCountryWrap","signupCountry","");
   $("authDialog").classList.add("is-open");
   setTimeout(function(){var field=$(up?"signupName":"email");if(field)field.focus();},50);
 }
@@ -7053,7 +7071,8 @@ $("authForm").addEventListener("submit", async function(e){
     var result;
     if(submitMode === "signup"){
       var uname = ($("signupName").value || "").trim();
-      result = await withTimeout(sb.auth.signUp({email: email, password: password, options: {emailRedirectTo: REDIRECT, data: {username: uname}}}), 15000);
+      var countryCode = kfSelectedCountry("signupFlagEnabled","signupCountry");
+      result = await withTimeout(sb.auth.signUp({email: email, password: password, options: {emailRedirectTo: REDIRECT, data: {username: uname, country_code: countryCode}}}), 15000);
     } else {
       result = await withTimeout(sb.auth.signInWithPassword({email: email, password: password}), 15000);
     }
@@ -7170,6 +7189,10 @@ function applyAuthUser(user){
   var username = user && user.user_metadata ? user.user_metadata.username : null;
   var avatarUrl = user && user.user_metadata ? user.user_metadata.avatar_url : null;
   $("userBadge").textContent = username || (user ? user.email : "");
+  var flagCode=user&&user.user_metadata&&user.user_metadata.country_code;
+  var flag=$("profileFlagBadge");
+  flag.textContent=kfCountryCodes.includes(flagCode)?kfFlagEmoji(flagCode):"";
+  flag.style.display=user&&flag.textContent?"inline-block":"none";
   $("userBadge").title = username ? ("Signed in as " + username) : (user ? user.email : "");
   $("avatarThumb").src = avatarUrl || defaultAvatar();
   $("avatarThumb").style.display = user ? "block" : "none";
@@ -7203,6 +7226,7 @@ $("avatarThumb").onclick = async function(){
   $("profileMessage").textContent = "";
   $("profileMessage").classList.remove("error");
   $("profileName").value = (user.user_metadata && user.user_metadata.username) || "";
+  kfSetCountryPicker("profileFlagEnabled","profileCountryWrap","profileCountry",user.user_metadata&&user.user_metadata.country_code);
   var avatarUrl = user.user_metadata ? user.user_metadata.avatar_url : null;
   $("avatarPreview").src = avatarUrl || "";
   $("avatarPreview").hidden = !avatarUrl;
@@ -7290,17 +7314,18 @@ $("profileForm").addEventListener("submit", async function(e){
   btn.textContent = "Saving…";
   $("profileMessage").textContent = "";
   try{
-    var res = await sb.auth.updateUser({data: {username: username}});
+    var countryCode=kfSelectedCountry("profileFlagEnabled","profileCountry");
+    var res = await sb.auth.updateUser({data: {username: username,country_code: countryCode}});
     if(res.error) throw res.error;
-    await updateAuth();
-    $("profileMessage").textContent = "Username saved successfully.";
+    if(res.data&&res.data.user){currentUser=res.data.user;applyAuthUser(res.data.user);}else{await updateAuth();}
+    $("profileMessage").textContent = "Profile saved successfully.";
     setTimeout(function(){ $("profileDialog").close(); }, 700);
   } catch(err){
     $("profileMessage").textContent = err.message || "Could not save username.";
     $("profileMessage").classList.add("error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Save username";
+    btn.textContent = "Save profile";
   }
 });
 
