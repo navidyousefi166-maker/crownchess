@@ -6807,22 +6807,13 @@ async function submitMove(m, clientWhite, clientBlack, moveStartedAt, isPremove)
     // verifies the JWT; the RPC derives player/session identity from it and
     // retains atomic turn, clock, and position enforcement. The heavier
     // independent chess/session verification stays in the shadow-audit queue.
-    // Endings require independent server-side chess verification.
-    // Ordinary moves and premoves preserve the original one-hop fast RPC.
+    // Every browser move uses the direct PostgreSQL path.
+    // The independent move-audit continues asynchronously.
     var res;
-    if(status === "completed" && !game.in_checkmate()){
-      res = await sb.functions.invoke("kf-submit-terminal-v1", {
-        body: {
-          game_id: onlineGameId,
-          request_id: crypto.randomUUID(),
-          from: m.from,
-          to: m.to,
-          promotion: m.promotion || null,
-          status: "completed",
-          fen: game.fen()
-        }
-      });
-    }else{
+    {
+      // One server-controlled path for ordinary moves and every ending.
+      // PostgreSQL derives the authoritative status and result; browser
+      // checkmate/stalemate claims are never trusted.
       res = await sb.rpc("kf_submit_browser_fast_v1", {
         p_game_id: onlineGameId,
         p_expected_fen: onlineGame.fen,
