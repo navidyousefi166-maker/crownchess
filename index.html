@@ -8176,7 +8176,9 @@ async function loadAdminStreakReviews(){
     '<div class="admin-report-actions">'+buttons+
     '<button type="button" class="btn" data-streak-id="'+adminEscape(String(r.id))+
     '" data-streak-status="'+(r.review_status==="pending"?"reviewed":"pending")+'">'+
-    (r.review_status==="pending"?"Mark reviewed":"Reopen")+'</button></div></article>';
+    (r.review_status==="pending"?"Mark reviewed":"Reopen")+'</button>'+
+    '<button type="button" class="btn" data-streak-id="'+adminEscape(String(r.id))+
+    '" data-streak-delete="1" style="color:#ef8b83">Delete</button></div></article>';
   }).join(""):'<div class="admin-empty">No three-win streaks queued yet.</div>';
  }catch(e){
   target.innerHTML='<div class="admin-empty">Unable to load anti-cheat cases: '+adminEscape(e.message||e)+'</div>';
@@ -8188,6 +8190,21 @@ $("adminStreakReviewsList").addEventListener("click",async function(event){
  var id=button.getAttribute("data-streak-id");
  var record=kfStreakReviewRows.find(function(x){return String(x.id)===id;});
  if(!record)return;
+ if(button.hasAttribute("data-streak-delete")){
+  if(!confirm("Permanently delete this anti-cheat case and its saved analysis from Supabase? This cannot be undone."))return;
+  button.disabled=true;
+  try{
+   var deleted=await sb.rpc("kf_admin_delete_win_streak_review",{p_review_id:Number(id)});
+   if(deleted.error)throw deleted.error;
+   if(deleted.data!==true)throw Error("Case was not found or already deleted");
+   await loadAdminStreakReviews();
+   say("Anti-cheat case permanently deleted.",{silentToast:true});
+  }catch(e){
+   say("Could not delete anti-cheat case: "+(e.message||e),{error:true});
+   button.disabled=false;
+  }
+  return;
+ }
  if(button.hasAttribute("data-streak-status")){
   button.disabled=true;
   try{
