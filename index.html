@@ -2899,14 +2899,30 @@ async function checkMyTournamentEntry(){
   if(!res.error && res.data) tournMyEntry = res.data;
 }
 
+var tournChannelRetryTimer = null;
 function startTournChannel(){
-  if(tournChannel && sb){ sb.removeChannel(tournChannel); tournChannel = null; }
-  if(!sb) return;
-  tournChannel = sb.channel("kf-tourn-ch")
+  // The 15-second tournament refresh also calls this function. Keep the
+  // existing subscription rather than tearing down its WebSocket every time.
+  if(!sb || tournChannel) return;
+  if(tournChannelRetryTimer){ clearTimeout(tournChannelRetryTimer); tournChannelRetryTimer = null; }
+  var channel = sb.channel("kf-tourn-ch")
     .on("postgres_changes",{event:"*",schema:"public",table:"kf_tournament_entries"}, function(){ refreshTournLive(); })
     .on("postgres_changes",{event:"*",schema:"public",table:"kf_tournament_matches"}, function(){ refreshTournLive(); })
-    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_tournaments"}, function(p){ handleTournUpdate(p.new); })
-    .subscribe();
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"kf_tournaments"}, function(p){ handleTournUpdate(p.new); });
+  tournChannel = channel;
+  channel.subscribe(function(status){
+    if(status !== "CLOSED" && status !== "TIMED_OUT" && status !== "CHANNEL_ERROR") return;
+    // Ignore notifications belonging to a previous subscription.
+    if(tournChannel !== channel) return;
+    tournChannel = null;
+    sb.removeChannel(channel);
+    if(!tournChannelRetryTimer){
+      tournChannelRetryTimer = setTimeout(function(){
+        tournChannelRetryTimer = null;
+        startTournChannel();
+      }, 5000);
+    }
+  });
 }
 
 async function refreshTournLive(){
