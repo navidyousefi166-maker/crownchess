@@ -7567,8 +7567,10 @@ function kfQueueServerPremove(pm){
 // execution, so this deliberately does not claim future legality.
 function kfPremoveGeometry(from,to,color){
   if(!/^[a-h][1-8]$/.test(from)||!/^[a-h][1-8]$/.test(to)||from===to)return false;
-  var piece=game.get(from),occupant=game.get(to);
-  if(!piece||piece.color!==color||occupant&&occupant.color===color)return false;
+  var piece=game.get(from);
+  // A friendly piece on the destination may be captured by the opponent
+  // before our turn. It must not block speculative premove selection.
+  if(!piece||piece.color!==color)return false;
   var x=to.charCodeAt(0)-from.charCodeAt(0), y=Number(to[1])-Number(from[1]);
   var ax=Math.abs(x),ay=Math.abs(y),type=piece.type;
   if(type==="n")return ax===1&&ay===2||ax===2&&ay===1;
@@ -7614,7 +7616,11 @@ async function kfHandlePremoveSquare(square,color){
     (square===kfPremoveQueued.from||square===kfPremoveQueued.to)){
     kfCancelQueuedServerPremove();kfPremoveQueued=null;draw();return;
   }
-  if(piece&&piece.color===color){
+  // A selected piece gets first chance to target this square, even when
+  // currently occupied by our own piece (conditional recapture premove).
+  // An incompatible friendly square instead switches the selected piece.
+  if(piece&&piece.color===color&&
+     (!kfPremoveSelected||!kfPremoveGeometry(kfPremoveSelected,square,color))){
     if(kfPremoveQueued){kfCancelQueuedServerPremove();kfPremoveQueued=null;}
     kfPremoveSelected=square;
     draw();
